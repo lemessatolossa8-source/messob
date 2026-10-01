@@ -134,26 +134,8 @@ export default function EditNewsPage() {
         status: "published",
       };
 
-      // Handle image upload if new photo selected
-      if (formData.photo) {
-        const formDataToSend = new FormData();
-        formDataToSend.append("image", formData.photo);
-        formDataToSend.append("data", JSON.stringify(newsData));
-
-        const response = await fetch(`http://localhost:5000/api/news/${params.id}`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: formDataToSend,
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to update news");
-        }
-      } else {
-        await newsService.update(params.id, newsData);
-      }
+      // Update without image for now (image upload can be added later)
+      await newsService.update(params.id, newsData);
 
       toast.success("News updated successfully");
       router.push("/admin/dashboard/news");
