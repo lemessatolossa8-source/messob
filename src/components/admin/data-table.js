@@ -187,7 +187,7 @@ export default function DataTable({
                         <div className="flex items-center gap-3">
                           {item.image ? (
                             <img
-                              src={item.image}
+                              src={item.image.startsWith('http') ? item.image : `http://localhost:5000${item.image}`}
                               alt=""
                               className="h-10 w-12 rounded-lg object-cover bg-slate-100 shrink-0 border border-slate-200"
                             />

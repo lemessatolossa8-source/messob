@@ -50,7 +50,7 @@ export function NewsCard({ item }) {
       {item.image ? (
         <div className="relative aspect-[16/9] w-full overflow-hidden bg-neutral-100">
           <img
-            src={item.image}
+            src={item.image.startsWith('http') ? item.image : `http://localhost:5000${item.image}`}
             alt={title}
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
