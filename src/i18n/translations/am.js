@@ -343,7 +343,7 @@ const am = {
     required: "ይህ ቦታ ባዶ መሆን አይችልም።",
     invalidEmail: "ትክክለኛ ኢሜይል ያስገቡ።",
     invalidPhone: "ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ (ለምሳሌ፡ 09XXXXXXXX ወይም +2519XXXXXXXX)።",
-    invalidUrl: "ትክክለኛ ድረ-ገጽ አድራሻ ያስገቡ (ለምሳሌ፡ https://example.com)።",
+    invalidUrl: "ትክክለኛ ድረ-ገጽ አድራሻ ያስገቡ።",
     minLength: "ቢያንስ {min} ፊደላት መሆን አለበት።",
     maxLength: "ከ {max} ፊደላት መብለጥ የለበትም።",
     invalidDate: "ትክክለኛ ቀን ያስገቡ።",

@@ -52,7 +52,7 @@ export function validateUrl(value, isRequired = false) {
     }
     return null;
   } catch {
-    return "Please enter a valid URL (e.g. https://example.com).";
+    return "Please enter a valid URL.";
   }
 }
 

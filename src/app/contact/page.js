@@ -195,7 +195,6 @@ export default function ContactPage() {
                     required
                     value={formData.name}
                     onChange={(e) => handleChange("name", e.target.value)}
-                    placeholder="e.g. Abebe Bikila"
                     className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
                   />
                   {errors.name && <p className="mt-1 text-[11px] font-bold text-rose-600">{errors.name}</p>}
@@ -210,7 +209,6 @@ export default function ContactPage() {
                     required
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    placeholder="name@example.com"
                     className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
                   />
                   {errors.email && <p className="mt-1 text-[11px] font-bold text-rose-600">{errors.email}</p>}
@@ -226,7 +224,6 @@ export default function ContactPage() {
                     type="text"
                     value={formData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    placeholder="09XXXXXXXX or +251..."
                     className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
                   />
                   {errors.phone && <p className="mt-1 text-[11px] font-bold text-rose-600">{errors.phone}</p>}
@@ -258,7 +255,6 @@ export default function ContactPage() {
                   type="text"
                   value={formData.subject}
                   onChange={(e) => handleChange("subject", e.target.value)}
-                  placeholder="Inquiry topic..."
                   className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
                 />
               </div>
@@ -272,7 +268,6 @@ export default function ContactPage() {
                   required
                   value={formData.message}
                   onChange={(e) => handleChange("message", e.target.value)}
-                  placeholder="Details of your inquiry or feedback..."
                   className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
                 />
                 {errors.message && <p className="mt-1 text-[11px] font-bold text-rose-600">{errors.message}</p>}

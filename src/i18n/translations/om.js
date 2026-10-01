@@ -343,7 +343,7 @@ const om = {
     required: "Bakki kun duwwaa ta'uu hin danda'u.",
     invalidEmail: "Imeelii sirrii ta'e galchaa.",
     invalidPhone: "Lakkoofsa bilbilaa sirrii Itoophiyaa galchaa (fakkeenya: 09XXXXXXXX yookiin +2519XXXXXXXX).",
-    invalidUrl: "URL sirrii galchaa (fakkeenya: https://example.com).",
+    invalidUrl: "URL sirrii galchaa.",
     minLength: "Yoo xiqqaate qubee {min} ta'uu qaba.",
     maxLength: "Qubee {max} caaluu hin qabu.",
     invalidDate: "Guyyaa sirrii galchaa.",

@@ -343,7 +343,7 @@ const en = {
     required: "This field cannot be empty.",
     invalidEmail: "Please enter a valid email address.",
     invalidPhone: "Please enter a valid Ethiopian phone number (e.g. 09XXXXXXXX or +2519XXXXXXXX).",
-    invalidUrl: "Please enter a valid URL (e.g. https://example.com).",
+    invalidUrl: "Please enter a valid URL.",
     minLength: "Must be at least {min} characters.",
     maxLength: "Cannot exceed {max} characters.",
     invalidDate: "Please enter a valid date.",

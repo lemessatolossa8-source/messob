@@ -231,7 +231,6 @@ export function ImagePickerInput({
             value={value && !value.startsWith("data:") ? value : ""}
             onChange={(e) => onChange(e.target.value)}
             onBlur={onBlur}
-            placeholder="Paste image URL (https://...)"
             className={`flex-1 rounded-xl border bg-white px-4 py-2.5 text-xs font-medium text-slate-900 placeholder-slate-400 transition focus:outline-none focus:ring-2 ${
               error || uploadError
                 ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/20"
