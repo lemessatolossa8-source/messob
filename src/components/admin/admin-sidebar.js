@@ -16,7 +16,6 @@ import {
   ClipboardList,
   Info,
   UserCheck,
-  PhoneCall,
   Settings,
   LogOut,
   X,
@@ -55,7 +54,6 @@ export default function AdminSidebar({ isOpen, onClose }) {
         { label: "Services", href: "/admin/dashboard/services", icon: ClipboardList },
         { label: "Mayor Message", href: "/admin/dashboard/about", icon: UserCheck },
         { label: "City Information", href: "/admin/dashboard/city-information", icon: Info },
-        { label: "Contact Information", href: "/admin/dashboard/contact-information", icon: PhoneCall },
       ],
     },
     {
