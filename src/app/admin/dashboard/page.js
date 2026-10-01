@@ -50,21 +50,6 @@ export default function AdminDashboardOverviewPage() {
     );
   }
 
-export default function AdminDashboardOverviewPage() {
-  const [stats, setStats] = useState({
-    totalNews: 0,
-    totalAnnouncements: 0,
-    totalNotices: 0,
-    totalEvents: 0,
-    totalProjects: 0,
-    totalGallery: 0,
-    totalServices: 0,
-    published: 0,
-    draft: 0,
-  });
-
-  const [recentNews, setRecentNews] = useState([]);
-
   useEffect(() => {
     const loadStats = async () => {
       // Sync stats from storageStore (all except projects)
