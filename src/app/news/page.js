@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import PageHero from "@/components/page-hero";
 import { NewsCard } from "@/components/cards";
 import { CategoryFilter, Pagination, SearchBar } from "@/components/search-filter";
-import { newsService } from "@/src/services";
+import { newsApiService } from "@/src/services";
 import { useTranslation } from "@/src/context/LanguageContext";
 
 export default function NewsPage() {
@@ -15,15 +15,18 @@ export default function NewsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  const loadNews = () => {
-    const res = newsService.getAll({ status: "published" });
-    setNews(res.items);
+  const loadNews = async () => {
+    try {
+      const res = await newsApiService.getAll({ status: "published" });
+      setNews(res.data.items || []);
+    } catch (error) {
+      console.error("Error loading news:", error);
+      setNews([]);
+    }
   };
 
   useEffect(() => {
     loadNews();
-    const unsub = newsService.subscribe(loadNews);
-    return () => unsub();
   }, []);
 
   const categories = ["All", ...new Set(news.map((item) => item.category).filter(Boolean))];
