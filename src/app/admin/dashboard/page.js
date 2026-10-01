@@ -20,6 +20,35 @@ import {
 } from "lucide-react";
 import { siteService, newsService, announcementService, eventService, projectService } from "@/src/services";
 import { getLocalizedText } from "@/src/i18n";
+import { useRequireAuth } from "@/src/lib/hooks/useAuth";
+
+export default function AdminDashboardOverviewPage() {
+  const { isLoading: authLoading, user } = useRequireAuth();
+  const [stats, setStats] = useState({
+    totalNews: 0,
+    totalAnnouncements: 0,
+    totalNotices: 0,
+    totalEvents: 0,
+    totalProjects: 0,
+    totalGallery: 0,
+    totalServices: 0,
+    published: 0,
+    draft: 0,
+  });
+
+  const [recentNews, setRecentNews] = useState([]);
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-3">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-emerald-600 border-r-transparent"></div>
+          <p className="text-sm text-slate-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
 export default function AdminDashboardOverviewPage() {
   const [stats, setStats] = useState({

@@ -6,14 +6,28 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Lock, Mail, ShieldCheck, CheckSquare, HelpCircle } from "lucide-react";
 import Logo from "@/components/logo";
 import authService from "@/src/services/authService";
+import { useRedirectIfAuthenticated } from "@/src/lib/hooks/useAuth";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { isLoading: authLoading } = useRedirectIfAuthenticated();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-100">
+        <div className="text-center space-y-3">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+          <p className="text-sm text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -99,13 +113,12 @@ export default function AdminLoginPage() {
                   <span>Remember me</span>
                 </label>
 
-                <button
-                  type="button"
-                  onClick={() => alert("Please contact system administrator to reset credentials.")}
+                <Link
+                  href="/admin/forgot-password"
                   className="font-medium text-blue-600 hover:text-blue-700 hover:underline transition"
                 >
                   Forgot password?
-                </button>
+                </Link>
               </div>
 
               <button

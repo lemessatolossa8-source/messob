@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Logo from "@/components/logo";
+import authService from "@/src/services/authService";
 import {
   LayoutDashboard,
   Newspaper,
@@ -24,6 +25,12 @@ import {
 
 export default function AdminSidebar({ isOpen, onClose }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    authService.logout();
+    router.push("/admin/login");
+  };
 
   const navSections = [
     {
@@ -55,7 +62,7 @@ export default function AdminSidebar({ isOpen, onClose }) {
       title: "SYSTEM",
       items: [
         { label: "Settings", href: "/admin/dashboard/settings", icon: Settings },
-        { label: "Logout", href: "/admin/login", icon: LogOut },
+        { label: "Logout", href: null, icon: LogOut, onClick: handleLogout },
       ],
     },
   ];
@@ -106,6 +113,24 @@ export default function AdminSidebar({ isOpen, onClose }) {
                   : pathname === item.href ||
                     (pathname && pathname.startsWith(`${item.href}/`)) ||
                     (isProjects && (pathname === "/admin/projects" || (pathname && pathname.startsWith("/admin/projects/"))));
+
+                // Handle logout button (no href)
+                if (item.onClick) {
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => {
+                        item.onClick();
+                        onClose && onClose();
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition text-slate-300 hover:bg-slate-900 hover:text-white"
+                    >
+                      <Icon className="h-4 w-4 shrink-0 text-slate-400" />
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  );
+                }
 
                 return (
                   <Link

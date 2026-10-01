@@ -9,7 +9,7 @@ const generateToken = (id) => {
 
 // @desc   Register a new admin/editor user
 // @route  POST /api/auth/register
-// @access Public (restrict in production)
+// @access Protected (admin only) - enforced by route middleware
 const register = async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -17,8 +17,31 @@ const register = async (req, res) => {
     return res.status(400).json({ success: false, message: "Name, email, and password are required" });
   }
 
-  if (password.length < 8) {
-    return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
+  // Strengthen password validation for production
+  if (password.length < 12) {
+    return res.status(400).json({ 
+      success: false, 
+      message: "Password must be at least 12 characters long" 
+    });
+  }
+
+  // Check password complexity: must contain uppercase, lowercase, number, and special character
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  if (!hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+    return res.status(400).json({
+      success: false,
+      message: "Password must contain uppercase, lowercase, number, and special character (!@#$%^&* etc.)"
+    });
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ success: false, message: "Please provide a valid email address" });
   }
 
   const existingUser = await User.findOne({ where: { email: email.toLowerCase() } });

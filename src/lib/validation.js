@@ -56,6 +56,38 @@ export function validateUrl(value, isRequired = false) {
   }
 }
 
+export function validatePassword(value, isRequired = true) {
+  if (!value || typeof value !== "string" || value.trim() === "") {
+    return isRequired ? "Password is required." : null;
+  }
+
+  const password = value.trim();
+
+  if (password.length < 12) {
+    return "Password must be at least 12 characters long.";
+  }
+
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  if (!hasUppercase) {
+    return "Password must contain at least one uppercase letter (A-Z).";
+  }
+  if (!hasLowercase) {
+    return "Password must contain at least one lowercase letter (a-z).";
+  }
+  if (!hasNumber) {
+    return "Password must contain at least one number (0-9).";
+  }
+  if (!hasSpecial) {
+    return "Password must contain at least one special character (!@#$%^&* etc.).";
+  }
+
+  return null;
+}
+
 export function validateLength(value, { min = 0, max = Infinity }, fieldName = "Field") {
   if (!value) return null;
   const str = String(value).trim();
