@@ -194,7 +194,7 @@ export default function SlideImageAdminPage() {
                 {/* Image Banner Container */}
                 <div className="relative h-48 w-full bg-slate-950 overflow-hidden">
                   <img
-                    src={slide.image || "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=800&q=80"}
+                    src={slide.image || "/images/burayu-mesob-logo.png"}
                     alt={titleText}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />

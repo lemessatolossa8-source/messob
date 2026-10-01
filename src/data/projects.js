@@ -29,7 +29,7 @@ Current Progress: 75% complete. Underground concrete drainage channels are finis
     startDate: "2025-01-15",
     targetCompletion: "2026-12-30",
     budget: "Municipal Infrastructure Fund",
-    image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1200&q=80",
+    image: "",
   },
   {
     id: "2",
@@ -55,7 +55,7 @@ Current Progress: 75% complete. Underground concrete drainage channels are finis
     startDate: "2026-10-01",
     targetCompletion: "2027-06-30",
     budget: "Urban Trade Enhancement Fund",
-    image: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1200&q=80",
+    image: "",
   },
   {
     id: "3",
@@ -81,7 +81,7 @@ Current Progress: 75% complete. Underground concrete drainage channels are finis
     startDate: "2025-03-01",
     targetCompletion: "2026-11-30",
     budget: "Public Utilities Improvement Program",
-    image: "https://images.unsplash.com/photo-1509395176047-4a66953fd231?auto=format&fit=crop&w=1200&q=80",
+    image: "",
   },
   {
     id: "4",
@@ -107,6 +107,6 @@ Current Progress: 75% complete. Underground concrete drainage channels are finis
     startDate: "2026-05-01",
     targetCompletion: "2026-10-31",
     budget: "Digital Government Modernization",
-    image: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80",
+    image: "",
   },
 ];

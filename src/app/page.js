@@ -117,7 +117,7 @@ export default function HomePage() {
                   }`}
                 >
                   <img
-                    src={slide.image || "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=1600&q=80"}
+                    src={slide.image || "/images/burayu-mesob-logo.png"}
                     alt={getText(slide.title) || "Burayu MESOB"}
                     className={`h-full w-full object-cover object-center transition-transform duration-[8000ms] ease-out ${
                       isActive ? "scale-105" : "scale-100"
@@ -129,7 +129,7 @@ export default function HomePage() {
           ) : (
             <div className="absolute inset-0">
               <img
-                src="https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=1600&q=80"
+                src="/images/burayu-mesob-logo.png"
                 alt="Burayu City"
                 className="h-full w-full object-cover object-center"
               />

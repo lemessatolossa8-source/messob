@@ -362,7 +362,7 @@ export default function EditSlideImagePage() {
               {/* Slide background photo */}
               <div className="absolute inset-0 z-0">
                 <img
-                  src={formData.image || "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=800&q=80"}
+                  src={formData.image || "/images/burayu-mesob-logo.png"}
                   alt="Slide preview"
                   className="h-full w-full object-cover"
                 />

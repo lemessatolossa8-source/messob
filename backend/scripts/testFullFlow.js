@@ -63,7 +63,7 @@ async function runEndToEndVerification() {
         am: "በቡራዩ ከተማ የሚካሄድ የዋና መንገድ አስፋልት ዝርጋታ ፕሮጀክት።",
         en: "Comprehensive municipal road asphalt construction project across Burayu corridors.",
       },
-      image: "https://images.unsplash.com/photo-1541888946425-d0fbb1861593?w=800",
+      image: "",
       location: "Burayu Central Corridor",
       start_date: "2026-02-01",
       end_date: "2026-11-30",
