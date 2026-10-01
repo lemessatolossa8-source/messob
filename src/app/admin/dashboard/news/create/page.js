@@ -8,13 +8,17 @@ import LanguageTabs from "@/components/admin/language-tabs";
 import { TextInput, TextAreaInput, SelectInput, ImagePickerInput } from "@/components/admin/form-controls";
 import { newsService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
-import { validateRequired, validateLength, validateImage, validateMultilingual } from "@/src/lib/validation";
+import { validateNewsForm } from "@/src/lib/formValidation";
+import { sanitizeFormData } from "@/src/lib/sanitize";
+import PublishConfirmDialog from "@/components/admin/publish-confirm-dialog";
+import { useRequireAuth } from "@/src/lib/hooks/useAuth";
 
 export default function CreateNewsPage() {
   const router = useRouter();
   const toast = useToast();
+  const { isLoading: authLoading } = useRequireAuth();
 
-  const [activeLang, setActiveLang] = useState("am");
+  const [activeLang, setActiveLang] = useState("om");
   const [formData, setFormData] = useState({
     title: { om: "", am: "", en: "" },
     summary: { om: "", am: "", en: "" },
@@ -30,6 +34,20 @@ export default function CreateNewsPage() {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [publishWarnings, setPublishWarnings] = useState([]);
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-3">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-emerald-600 border-r-transparent"></div>
+          <p className="text-sm text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleFieldChange = (field, lang, value) => {
     if (lang) {
@@ -70,32 +88,68 @@ export default function CreateNewsPage() {
   };
 
   const validateForm = (targetStatus) => {
-    const newErrors = {};
-
-    // Validate that at least ONE title is provided (om, am, or en)
-    const hasAnyTitle = !!(formData.title.om?.trim() || formData.title.am?.trim() || formData.title.en?.trim());
-    if (!hasAnyTitle) {
-      newErrors.title_om = "Please enter an article title in at least one language.";
+    const isPublishing = targetStatus === "published";
+    const validationErrors = validateNewsForm(formData, isPublishing);
+    
+    if (validationErrors) {
+      setErrors(validationErrors);
+      return false;
     }
-
-    if (!formData.category) {
-      newErrors.category = "Category is required.";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    
+    setErrors({});
+    return true;
   };
 
-  const handleSubmit = async (e, targetStatus) => {
-    if (e) e.preventDefault();
-    setIsSubmitting(true);
+  const getPublishWarnings = () => {
+    const warnings = [];
+    
+    // Check for missing translations
+    if (!formData.title.om?.trim()) warnings.push("Afan Oromo title is missing");
+    if (!formData.title.am?.trim()) warnings.push("አማርኛ (Amharic) title is missing");
+    if (!formData.title.en?.trim()) warnings.push("English title is missing");
+    
+    if (!formData.summary.om?.trim() && !formData.content.om?.trim()) {
+      warnings.push("No Afan Oromo content provided");
+    }
+    if (!formData.summary.am?.trim() && !formData.content.am?.trim()) {
+      warnings.push("No አማርኛ content provided");
+    }
+    if (!formData.summary.en?.trim() && !formData.content.en?.trim()) {
+      warnings.push("No English content provided");
+    }
+    
+    if (!formData.image?.trim()) {
+      warnings.push("No cover image selected");
+    }
+    
+    return warnings;
+  };
 
+  const handleSubmit = async (targetStatus) => {
     const isValid = validateForm(targetStatus);
     if (!isValid) {
-      setIsSubmitting(false);
-      toast.error("Please enter an article headline.");
+      toast.error("Please fix the errors before saving.");
+      // Scroll to first error
+      const firstError = document.querySelector('[class*="border-rose"]');
+      firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
+
+    // Show confirmation for publish
+    if (targetStatus === "published") {
+      const warnings = getPublishWarnings();
+      setPublishWarnings(warnings);
+      setShowPublishDialog(true);
+      return;
+    }
+
+    // Save draft directly
+    await submitForm(targetStatus);
+  };
+
+  const submitForm = async (targetStatus) => {
+    setIsSubmitting(true);
+    setShowPublishDialog(false);
 
     try {
       const tagsArray = typeof formData.tags === "string"
@@ -124,7 +178,8 @@ export default function CreateNewsPage() {
         en: formData.content.en?.trim() || primaryContent,
       };
 
-      newsService.create({
+      // Sanitize all user input before submission
+      const cleanData = sanitizeFormData({
         ...formData,
         title: finalTitle,
         summary: finalSummary,
@@ -134,15 +189,17 @@ export default function CreateNewsPage() {
         status: targetStatus,
       });
 
+      newsService.create(cleanData);
+
       toast.success(
         targetStatus === "published"
-          ? "News article created and published successfully!"
-          : "News article saved as draft."
+          ? "✅ News article published successfully!"
+          : "📝 News article saved as draft."
       );
       router.push("/admin/dashboard/news");
     } catch (err) {
       console.error("Create news error:", err);
-      toast.error("Failed to create news item. Please try again.");
+      toast.error("❌ Failed to create news item. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -190,33 +247,36 @@ export default function CreateNewsPage() {
         {/* Multilingual Fields */}
         <div className="space-y-5">
           <TextInput
-            label={`Article Title (${activeLang.toUpperCase()})`}
+            label={`Article Title (${activeLang === "om" ? "Afan Oromo" : activeLang === "am" ? "አማርኛ" : "English"})`}
             required={activeLang === "om"}
             value={formData.title[activeLang]}
             onChange={(v) => handleFieldChange("title", activeLang, v)}
             onBlur={() => handleBlur("title", activeLang)}
-            error={errors[`title_${activeLang}`]}
-            placeholder={`Enter news headline in ${activeLang === "om" ? "Afaan Oromoo" : activeLang === "am" ? "Amharic" : "English"}...`}
+            error={errors[`title_${activeLang}`] || errors[activeLang]}
+            placeholder={`Enter news headline in ${activeLang === "om" ? "Afan Oromo" : activeLang === "am" ? "Amharic" : "English"}...`}
+            helpText={activeLang === "om" ? "Required for all news articles" : "Recommended for multilingual audience"}
           />
 
           <TextAreaInput
-            label={`Summary / Lead Paragraph (${activeLang.toUpperCase()})`}
-            rows={2}
+            label={`Summary / Lead Paragraph (${activeLang === "om" ? "Afan Oromo" : activeLang === "am" ? "አማርኛ" : "English"})`}
+            rows={3}
             value={formData.summary[activeLang]}
             onChange={(v) => handleFieldChange("summary", activeLang, v)}
             onBlur={() => handleBlur("summary", activeLang)}
             error={errors[`summary_${activeLang}`]}
-            placeholder="Brief introductory summary..."
+            placeholder="Brief introductory summary (2-3 sentences)..."
+            helpText="This appears in news listings and social media previews"
           />
 
           <TextAreaInput
-            label={`Full Article Content (${activeLang.toUpperCase()})`}
-            rows={6}
+            label={`Full Article Content (${activeLang === "om" ? "Afan Oromo" : activeLang === "am" ? "አማርኛ" : "English"})`}
+            rows={8}
             value={formData.content[activeLang]}
             onChange={(v) => handleFieldChange("content", activeLang, v)}
             onBlur={() => handleBlur("content", activeLang)}
             error={errors[`content_${activeLang}`]}
             placeholder="Complete news story body text..."
+            helpText="Main article content - supports basic formatting"
           />
         </div>
 
@@ -288,24 +348,34 @@ export default function CreateNewsPage() {
           <button
             type="button"
             disabled={isSubmitting}
-            onClick={(e) => handleSubmit(e, "draft")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-200 transition disabled:opacity-50"
+            onClick={() => handleSubmit("draft")}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="h-4 w-4" />
-            <span>Save as Draft</span>
+            <span>{isSubmitting ? "Saving..." : "Save as Draft"}</span>
           </button>
 
           <button
             type="button"
             disabled={isSubmitting}
-            onClick={(e) => handleSubmit(e, "published")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition disabled:opacity-50"
+            onClick={() => handleSubmit("published")}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Send className="h-4 w-4 text-amber-400" />
+            <Send className="h-4 w-4" />
             <span>{isSubmitting ? "Publishing..." : "Publish News"}</span>
           </button>
         </div>
       </form>
+
+      {/* Publish Confirmation Dialog */}
+      <PublishConfirmDialog
+        isOpen={showPublishDialog}
+        onClose={() => setShowPublishDialog(false)}
+        onConfirm={() => submitForm("published")}
+        title="Publish News Article?"
+        warnings={publishWarnings}
+        isLoading={isSubmitting}
+      />
     </div>
   );
 }
