@@ -1,0 +1,28 @@
+{
+  "name": "mesob",
+  "version": "1.0.0",
+  "description": "Frontend-only Burayu MESOB official portal built with Next.js App Router.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lucide-react": "^1.33.0",
+    "mysql2": "^3.24.5",
+    "next": "^16.3.2",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.2",
+    "postcss": "^8.5.26",
+    "tailwindcss": "^4.3.3"
+  }
+}
