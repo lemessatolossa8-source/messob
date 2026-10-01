@@ -38,19 +38,10 @@ export default function AdminDashboardOverviewPage() {
 
   const [recentNews, setRecentNews] = useState([]);
 
-  // Show loading state while checking authentication
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-3">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-emerald-600 border-r-transparent"></div>
-          <p className="text-sm text-slate-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
   useEffect(() => {
+    // Only load data after authentication is confirmed
+    if (authLoading) return;
+
     const loadStats = async () => {
       // Sync stats from storageStore (all except projects)
       const baseStats = siteService.getStats();
@@ -75,7 +66,19 @@ export default function AdminDashboardOverviewPage() {
     loadStats();
     const unsubscribe = siteService.subscribe(loadStats);
     return () => unsubscribe();
-  }, []);
+  }, [authLoading]);
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-3">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-emerald-600 border-r-transparent"></div>
+          <p className="text-sm text-slate-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   const statCards = [
     { label: "Total Projects", value: stats.totalProjects, icon: Building2, color: "bg-emerald-50 text-emerald-800 border-emerald-200", href: "/admin/dashboard/projects" },
