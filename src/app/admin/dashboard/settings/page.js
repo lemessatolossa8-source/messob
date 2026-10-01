@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/src/context/LanguageContext";
 import { useToast } from "@/src/context/ToastContext";
+import settingService from "@/src/services/settingService";
 
 export default function AdminSettingsPage() {
   const { language, setLanguage, languages } = useLanguage();
@@ -90,30 +91,57 @@ export default function AdminSettingsPage() {
   });
 
   const [activeTab, setActiveTab] = useState("general");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // Load settings from localStorage on mount
+  // Load settings from backend on mount
   useEffect(() => {
-    const saved = localStorage.getItem("mesob_admin_settings");
-    if (saved) {
-      try {
-        setSettings(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to load settings:", e);
-      }
-    }
+    loadSettings();
   }, []);
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    // Save to localStorage (in production, this would be an API call)
-    localStorage.setItem("mesob_admin_settings", JSON.stringify(settings));
-    toast.success("Settings saved successfully");
+  const loadSettings = async () => {
+    try {
+      setLoading(true);
+      const data = await settingService.getAll();
+      
+      // Merge with defaults
+      setSettings(prev => ({
+        ...prev,
+        ...data,
+      }));
+    } catch (error) {
+      console.error("Failed to load settings:", error);
+      toast.error("Failed to load settings. Using defaults.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReset = () => {
-    if (confirm("Reset all settings to default values?")) {
-      localStorage.removeItem("mesob_admin_settings");
-      window.location.reload();
+  const handleSave = async (e) => {
+    e.preventDefault();
+    
+    try {
+      setSaving(true);
+      await settingService.update(settings);
+      toast.success("Settings saved successfully");
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      toast.error(error.message || "Failed to save settings");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReset = async () => {
+    if (confirm("Reset all settings to default values? This will reload the page.")) {
+      try {
+        await settingService.reset();
+        toast.success("Settings reset successfully. Reloading...");
+        setTimeout(() => window.location.reload(), 1000);
+      } catch (error) {
+        console.error("Failed to reset settings:", error);
+        toast.error(error.message || "Failed to reset settings");
+      }
     }
   };
 
@@ -452,10 +480,11 @@ export default function AdminSettingsPage() {
 
           <button
             type="submit"
-            className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition"
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save className="h-4 w-4" />
-            Save Settings
+            <Save className={`h-4 w-4 ${saving ? 'animate-spin' : ''}`} />
+            {saving ? "Saving..." : "Save Settings"}
           </button>
         </div>
       </form>

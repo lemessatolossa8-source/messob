@@ -17,6 +17,7 @@ const branchRoutes = require("./routes/branchRoutes");
 const contactRoutes = require("./routes/contactRoutes");
 const userRoutes = require("./routes/userRoutes");
 const projectRoutes = require("./routes/projectRoutes");
+const settingRoutes = require("./routes/settingRoutes");
 
 // Central error handler
 const errorHandler = require("./middleware/errorMiddleware");
@@ -104,6 +105,7 @@ app.use("/api/branches", branchRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/settings", settingRoutes);
 
 // 8. 404 handler for unknown routes
 app.use((req, res) => {
