@@ -109,33 +109,57 @@ export default function EditNewsPage() {
     try {
       setIsSubmitting(true);
 
-      // Create news object with multilingual structure
-      const newsData = {
-        title: {
-          en: formData.title,
-          am: formData.title,
-          om: formData.title,
-        },
-        summary: {
-          en: formData.description.substring(0, 200),
-          am: formData.description.substring(0, 200),
-          om: formData.description.substring(0, 200),
-        },
-        content: {
-          en: formData.description,
-          am: formData.description,
-          om: formData.description,
-        },
-        category: "Community",
-        date: formData.date,
-        author: "Burayu Communications Desk",
-        image: currentImage,
-        tags: "Burayu, News",
-        status: "published",
-      };
+      const formDataToSend = new FormData();
+      
+      // Add multilingual fields as JSON strings
+      formDataToSend.append("title", JSON.stringify({
+        en: formData.title,
+        am: formData.title,
+        om: formData.title,
+      }));
+      
+      formDataToSend.append("summary", JSON.stringify({
+        en: formData.description.substring(0, 200),
+        am: formData.description.substring(0, 200),
+        om: formData.description.substring(0, 200),
+      }));
+      
+      formDataToSend.append("content", JSON.stringify({
+        en: formData.description,
+        am: formData.description,
+        om: formData.description,
+      }));
+      
+      formDataToSend.append("category", "Community");
+      formDataToSend.append("date", formData.date);
+      formDataToSend.append("author", "Burayu Communications Desk");
+      formDataToSend.append("tags", "Burayu, News");
+      formDataToSend.append("status", "published");
+      
+      // Add image file if selected (new upload)
+      if (formData.photo) {
+        formDataToSend.append("image", formData.photo);
+      }
+      // Keep current image if no new photo selected
+      else if (currentImage) {
+        formDataToSend.append("existingImage", currentImage);
+      }
 
-      // Update without image for now (image upload can be added later)
-      await newsService.update(params.id, newsData);
+      // Use fetch directly for FormData
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:5000/api/news/${params.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formDataToSend,
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to update news");
+      }
 
       toast.success("News updated successfully");
       router.push("/admin/dashboard/news");
