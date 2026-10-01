@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { newsService } from "@/src/services";
+import { newsApiService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
 import { useRequireAuth } from "@/src/lib/hooks/useAuth";
 
@@ -106,21 +106,8 @@ export default function CreateNewsPage() {
         formDataToSend.append("image", formData.photo);
       }
 
-      // Use fetch directly for FormData
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/news", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formDataToSend,
-      });
-
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to create news");
-      }
+      // Use the API service with FormData support
+      await newsApiService.createWithImage(formDataToSend);
       
       toast.success("News created successfully");
       router.push("/admin/dashboard/news");

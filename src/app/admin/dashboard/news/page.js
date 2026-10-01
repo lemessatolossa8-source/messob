@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import DataTable from "@/components/admin/data-table";
 import ConfirmDialog from "@/components/admin/confirm-dialog";
-import { newsService } from "@/src/services";
+import { newsApiService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
 import { getLocalizedText } from "@/src/i18n";
 
@@ -18,45 +18,60 @@ export default function AdminNewsListPage() {
 
   const toast = useToast();
 
-  const loadNews = () => {
-    const res = newsService.getAll({
-      search,
-      category,
-      status,
-      page,
-      limit: 8,
-    });
-    setData(res);
+  const loadNews = async () => {
+    try {
+      const res = await newsApiService.getAll({
+        search,
+        category: category === "all" ? "" : category,
+        status: status === "all" ? "" : status,
+        page,
+        limit: 8,
+      });
+      setData(res.data);
+    } catch (error) {
+      console.error("Error loading news:", error);
+      toast.error("Failed to load news");
+    }
   };
 
   useEffect(() => {
     loadNews();
-    const unsub = newsService.subscribe(loadNews);
-    return () => unsub();
   }, [search, category, status, page]);
 
-  const handleTogglePublish = (item) => {
-    if (item.status === "published") {
-      newsService.unpublish(item.id);
-      toast.info("News item moved to draft.");
-    } else {
-      // Validate multilingual title
-      if (!item.title?.om || !item.title?.am || !item.title?.en) {
+  const handleTogglePublish = async (item) => {
+    try {
+      const newStatus = item.status === "published" ? "draft" : "published";
+      
+      // Validate multilingual title before publishing
+      if (newStatus === "published" && (!item.title?.om || !item.title?.am || !item.title?.en)) {
         toast.warning("Title in all 3 languages (OM, AM, EN) is recommended before publishing.");
       }
-      newsService.publish(item.id);
-      toast.success("News item published successfully!");
+      
+      await newsApiService.update(item.id, { status: newStatus });
+      
+      if (newStatus === "published") {
+        toast.success("News item published successfully!");
+      } else {
+        toast.info("News item moved to draft.");
+      }
+      
+      loadNews();
+    } catch (error) {
+      console.error("Error toggling publish status:", error);
+      toast.error("Failed to update news status");
     }
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
     setIsDeleting(true);
     try {
-      newsService.delete(deleteTarget.id);
+      await newsApiService.remove(deleteTarget.id);
       toast.success("News item deleted successfully.");
       setDeleteTarget(null);
-    } catch {
+      loadNews();
+    } catch (error) {
+      console.error("Error deleting news:", error);
       toast.error("Failed to delete news item.");
     } finally {
       setIsDeleting(false);

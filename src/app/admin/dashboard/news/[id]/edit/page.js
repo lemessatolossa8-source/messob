@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { newsService } from "@/src/services";
+import { newsApiService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
 import { useRequireAuth } from "@/src/lib/hooks/useAuth";
 
@@ -34,7 +34,8 @@ export default function EditNewsPage() {
   const loadNews = async () => {
     try {
       setIsLoading(true);
-      const news = await newsService.getById(params.id);
+      const response = await newsApiService.getById(params.id);
+      const news = response.data;
       
       // Extract data from multilingual structure
       const title = news.title?.en || news.title?.am || news.title?.om || "";
@@ -145,21 +146,8 @@ export default function EditNewsPage() {
         formDataToSend.append("existingImage", currentImage);
       }
 
-      // Use fetch directly for FormData
-      const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5000/api/news/${params.id}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formDataToSend,
-      });
-
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to update news");
-      }
+      // Use the API service with FormData support
+      await newsApiService.updateWithImage(params.id, formDataToSend);
 
       toast.success("News updated successfully");
       router.push("/admin/dashboard/news");
