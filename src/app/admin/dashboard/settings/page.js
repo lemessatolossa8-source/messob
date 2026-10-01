@@ -52,9 +52,23 @@ export default function AdminSettingsPage() {
     // E-Service Settings
     eService: {
       enabled: true,
-      url: "https://eservice.shaggarcity.et/",
-      displayInHeader: true,
-      displayInFooter: false
+      eLand: {
+        enabled: true,
+        url: "https://eland.shaggarcity.et/"
+      },
+      eConference: {
+        enabled: true,
+        url: "https://econference.shaggarcity.et/"
+      },
+      eLibrary: {
+        enabled: false,
+        url: "",
+        comingSoon: true
+      },
+      eTrade: {
+        enabled: true,
+        url: "https://etrade.gov.et/"
+      }
     },
 
     // Language Settings
@@ -249,16 +263,115 @@ export default function AdminSettingsPage() {
                   onChange={(e) => updateSetting('eService.enabled', e.target.checked)}
                   className="rounded border-slate-300 text-emerald-600"
                 />
-                <span className="text-xs font-bold text-slate-700">Enable E-Service Button</span>
+                <span className="text-xs font-bold text-slate-700">Enable E-Service</span>
               </label>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-2">E-Service URL</label>
+              {/* E-Land */}
+              <div className="rounded-xl border border-slate-200 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-900">E-Land</label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={settings.eService.eLand.enabled}
+                      onChange={(e) => updateSetting('eService.eLand.enabled', e.target.checked)}
+                      className="rounded border-slate-300 text-emerald-600"
+                    />
+                    <span className="text-xs text-slate-600">Enabled</span>
+                  </label>
+                </div>
                 <input
                   type="url"
-                  value={settings.eService.url}
-                  onChange={(e) => updateSetting('eService.url', e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-900"
+                  value={settings.eService.eLand.url}
+                  onChange={(e) => updateSetting('eService.eLand.url', e.target.value)}
+                  placeholder="https://eland.shaggarcity.et/"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900"
+                />
+              </div>
+
+              {/* E-Conference */}
+              <div className="rounded-xl border border-slate-200 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-900">E-Conference</label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={settings.eService.eConference.enabled}
+                      onChange={(e) => updateSetting('eService.eConference.enabled', e.target.checked)}
+                      className="rounded border-slate-300 text-emerald-600"
+                    />
+                    <span className="text-xs text-slate-600">Enabled</span>
+                  </label>
+                </div>
+                <input
+                  type="url"
+                  value={settings.eService.eConference.url}
+                  onChange={(e) => updateSetting('eService.eConference.url', e.target.value)}
+                  placeholder="https://econference.shaggarcity.et/"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900"
+                />
+              </div>
+
+              {/* E-Library */}
+              <div className="rounded-xl border border-slate-200 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-bold text-slate-900">E-Library</label>
+                    {settings.eService.eLibrary.comingSoon && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                        Coming Soon
+                      </span>
+                    )}
+                  </div>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={settings.eService.eLibrary.enabled}
+                      onChange={(e) => updateSetting('eService.eLibrary.enabled', e.target.checked)}
+                      className="rounded border-slate-300 text-emerald-600"
+                    />
+                    <span className="text-xs text-slate-600">Enabled</span>
+                  </label>
+                </div>
+                <input
+                  type="url"
+                  value={settings.eService.eLibrary.url}
+                  onChange={(e) => updateSetting('eService.eLibrary.url', e.target.value)}
+                  placeholder="Coming Soon / Enter URL when available"
+                  disabled={settings.eService.eLibrary.comingSoon}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 disabled:bg-slate-50 disabled:text-slate-400"
+                />
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={settings.eService.eLibrary.comingSoon}
+                    onChange={(e) => updateSetting('eService.eLibrary.comingSoon', e.target.checked)}
+                    className="rounded border-slate-300 text-amber-600"
+                  />
+                  <span className="text-xs text-slate-600">Mark as "Coming Soon"</span>
+                </label>
+              </div>
+
+              {/* E-Trade */}
+              <div className="rounded-xl border border-slate-200 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-900">E-Trade</label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={settings.eService.eTrade.enabled}
+                      onChange={(e) => updateSetting('eService.eTrade.enabled', e.target.checked)}
+                      className="rounded border-slate-300 text-emerald-600"
+                    />
+                    <span className="text-xs text-slate-600">Enabled</span>
+                  </label>
+                </div>
+                <input
+                  type="url"
+                  value={settings.eService.eTrade.url}
+                  onChange={(e) => updateSetting('eService.eTrade.url', e.target.value)}
+                  placeholder="https://etrade.gov.et/"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900"
                 />
               </div>
             </div>
