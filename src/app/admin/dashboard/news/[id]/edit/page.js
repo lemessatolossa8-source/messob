@@ -1,337 +1,287 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Save, Send, Trash2 } from "lucide-react";
-import LanguageTabs from "@/components/admin/language-tabs";
-import { TextInput, TextAreaInput, SelectInput, ImagePickerInput } from "@/components/admin/form-controls";
-import ConfirmDialog from "@/components/admin/confirm-dialog";
+import { ArrowLeft } from "lucide-react";
 import { newsService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
-import { validateImage, validateRequired } from "@/src/lib/validation";
+import { useRequireAuth } from "@/src/lib/hooks/useAuth";
 
-export default function EditNewsPage({ params }) {
+export default function EditNewsPage() {
   const router = useRouter();
-  const routeParams = useParams();
-  const id = routeParams?.id;
+  const params = useParams();
   const toast = useToast();
+  const { isLoading: authLoading } = useRequireAuth();
 
-  const [activeLang, setActiveLang] = useState("am");
-  const [formData, setFormData] = useState(null);
-  const [errors, setErrors] = useState({});
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    date: "",
+    photo: null,
+  });
+
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState("");
+  const [currentImage, setCurrentImage] = useState("");
 
   useEffect(() => {
-    if (id) {
-      const item = newsService.getById(id);
-      if (item) {
-        setFormData({
-          title: typeof item.title === "object" ? item.title : { om: item.title, am: "", en: "" },
-          summary: typeof item.summary === "object" ? item.summary : { om: item.summary || item.description || "", am: "", en: "" },
-          content: typeof item.content === "object" ? item.content : { om: item.content || "", am: "", en: "" },
-          category: item.category || "Community",
-          date: item.date || new Date().toISOString().split("T")[0],
-          author: item.author || "Burayu Communications Desk",
-          image: item.image || "",
-          tags: Array.isArray(item.tags) ? item.tags.join(", ") : (item.tags || ""),
-          status: item.status || "published",
-        });
-      } else {
-        toast.error("News item not found.");
-        router.push("/admin/dashboard/news");
-      }
+    if (!authLoading) {
+      loadNews();
     }
-  }, [id, router, toast]);
+  }, [authLoading]);
 
-  if (!formData) {
+  const loadNews = async () => {
+    try {
+      setIsLoading(true);
+      const news = await newsService.getById(params.id);
+      
+      // Extract data from multilingual structure
+      const title = news.title?.en || news.title?.am || news.title?.om || "";
+      const description = news.content?.en || news.content?.am || news.content?.om || "";
+      
+      setFormData({
+        title,
+        description,
+        date: news.date || "",
+        photo: null,
+      });
+      
+      setCurrentImage(news.image || "");
+    } catch (error) {
+      console.error("Error loading news:", error);
+      toast.error("Failed to load news");
+      router.push("/admin/dashboard/news");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (authLoading || isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
-          <span>Loading news item...</span>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-3">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-emerald-600 border-r-transparent"></div>
+          <p className="text-sm text-slate-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  const handleFieldChange = (field, lang, value) => {
-    if (lang) {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: {
-          ...prev[field],
-          [lang]: value,
-        },
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-    }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-    const errorKey = lang ? `${field}_${lang}` : field;
-    if (errors[errorKey]) {
-      setErrors((prev) => {
-        const copy = { ...prev };
-        delete copy[errorKey];
-        return copy;
-      });
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        photo: file,
+      }));
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const validateForm = (targetStatus) => {
-    const newErrors = {};
-
-    const hasAnyTitle = !!(formData.title.om?.trim() || formData.title.am?.trim() || formData.title.en?.trim());
-    if (!hasAnyTitle) {
-      newErrors.title_om = "Please enter an article title in at least one language.";
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.title.trim()) {
+      toast.error("Title is required");
+      return;
     }
 
-    if (!formData.category) {
-      newErrors.category = "Category is required.";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e, targetStatus) => {
-    if (e) e.preventDefault();
-    setIsSubmitting(true);
-
-    const isValid = validateForm(targetStatus);
-    if (!isValid) {
-      setIsSubmitting(false);
-      toast.error("Please enter an article headline.");
+    if (!formData.description.trim()) {
+      toast.error("Description is required");
       return;
     }
 
     try {
-      const tagsArray = typeof formData.tags === "string"
-        ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean)
-        : formData.tags;
+      setIsSubmitting(true);
 
-      const primaryTitle = formData.title.om?.trim() || formData.title.en?.trim() || formData.title.am?.trim();
-      const primarySummary = formData.summary.om?.trim() || formData.summary.en?.trim() || formData.summary.am?.trim() || "";
-      const primaryContent = formData.content.om?.trim() || formData.content.en?.trim() || formData.content.am?.trim() || "";
-
-      const finalTitle = {
-        om: formData.title.om?.trim() || primaryTitle,
-        am: formData.title.am?.trim() || primaryTitle,
-        en: formData.title.en?.trim() || primaryTitle,
+      // Create news object with multilingual structure
+      const newsData = {
+        title: {
+          en: formData.title,
+          am: formData.title,
+          om: formData.title,
+        },
+        summary: {
+          en: formData.description.substring(0, 200),
+          am: formData.description.substring(0, 200),
+          om: formData.description.substring(0, 200),
+        },
+        content: {
+          en: formData.description,
+          am: formData.description,
+          om: formData.description,
+        },
+        category: "Community",
+        date: formData.date,
+        author: "Burayu Communications Desk",
+        image: currentImage,
+        tags: "Burayu, News",
+        status: "published",
       };
 
-      const finalSummary = {
-        om: formData.summary.om?.trim() || primarySummary,
-        am: formData.summary.am?.trim() || primarySummary,
-        en: formData.summary.en?.trim() || primarySummary,
-      };
+      // Handle image upload if new photo selected
+      if (formData.photo) {
+        const formDataToSend = new FormData();
+        formDataToSend.append("image", formData.photo);
+        formDataToSend.append("data", JSON.stringify(newsData));
 
-      const finalContent = {
-        om: formData.content.om?.trim() || primaryContent,
-        am: formData.content.am?.trim() || primaryContent,
-        en: formData.content.en?.trim() || primaryContent,
-      };
+        const response = await fetch(`http://localhost:5000/api/news/${params.id}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: formDataToSend,
+        });
 
-      newsService.update(id, {
-        ...formData,
-        title: finalTitle,
-        summary: finalSummary,
-        content: finalContent,
-        image: formData.image || "",
-        tags: tagsArray,
-        status: targetStatus,
-      });
+        if (!response.ok) {
+          throw new Error("Failed to update news");
+        }
+      } else {
+        await newsService.update(params.id, newsData);
+      }
 
-      toast.success("News article updated successfully!");
+      toast.success("News updated successfully");
       router.push("/admin/dashboard/news");
-    } catch (err) {
-      console.error("Update news error:", err);
-      toast.error("Failed to update news item.");
+    } catch (error) {
+      console.error("Error updating news:", error);
+      toast.error(error.message || "Failed to update news");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = () => {
-    try {
-      newsService.delete(id);
-      toast.success("News item deleted successfully.");
-      router.push("/admin/dashboard/news");
-    } catch {
-      toast.error("Failed to delete news item.");
-    }
-  };
-
-  const langStatus = {
-    om: !!formData.title.om?.trim(),
-    am: !!formData.title.am?.trim(),
-    en: !!formData.title.en?.trim(),
-  };
-
-  const tabErrors = {
-    om: errors.title_om || errors.summary_om || errors.content_om,
-    am: errors.title_am || errors.summary_am || errors.content_am,
-    en: errors.title_en || errors.summary_en || errors.content_en,
-  };
-
   return (
     <div className="space-y-6 max-w-4xl">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link
-            href="/admin/dashboard/news"
-            className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50 transition"
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center justify-center h-9 w-9 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
           >
             <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h2 className="text-xl font-extrabold text-slate-900">Edit News Article</h2>
-            <p className="text-xs text-slate-500">Update multilingual translations and publication status</p>
-          </div>
+          </button>
+          <h1 className="text-2xl font-bold text-slate-900">Edit News</h1>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setDeleteModalOpen(true)}
-          className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition inline-flex items-center gap-1.5"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          <span>Delete</span>
-        </button>
       </div>
 
-      <form className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-        <LanguageTabs
-          activeTab={activeLang}
-          onTabChange={setActiveLang}
-          status={langStatus}
-          errors={tabErrors}
-        />
-
-        <div className="space-y-5">
-          <TextInput
-            label={`Article Title (${activeLang.toUpperCase()})`}
-            required={activeLang === "om"}
-            value={formData.title[activeLang]}
-            onChange={(v) => handleFieldChange("title", activeLang, v)}
-            error={errors[`title_${activeLang}`]}
-            placeholder="Headline..."
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm space-y-6">
+        {/* Title */}
+        <div>
+          <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-2">
+            Title
+          </label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            required
+            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
+        </div>
 
-          <TextAreaInput
-            label={`Summary / Lead (${activeLang.toUpperCase()})`}
-            rows={2}
-            value={formData.summary[activeLang]}
-            onChange={(v) => handleFieldChange("summary", activeLang, v)}
-            error={errors[`summary_${activeLang}`]}
-            placeholder="Summary..."
-          />
-
-          <TextAreaInput
-            label={`Full Content (${activeLang.toUpperCase()})`}
+        {/* Description */}
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium text-slate-700 mb-2">
+            Description
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            required
             rows={6}
-            value={formData.content[activeLang]}
-            onChange={(v) => handleFieldChange("content", activeLang, v)}
-            error={errors[`content_${activeLang}`]}
-            placeholder="Full story text..."
+            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
-        <div className="border-t border-slate-100 pt-6 space-y-5">
-          <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-            Publishing Settings & Metadata
-          </h3>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SelectInput
-              label="Category"
-              required
-              value={formData.category}
-              onChange={(v) => handleFieldChange("category", null, v)}
-              error={errors.category}
-              options={[
-                { value: "Community", label: "Community" },
-                { value: "Infrastructure", label: "Infrastructure" },
-                { value: "Urban Planning", label: "Urban Planning" },
-                { value: "Economic Development", label: "Economic Development" },
-                { value: "Digital Services", label: "Digital Services" },
-                { value: "Investment", label: "Investment" },
-                { value: "Commerce", label: "Commerce" },
-              ]}
-            />
-
-            <TextInput
-              label="Author / Bureau Desk"
-              value={formData.author}
-              onChange={(v) => handleFieldChange("author", null, v)}
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput
-              label="Published Date"
-              type="date"
-              value={formData.date}
-              onChange={(v) => handleFieldChange("date", null, v)}
-            />
-
-            <TextInput
-              label="Tags"
-              value={formData.tags}
-              onChange={(v) => handleFieldChange("tags", null, v)}
-            />
-          </div>
-
-          <ImagePickerInput
-            label="Cover Photography"
-            value={formData.image}
-            onChange={(v) => handleFieldChange("image", null, v)}
-            error={errors.image}
+        {/* Date */}
+        <div>
+          <label htmlFor="date" className="block text-sm font-medium text-slate-700 mb-2">
+            Date
+          </label>
+          <input
+            type="date"
+            id="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+            required
+            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
-        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-slate-100 pt-6">
-          <Link
-            href="/admin/dashboard/news"
-            className="w-full sm:w-auto rounded-full border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
-          >
-            Cancel
-          </Link>
+        {/* Current Photo */}
+        {currentImage && !photoPreview && (
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Current Photo
+            </label>
+            <img
+              src={currentImage}
+              alt="Current"
+              className="h-48 w-auto rounded-lg border border-slate-200 object-cover"
+            />
+          </div>
+        )}
 
-          <button
-            type="button"
-            disabled={isSubmitting}
-            onClick={(e) => handleSubmit(e, "draft")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-200 transition"
-          >
-            <Save className="h-4 w-4" />
-            <span>Save as Draft</span>
-          </button>
+        {/* Photo */}
+        <div>
+          <label htmlFor="photo" className="block text-sm font-medium text-slate-700 mb-2">
+            {currentImage ? "Change Photo" : "Photo"}
+          </label>
+          <input
+            type="file"
+            id="photo"
+            name="photo"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-1.5 file:text-xs file:font-semibold file:text-blue-700 hover:file:bg-blue-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          
+          {/* New Photo Preview */}
+          {photoPreview && (
+            <div className="mt-3">
+              <img
+                src={photoPreview}
+                alt="New Preview"
+                className="h-48 w-auto rounded-lg border border-slate-200 object-cover"
+              />
+            </div>
+          )}
+        </div>
 
+        {/* Submit Button */}
+        <div className="flex justify-start pt-4">
           <button
-            type="button"
+            type="submit"
             disabled={isSubmitting}
-            onClick={(e) => handleSubmit(e, "published")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition"
+            className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
-            <Send className="h-4 w-4 text-amber-400" />
-            <span>{isSubmitting ? "Updating..." : "Update & Publish"}</span>
+            {isSubmitting ? "Updating..." : "Update"}
           </button>
         </div>
       </form>
-
-      <ConfirmDialog
-        isOpen={deleteModalOpen}
-        title="Delete News Article"
-        message="Are you sure you want to permanently delete this news story?"
-        itemName={formData?.title?.om || formData?.title?.en || ""}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteModalOpen(false)}
-      />
     </div>
   );
 }
