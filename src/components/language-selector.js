@@ -70,7 +70,7 @@ export default function LanguageSelector({ variant = "header", className = "" })
       <button
         type="button"
         onClick={() => setDropdownOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase text-white shadow-xs transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+        className="flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
         aria-expanded={dropdownOpen}
         aria-haspopup="true"
       >
@@ -78,7 +78,7 @@ export default function LanguageSelector({ variant = "header", className = "" })
       </button>
 
       {dropdownOpen && (
-        <div className="absolute right-0 mt-2 w-28 origin-top-right rounded-xl border border-slate-200 bg-white p-1 shadow-xl ring-1 ring-black/5 z-50 animate-in fade-in zoom-in-95">
+        <div className="absolute right-0 mt-2 w-44 origin-top-right rounded-xl border border-slate-200 bg-white p-1 shadow-xl ring-1 ring-black/5 z-50 animate-in fade-in zoom-in-95">
           {languages.map((lang) => {
             const isActive = language === lang.code;
             return (
@@ -89,9 +89,9 @@ export default function LanguageSelector({ variant = "header", className = "" })
                   setLanguage(lang.code);
                   setDropdownOpen(false);
                 }}
-                className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-xs font-bold uppercase transition ${
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition ${
                   isActive
-                    ? "bg-emerald-50 text-emerald-950 font-extrabold"
+                    ? "bg-emerald-50 text-emerald-950 font-semibold"
                     : "text-slate-700 hover:bg-slate-100"
                 }`}
               >
