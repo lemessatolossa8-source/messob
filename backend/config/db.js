@@ -37,15 +37,30 @@ const connectDB = async () => {
     console.log(`✅ MySQL Connected on ${dbHost}:${dbPort}`);
     console.log(`📦 Database: ${dbName}`);
 
-    // 3. Sync models — only alter schema in development.
-    //    In production, use migrations instead (never auto-alter live schema).
-    if (process.env.NODE_ENV !== "production") {
-      await sequelize.sync({ alter: true });
-      console.log(`🔄 MySQL Models synchronized (alter:true – development only)`);
-    } else {
-      await sequelize.sync();
-      console.log(`🔄 MySQL Models verified (production – no schema alteration)`);
+    // 3. Sync models — create missing tables only, never alter existing ones.
+    await sequelize.sync({ force: false });
+    
+    // Auto-sync missing columns for otps table
+    const OTP = require("../models/OTP");
+    if (OTP && typeof OTP.syncSchema === "function") {
+      await OTP.syncSchema();
     }
+
+    // Ensure title column exists on gallery table
+    try {
+      const [colResults] = await sequelize.query(`
+        SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'gallery' AND COLUMN_NAME = 'title';
+      `);
+      if (colResults.length === 0) {
+        await sequelize.query("ALTER TABLE `gallery` ADD COLUMN `title` JSON NULL;");
+        console.log("➕ Added missing 'title' column to gallery table");
+      }
+    } catch (colErr) {
+      console.warn("Could not check/add gallery title column:", colErr.message);
+    }
+    
+    console.log(`🔄 MySQL Models synchronized`);
   } catch (error) {
     console.error(`❌ MySQL Connection Error: ${error.message}`);
     process.exit(1);

@@ -1,6 +1,8 @@
 const errorHandler = (err, req, res, next) => {
   let statusCode = err.statusCode || 500;
-  let message = err.message || "Internal Server Error";
+  let message = (err && typeof err.message === "string" && err.message.trim() && err.message !== "null")
+    ? err.message
+    : "An unexpected internal server error occurred.";
 
   // Sequelize Unique Constraint Error
   if (err.name === "SequelizeUniqueConstraintError") {

@@ -19,11 +19,11 @@ const News = sequelize.define(
       type: DataTypes.JSON,
       defaultValue: { en: "", am: "", om: "" },
     },
-    content: {
-      type: DataTypes.JSON,
-      defaultValue: { en: "", am: "", om: "" },
-    },
     image: {
+      type: DataTypes.STRING,
+      defaultValue: "",
+    },
+    video: {
       type: DataTypes.STRING,
       defaultValue: "",
     },

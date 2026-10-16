@@ -19,10 +19,6 @@ const Announcement = sequelize.define(
       type: DataTypes.JSON,
       defaultValue: { en: "", am: "", om: "" },
     },
-    content: {
-      type: DataTypes.JSON,
-      defaultValue: { en: "", am: "", om: "" },
-    },
     image: {
       type: DataTypes.STRING,
       defaultValue: "",
@@ -41,6 +37,11 @@ const Announcement = sequelize.define(
     },
     referenceNo: {
       type: DataTypes.STRING,
+    },
+    expiryDate: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      field: "expiry_date",
     },
     authorId: {
       type: DataTypes.INTEGER,
@@ -61,6 +62,8 @@ Announcement.prototype.toJSON = function () {
   const values = { ...this.get() };
   values._id = values.id;
   if (values.authorId) values.author = values.authorId;
+  // Add camelCase alias for frontend compatibility
+  if (values.expiry_date) values.expiryDate = values.expiry_date;
   return values;
 };
 

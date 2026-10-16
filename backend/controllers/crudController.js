@@ -1,4 +1,23 @@
 const { Op, Sequelize } = require("sequelize");
+const path = require("path");
+const fs = require("fs");
+const { autoTranslateModelData } = require("../utils/autoTranslator");
+
+// Safely delete an uploaded file referenced as "/uploads/<filename>"
+const deleteUploadedFile = (imageValue) => {
+  try {
+    if (typeof imageValue !== "string") return;
+    const match = imageValue.match(/^\/?uploads\/([^/\\?#]+)$/i);
+    if (!match) return;
+    const filename = match[1];
+    const backendFilePath = path.join(__dirname, "..", "uploads", filename);
+    if (fs.existsSync(backendFilePath)) fs.unlinkSync(backendFilePath);
+    const frontendFilePath = path.join(__dirname, "..", "..", "frontend", "public", "uploads", filename);
+    if (fs.existsSync(frontendFilePath)) fs.unlinkSync(frontendFilePath);
+  } catch (err) {
+    console.warn(`Failed to remove upload file for "${imageValue}":`, err.message);
+  }
+};
 
 /**
  * Generic CRUD controller factory for Sequelize models.
@@ -11,15 +30,20 @@ const createCRUDController = (Model, resourceName = "item") => {
     const { status, category, search, page = 1, limit = 20 } = req.query;
     const where = {};
 
+    // Only apply status filter if the model has a 'status' column
+    const hasStatusCol = !!Model.rawAttributes?.status;
+
     // Public access: only published items
     const isAuth = !!req.user;
-    if (!isAuth) {
-      where.status = "published";
-    } else if (status && status !== "all") {
-      where.status = status;
+    if (hasStatusCol) {
+      if (!isAuth) {
+        where.status = "published";
+      } else if (status && status !== "all") {
+        where.status = status;
+      }
     }
 
-    if (category && category !== "All") {
+    if (category && category.toLowerCase() !== "all") {
       where.category = category;
     }
 
@@ -43,6 +67,13 @@ const createCRUDController = (Model, resourceName = "item") => {
 
     const items = rows.map((item) => item.toJSON());
 
+    // Public responses can be cached safely for 60s; authenticated admin responses are strictly private no-cache
+    if (!isAuth) {
+      res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+    } else {
+      res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+    }
+
     res.json({
       success: true,
       data: {
@@ -61,6 +92,13 @@ const createCRUDController = (Model, resourceName = "item") => {
     if (!item) {
       return res.status(404).json({ success: false, message: `${resourceName} not found` });
     }
+
+    if (!req.user) {
+      res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+    } else {
+      res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+    }
+
     res.json({ success: true, data: item.toJSON() });
   };
 
@@ -68,7 +106,8 @@ const createCRUDController = (Model, resourceName = "item") => {
   // @route  POST /api/<resource>
   // @access Protected (editor or admin)
   const create = async (req, res) => {
-    const payload = { ...req.body };
+    let payload = { ...req.body };
+    payload = await autoTranslateModelData(payload);
     if (req.user) payload.authorId = req.user.id || req.user._id;
 
     const item = await Model.create(payload);
@@ -89,7 +128,9 @@ const createCRUDController = (Model, resourceName = "item") => {
       return res.status(404).json({ success: false, message: `${resourceName} not found` });
     }
 
-    await item.update(req.body);
+    let payload = { ...req.body };
+    payload = await autoTranslateModelData(payload);
+    await item.update(payload);
 
     res.json({
       success: true,
@@ -107,6 +148,7 @@ const createCRUDController = (Model, resourceName = "item") => {
       return res.status(404).json({ success: false, message: `${resourceName} not found` });
     }
     await item.destroy();
+    if (item.image) deleteUploadedFile(item.image);
     res.json({ success: true, message: `${resourceName} deleted successfully` });
   };
 

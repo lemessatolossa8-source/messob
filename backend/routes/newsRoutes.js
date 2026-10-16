@@ -1,17 +1,22 @@
 const express = require("express");
 const router = express.Router();
 const { getAll, getById, create, update, remove } = require("../controllers/newsController");
-const { protect } = require("../middleware/authMiddleware");
+const { protect, optionalAuth } = require("../middleware/authMiddleware");
 const { editorOrAdmin, adminOnly } = require("../middleware/adminMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
-// Public can GET (filtered to published); admins pass optionalAuth to see all
-router.get("/", getAll);
-router.get("/:id", getById);
+// Public can GET (filtered to published); optionalAuth lets admins see all
+router.get("/", optionalAuth, getAll);
+router.get("/:id", optionalAuth, getById);
 
 // Protected - with file upload support
-router.post("/", protect, editorOrAdmin, upload.single("image"), create);
-router.put("/:id", protect, editorOrAdmin, upload.single("image"), update);
+const newsUploads = upload.fields([
+  { name: "image", maxCount: 1 },
+  { name: "video", maxCount: 1 }
+]);
+
+router.post("/", protect, editorOrAdmin, newsUploads, create);
+router.put("/:id", protect, editorOrAdmin, newsUploads, update);
 router.delete("/:id", protect, adminOnly, remove);
 
 module.exports = router;

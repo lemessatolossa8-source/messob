@@ -1,0 +1,255 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Save, Send, Trash2 } from "lucide-react";
+import { ImagePickerInput, SelectInput, TextInput } from "@/components/admin/FormControls";
+import ConfirmDialog from "@/components/admin/ConfirmDialog";
+import { slideService } from "@/src/services";
+import { useToast } from "@/src/context/ToastContext";
+
+export default function EditSlideImagePage() {
+  const router = useRouter();
+  const routeParams = useParams();
+  const id = routeParams?.id;
+  const toast = useToast();
+
+  const [formData, setFormData] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!id) {
+      toast.error("No slide ID provided.");
+      router.push("/admin/dashboard/slide-image");
+      return;
+    }
+    const load = async () => {
+      try {
+        const item = await slideService.getById(id);
+        if (item) {
+          setFormData({
+            image: item.image || "",
+            order: item.order || 1,
+            status: item.status || "published",
+          });
+        } else {
+          toast.error("Slide image not found.");
+          router.push("/admin/dashboard/slide-image");
+        }
+      } catch {
+        toast.error("Failed to load slide.");
+        router.push("/admin/dashboard/slide-image");
+      }
+    };
+    load();
+  }, [id, router, toast]);
+
+  if (!formData) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+          <span>Loading slide image data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  const handleFieldChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[field];
+        return copy;
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.image || !formData.image.trim()) {
+      newErrors.image = "Please upload or provide a slide image URL.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e, targetStatus) => {
+    if (e) e.preventDefault();
+    setIsSubmitting(true);
+
+    const isValid = validateForm();
+    if (!isValid) {
+      setIsSubmitting(false);
+      toast.error("Please fill in required fields.");
+      return;
+    }
+
+    try {
+      await slideService.update(id, {
+        image: formData.image,
+        order: Number(formData.order) || 1,
+        status: targetStatus,
+      });
+
+      toast.success(
+        targetStatus === "published"
+          ? "Slide image updated and published to homepage!"
+          : "Slide image saved as draft."
+      );
+      router.push("/admin/dashboard/slide-image");
+    } catch (err) {
+      console.error("Update slide error:", err);
+      toast.error("Failed to update slide image.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await slideService.delete(id);
+      toast.success("Slide image deleted from carousel.");
+      router.push("/admin/dashboard/slide-image");
+    } catch {
+      toast.error("Failed to delete slide image.");
+    }
+  };
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      {/* Header & Back Link */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/dashboard/slide-image"
+            className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50 transition"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div>
+            <h2 className="text-xl font-extrabold text-[#070707]">Edit Slide Image</h2>
+            <p className="text-xs text-slate-500">
+              Update carousel background image for the homepage hero section
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setDeleteModalOpen(true)}
+          className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-[#FE0002] hover:bg-rose-100 transition inline-flex items-center gap-1.5"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          <span>Delete Slide</span>
+        </button>
+      </div>
+
+      {/* Main Form */}
+      <form className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+        <div className="space-y-5">
+          <ImagePickerInput
+            label="Slide Background Image"
+            value={formData.image}
+            onChange={(v) => handleFieldChange("image", v)}
+            error={errors.image}
+            required
+          />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TextInput
+              label="Display Order (Sequence in Carousel)"
+              type="number"
+              value={formData.order}
+              onChange={(v) => handleFieldChange("order", v)}
+              placeholder="1"
+            />
+
+            <SelectInput
+              label="Publish Status"
+              value={formData.status}
+              onChange={(v) => handleFieldChange("status", v)}
+              options={[
+                { value: "published", label: "Published (Live on Home Page)" },
+                { value: "draft", label: "Draft (Hidden from Public)" },
+              ]}
+            />
+          </div>
+        </div>
+
+        {/* Action Bar */}
+        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-slate-100 pt-6">
+          <Link
+            href="/admin/dashboard/slide-image"
+            className="w-full sm:w-auto rounded-full border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-[#070707] hover:bg-slate-50 transition text-center"
+          >
+            Cancel
+          </Link>
+
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={(e) => handleSubmit(e, "draft")}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-slate-200 transition disabled:opacity-50"
+          >
+            <Save className="h-4 w-4" />
+            <span>Save as Draft</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={(e) => handleSubmit(e, "published")}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition disabled:opacity-50"
+          >
+            <Send className="h-4 w-4 text-amber-400" />
+            <span>{isSubmitting ? "Updating..." : "Update & Publish"}</span>
+          </button>
+        </div>
+      </form>
+
+      {/* Live Preview */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-4">
+          Preview
+        </h3>
+        <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 h-64 flex items-center justify-center">
+          {formData.image ? (
+            <>
+              <img
+                src={formData.image}
+                alt="Slide preview"
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute top-3 right-3">
+                <span className="rounded-full bg-black/60 px-3 py-1 text-[10px] font-bold text-white backdrop-blur-md">
+                  Order #{formData.order}
+                </span>
+              </div>
+            </>
+          ) : (
+            <p className="text-xs text-slate-500">No image selected yet</p>
+          )}
+        </div>
+        <p className="mt-3 text-center text-[10px] text-slate-400">
+          This image will appear in the homepage hero carousel
+        </p>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={deleteModalOpen}
+        title="Delete Slide Image"
+        message="Are you sure you want to delete this slide from the homepage carousel?"
+        itemName={`Slide #${formData?.order}`}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteModalOpen(false)}
+      />
+    </div>
+  );
+}

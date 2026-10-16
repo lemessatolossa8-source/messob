@@ -1,16 +1,23 @@
 const News = require("../models/News");
 const createCRUDController = require("./crudController");
+const { autoTranslateModelData } = require("../utils/autoTranslator");
 
 // Get base CRUD operations
 const baseCRUD = createCRUDController(News, "News");
 
 // Override create to handle file upload
 const create = async (req, res) => {
-  const payload = { ...req.body };
+  let payload = { ...req.body };
+  payload = await autoTranslateModelData(payload);
   
-  // Handle uploaded file
-  if (req.file) {
-    payload.image = `/uploads/${req.file.filename}`;
+  // Handle uploaded files
+  if (req.files) {
+    if (req.files.image && req.files.image[0]) {
+      payload.image = `/uploads/${req.files.image[0].filename}`;
+    }
+    if (req.files.video && req.files.video[0]) {
+      payload.video = `/uploads/${req.files.video[0].filename}`;
+    }
   }
   
   if (req.user) {
@@ -33,15 +40,28 @@ const update = async (req, res) => {
     return res.status(404).json({ success: false, message: "News not found" });
   }
 
-  const payload = { ...req.body };
+  let payload = { ...req.body };
+  payload = await autoTranslateModelData(payload);
   
-  // Handle uploaded file
-  if (req.file) {
-    payload.image = `/uploads/${req.file.filename}`;
-  }
-  // Keep existing image if no new file uploaded
-  else if (req.body.existingImage) {
-    payload.image = req.body.existingImage;
+  // Handle uploaded files
+  if (req.files) {
+    if (req.files.image && req.files.image[0]) {
+      payload.image = `/uploads/${req.files.image[0].filename}`;
+    } else if (req.body.existingImage) {
+      payload.image = req.body.existingImage;
+    }
+
+    if (req.files.video && req.files.video[0]) {
+      payload.video = `/uploads/${req.files.video[0].filename}`;
+    } else if (req.body.existingVideo) {
+      payload.video = req.body.existingVideo;
+    } else if (req.body.video === "") {
+      payload.video = ""; // Allows deleting the video
+    }
+  } else {
+    if (req.body.existingImage) payload.image = req.body.existingImage;
+    if (req.body.existingVideo) payload.video = req.body.existingVideo;
+    if (req.body.video === "") payload.video = "";
   }
 
   await item.update(payload);

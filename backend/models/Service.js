@@ -34,6 +34,11 @@ const Service = sequelize.define(
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
+    floorId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+    },
   },
   {
     timestamps: true,

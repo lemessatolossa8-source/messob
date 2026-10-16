@@ -10,6 +10,7 @@ const { connectDB } = require("./config/db");
 
 // Route files
 const authRoutes = require("./routes/authRoutes");
+const passwordRecoveryRoutes = require("./routes/passwordRecoveryRoutes");
 const newsRoutes = require("./routes/newsRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
@@ -18,6 +19,20 @@ const contactRoutes = require("./routes/contactRoutes");
 const userRoutes = require("./routes/userRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const settingRoutes = require("./routes/settingRoutes");
+const galleryRoutes = require("./routes/galleryRoutes");
+const slideRoutes = require("./routes/slideRoutes");
+const translateRoutes = require("./routes/translateRoutes");
+const statisticRoutes = require("./routes/statisticRoutes");
+const floorRoutes = require("./routes/floorRoutes");
+const { ensureDefaultFloors } = require("./controllers/floorController");
+
+// Ensure models are loaded so Sequelize syncs all tables on startup
+require("./models/Gallery");
+require("./models/Slide");
+require("./models/Setting");
+require("./models/Statistic");
+require("./models/Floor");
+require("./models/FloorService");
 
 // Central error handler
 const errorHandler = require("./middleware/errorMiddleware");
@@ -40,11 +55,17 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV === "development") {
+    // Allow requests with no origin (server-to-server, curl, mobile apps)
+    if (!origin) return callback(null, true);
+    // In development allow all localhost origins
+    if (process.env.NODE_ENV === "development" && (origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1"))) {
       return callback(null, true);
     }
-    return callback(null, true);
+    // In all environments only allow explicitly listed origins
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS: origin '${origin}' is not allowed`));
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -63,20 +84,28 @@ app.use(
 // 4. Global rate limiter – 200 requests per IP per 15 minutes
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: process.env.NODE_ENV === "development" ? 5000 : 200,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Too many requests – please try again later." },
 });
 app.use(globalLimiter);
 
-// Stricter limiter for auth endpoints – 20 attempts per IP per 15 minutes
+// Stricter limiter for auth endpoints – adjusted for development
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: process.env.NODE_ENV === "development" ? 100 : 20, // 100 in dev, 20 in production
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Too many login attempts – please try again later." },
+  skip: (req) => {
+    // Skip rate limiting for localhost in development
+    if (process.env.NODE_ENV === "development") {
+      const ip = req.ip || req.connection.remoteAddress;
+      return ip === "127.0.0.1" || ip === "::1" || ip === "::ffff:127.0.0.1";
+    }
+    return false;
+  },
 });
 
 // 5. Body parser
@@ -98,6 +127,7 @@ app.get("/", (req, res) => {
 
 // 7. API Routes
 app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/auth", authLimiter, passwordRecoveryRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/services", serviceRoutes);
@@ -106,6 +136,11 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/settings", settingRoutes);
+app.use("/api/gallery", galleryRoutes);
+app.use("/api/slides", slideRoutes);
+app.use("/api/translate", translateRoutes);
+app.use("/api/statistics", statisticRoutes);
+app.use("/api/floors", floorRoutes);
 
 // 8. 404 handler for unknown routes
 app.use((req, res) => {
@@ -123,6 +158,7 @@ const PORT = process.env.PORT || 5000;
 
 (async () => {
   await connectDB();
+  await ensureDefaultFloors();
   app.listen(PORT, () => {
     console.log(`🚀 Burayu MESOB API running on http://localhost:${PORT}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);

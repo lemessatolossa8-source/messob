@@ -19,10 +19,6 @@ const Project = sequelize.define(
       type: DataTypes.JSON,
       defaultValue: { en: "", am: "", om: "" },
     },
-    content: {
-      type: DataTypes.JSON,
-      defaultValue: { en: "", am: "", om: "" },
-    },
     image: {
       type: DataTypes.STRING(2000),
       defaultValue: "",

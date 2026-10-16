@@ -1,48 +1,28 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/db");
+const { DEFAULT_SETTINGS } = require("../config/defaultSettings");
 
+/**
+ * Single-row site settings for the one-admin CMS.
+ * id is always 1. Nested CMS fields live in `payload` (MySQL JSON).
+ */
 const Setting = sequelize.define(
   "Setting",
   {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true,
+      autoIncrement: false,
+      defaultValue: 1,
     },
-    key: {
-      type: DataTypes.STRING,
+    payload: {
+      type: DataTypes.JSON,
       allowNull: false,
-      unique: true,
-      comment: "Unique setting key (e.g., 'site_name', 'contact_email')",
-    },
-    value: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      comment: "Setting value (can be JSON string for complex data)",
-    },
-    type: {
-      type: DataTypes.ENUM("string", "json", "boolean", "number"),
-      defaultValue: "string",
-      comment: "Data type of the value",
-    },
-    category: {
-      type: DataTypes.STRING,
-      defaultValue: "general",
-      comment: "Setting category (general, contact, social, language, content, seo)",
-    },
-    description: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      comment: "Human-readable description of the setting",
-    },
-    isPublic: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      comment: "Whether this setting is accessible to public API",
+      defaultValue: DEFAULT_SETTINGS,
     },
   },
   {
-    tableName: "settings",
+    tableName: "site_settings",
     timestamps: true,
   }
 );

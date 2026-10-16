@@ -1,5 +1,6 @@
 const { Op, Sequelize } = require("sequelize");
 const Project = require("../models/Project");
+const { autoTranslateModelData } = require("../utils/autoTranslator");
 
 // Helper to normalize input payload
 const normalizeProjectData = (body, userId) => {
@@ -11,9 +12,7 @@ const normalizeProjectData = (body, userId) => {
   if (body.description !== undefined) {
     data.description = typeof body.description === "string" ? { om: body.description, am: body.description, en: body.description } : body.description;
   }
-  if (body.content !== undefined) {
-    data.content = typeof body.content === "string" ? { om: body.content, am: body.content, en: body.content } : body.content;
-  }
+
   if (body.image !== undefined) data.image = body.image || "";
   if (body.location !== undefined) data.location = body.location || "Burayu";
   if (body.start_date !== undefined || body.startDate !== undefined) {
@@ -144,7 +143,8 @@ const getById = async (req, res) => {
 // @access Protected (admin/editor)
 const create = async (req, res) => {
   const userId = req.user ? (req.user.id || req.user._id) : null;
-  const payload = normalizeProjectData(req.body, userId);
+  let payload = normalizeProjectData(req.body, userId);
+  payload = await autoTranslateModelData(payload);
 
   const project = await Project.create(payload);
 
@@ -165,7 +165,8 @@ const update = async (req, res) => {
     return res.status(404).json({ success: false, message: "Project not found" });
   }
 
-  const payload = normalizeProjectData(req.body);
+  let payload = normalizeProjectData(req.body);
+  payload = await autoTranslateModelData(payload);
   await project.update(payload);
 
   res.json({
