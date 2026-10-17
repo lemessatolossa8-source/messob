@@ -219,7 +219,7 @@ export default function CreateNoticePage() {
         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-slate-100 pt-6">
           <Link
             href="/admin/dashboard/notices"
-            className="w-full sm:w-auto rounded-full border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-[#070707] hover:bg-slate-50 transition text-center"
+            className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-[#070707] hover:bg-slate-50 transition text-center"
           >
             Cancel
           </Link>
@@ -228,7 +228,7 @@ export default function CreateNoticePage() {
             type="button"
             disabled={isSubmitting}
             onClick={(e) => handleSubmit(e, "draft")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-slate-200 transition"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-slate-200 transition"
           >
             <Save className="h-4 w-4" />
             <span>Save as Draft</span>
@@ -238,9 +238,9 @@ export default function CreateNoticePage() {
             type="button"
             disabled={isSubmitting}
             onClick={(e) => handleSubmit(e, "published")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#FE0002] px-6 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#CC0002] transition"
           >
-            <Send className="h-4 w-4 text-amber-400" />
+            <Send className="h-4 w-4 text-white" />
             <span>{isSubmitting ? "Publishing..." : "Publish Notice"}</span>
           </button>
         </div>

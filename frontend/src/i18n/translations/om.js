@@ -166,6 +166,9 @@ const om = {
     leadershipDesc: "Waajjiraalee fi hoggansa tajaajila uummataa kennan.",
     frameworkTitle: "Caasaa Dijitaalaa Fuula Duraa",
     frameworkDesc: "Wirtuun kun tajaajila uummataaf qophii ta'ee gara fuulduraatti sirnoota kuusaa ragaa fi tajaajila e-service waliin wal-qabata.",
+    cityOverview: "Ibsa Magaalaa",
+    generalInfoTitle: "Odeeffannoo Waliigalaa Magaalaa",
+    generalInfoDesc: "Ragaalee teessuma lafaa, dinagdee fi lojistiksii Magaalaa Buraayyuu.",
   },
 
   // Services Page

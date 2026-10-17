@@ -13,25 +13,27 @@ import { ArrowRight, CheckCircle2, Landmark, ShieldCheck, Users, Sprout } from "
 export default function AboutPage() {
   const { t, getText, language } = useTranslation();
   const { settings } = useSiteSettings();
-  const [cityInfo, setCityInfo] = useState(null);
+  const [localCityInfo, setLocalCityInfo] = useState(null);
 
   const mayorMessage = settings?.mayorMessage;
   const activeMsg = mayorMessage?.[language] || mayorMessage?.om || mayorMessage?.en || mayorMessage?.am;
   const mayorPhoto = mayorMessage?.photo || activeMsg?.photo;
 
-  const loadData = () => {
-    setCityInfo(siteService.getCityInfo());
-  };
-
   useEffect(() => {
-    loadData();
-    const unsub = siteService.subscribe(loadData);
+    setLocalCityInfo(siteService.getCityInfo());
+    const unsub = siteService.subscribe(() => {
+      setLocalCityInfo(siteService.getCityInfo());
+    });
     return () => unsub();
   }, []);
+
+  // Prefer MySQL backend settings, fall back to local store
+  const cityInfo = settings?.cityInfo || localCityInfo;
 
   const mission = getText(cityInfo?.mission) || t("about.missionDesc", "Deliver reliable public information...");
   const vision = getText(cityInfo?.vision) || t("about.visionDesc", "Become a modern, trusted portal...");
   const objective = getText(cityInfo?.objectives) || t("about.objectiveDesc", "Provide a scalable digital foundation...");
+  const generalInfo = getText(cityInfo?.generalInfo);
 
   return (
     <div className="space-y-16 sm:space-y-24 pb-16">
@@ -131,7 +133,21 @@ export default function AboutPage() {
         </div>
       </section>
 
-
+      {/* 3. General City Information */}
+      {generalInfo && cityInfo?.status !== "draft" && (
+        <section className="container-shell">
+          <SectionHeading
+            eyebrow={t("about.cityOverview", "City Overview")}
+            title={t("about.generalInfoTitle", "General City Information")}
+            description={t("about.generalInfoDesc", "Key geographic, economic, and logistical facts about Burayu.")}
+          />
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm transition hover:shadow-md hover:border-[#FE0002]/30">
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal whitespace-pre-line">
+              {generalInfo}
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* 4. Location & Contact Information */}
       <section className="container-shell">

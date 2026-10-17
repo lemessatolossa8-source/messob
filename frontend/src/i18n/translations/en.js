@@ -166,6 +166,9 @@ const en = {
     leadershipDesc: "Key public administrative departments and leadership teams serving Burayu.",
     frameworkTitle: "Architected for Future Integration",
     frameworkDesc: "Burayu MESOB is structured as a Phase I high-performance frontend interface, providing immediate public utility while allowing seamless future connections to backend CMS servers, databases, and e-government platforms.",
+    cityOverview: "City Overview",
+    generalInfoTitle: "General City Information",
+    generalInfoDesc: "Key geographic, economic, and logistical facts about Burayu.",
   },
 
   // Services Page

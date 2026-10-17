@@ -89,7 +89,7 @@ export default function SlideImageAdminPage() {
         <div>
           <div>
             <h2 className="text-xl font-extrabold text-[#070707]">Homepage Slides Management</h2>
-            <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-[11px] font-bold text-slate-700 mt-1">
               {slides.length} Slides
             </span>
           </div>
@@ -102,7 +102,7 @@ export default function SlideImageAdminPage() {
           <Link
             href="/"
             target="_blank"
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-[#070707] hover:bg-slate-50 shadow-xs transition"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-[#070707] hover:bg-slate-50 shadow-xs transition"
           >
             <Eye className="h-3.5 w-3.5 text-slate-500" />
             <span>Preview Homepage</span>
@@ -110,16 +110,16 @@ export default function SlideImageAdminPage() {
 
           <Link
             href="/admin/dashboard/slide-image/create"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-slate-800"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FE0002] px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#CC0002]"
           >
-            <Plus className="h-4 w-4 text-amber-400" />
+            <Plus className="h-4 w-4 text-white" />
             <span>Add Slide</span>
           </Link>
         </div>
       </div>
 
       {/* Filter and Stats Bar */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs md:flex-row md:items-center md:justify-between">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -127,7 +127,7 @@ export default function SlideImageAdminPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search slides..."
-            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-9.5 pr-4 text-xs font-medium text-[#070707] placeholder:text-slate-400 focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-9.5 pr-4 text-xs font-medium text-[#070707] placeholder:text-slate-400 focus:border-[#FE0002] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#FE0002]"
           />
         </div>
 
@@ -135,9 +135,9 @@ export default function SlideImageAdminPage() {
           <button
             type="button"
             onClick={() => setStatusFilter("all")}
-            className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
               statusFilter === "all"
-                ? "bg-slate-900 text-white"
+                ? "bg-[#070707] text-white"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
@@ -146,10 +146,10 @@ export default function SlideImageAdminPage() {
           <button
             type="button"
             onClick={() => setStatusFilter("published")}
-            className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
               statusFilter === "published"
-                ? "bg-emerald-700 text-white"
-                : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                ? "bg-[#070707] text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
             Published ({totalPublished})
@@ -157,10 +157,10 @@ export default function SlideImageAdminPage() {
           <button
             type="button"
             onClick={() => setStatusFilter("draft")}
-            className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
               statusFilter === "draft"
-                ? "bg-amber-700 text-white"
-                : "bg-amber-50 text-amber-800 hover:bg-amber-100"
+                ? "bg-[#070707] text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
             Draft ({totalDraft})
@@ -181,7 +181,7 @@ export default function SlideImageAdminPage() {
           <div className="mt-6">
             <Link
               href="/admin/dashboard/slide-image/create"
-              className="inline-flex items-center gap-2 rounded-full bg-emerald-700 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-600 transition"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#FE0002] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#CC0002] transition shadow-xs cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span>Add Slide</span>
@@ -196,27 +196,27 @@ export default function SlideImageAdminPage() {
             return (
               <div
                 key={slide.id}
-                className="group relative flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-[3px] hover:border-[#FE0002]/50 hover:shadow-md"
+                className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition-all duration-300 ease-out hover:border-[#FE0002]"
               >
                 {/* Image Banner Container */}
-                <div className="relative h-64 w-full bg-slate-950 overflow-hidden">
+                <div className="relative h-64 w-full bg-[#070707] overflow-hidden">
                   <img
                     src={slide.image}
                     alt={`Slide ${index + 1}`}
                     className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
                   {/* Badge & Order */}
                   <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
                     <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide backdrop-blur-md ${
+                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide backdrop-blur-md ${
                         isPub
-                          ? "bg-emerald-500/90 text-white"
-                          : "bg-amber-500/90 text-[#070707]"
+                          ? "bg-black/80 text-white border border-white/20"
+                          : "bg-white/90 text-[#070707] border border-black/10"
                       }`}
                     >
-                      {isPub ? <CheckCircle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                      <span className={`h-1.5 w-1.5 rounded-full ${isPub ? "bg-[#FE0002]" : "bg-slate-400"}`} />
                       <span>{isPub ? "Published" : "Draft"}</span>
                     </span>
 
@@ -240,10 +240,10 @@ export default function SlideImageAdminPage() {
                     <button
                       type="button"
                       onClick={() => handleTogglePublish(slide)}
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                      className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                         isPub
                           ? "border border-slate-200 text-slate-600 hover:bg-slate-100"
-                          : "bg-emerald-600 text-white hover:bg-emerald-500"
+                          : "bg-[#FE0002] text-white hover:bg-[#CC0002]"
                       }`}
                     >
                       {isPub ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -253,7 +253,7 @@ export default function SlideImageAdminPage() {
                     <div className="flex items-center gap-1.5">
                       <Link
                         href={`/admin/dashboard/slide-image/${slide.id}/edit`}
-                        className="rounded-xl border border-slate-200 bg-white p-2 text-[#070707] hover:bg-slate-50 hover:text-emerald-700 transition"
+                        className="rounded-xl border border-slate-200 bg-white p-2 text-[#070707] hover:border-[#FE0002] hover:text-[#FE0002] transition cursor-pointer"
                         title="Edit Slide"
                       >
                         <Edit className="h-4 w-4" />
@@ -262,7 +262,7 @@ export default function SlideImageAdminPage() {
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(slide)}
-                        className="rounded-xl border border-rose-200 bg-rose-50 p-2 text-[#FE0002] hover:bg-rose-100 transition"
+                        className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:border-[#FE0002] hover:text-[#FE0002] transition cursor-pointer"
                         title="Delete Slide"
                       >
                         <Trash2 className="h-4 w-4" />

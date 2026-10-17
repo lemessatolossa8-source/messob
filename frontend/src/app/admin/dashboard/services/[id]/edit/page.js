@@ -55,7 +55,7 @@ export default function EditServicePage() {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#FE0002] border-t-transparent" />
           <span>Loading service details...</span>
         </div>
       </div>
@@ -176,7 +176,7 @@ export default function EditServicePage() {
         <button
           type="button"
           onClick={() => setDeleteModalOpen(true)}
-          className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-[#FE0002] hover:bg-rose-100 transition inline-flex items-center gap-1.5"
+          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:border-[#FE0002] hover:text-[#FE0002] transition inline-flex items-center gap-1.5 cursor-pointer"
         >
           <Trash2 className="h-3.5 w-3.5" />
           <span>Delete</span>
@@ -251,7 +251,7 @@ export default function EditServicePage() {
                 type="checkbox"
                 checked={formData.eServiceAvailable}
                 onChange={(e) => handleFieldChange("eServiceAvailable", null, e.target.checked)}
-                className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                className="rounded border-slate-300 text-[#FE0002] focus:ring-[#FE0002]"
               />
               <span>Enable Shaggar E-Service Gateway button for this category</span>
             </label>
@@ -271,7 +271,7 @@ export default function EditServicePage() {
         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-slate-100 pt-6">
           <Link
             href="/admin/dashboard/services"
-            className="w-full sm:w-auto rounded-full border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-[#070707] hover:bg-slate-50 transition text-center"
+            className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-[#070707] hover:bg-slate-50 transition text-center"
           >
             Cancel
           </Link>
@@ -280,7 +280,7 @@ export default function EditServicePage() {
             type="button"
             disabled={isSubmitting}
             onClick={(e) => handleSubmit(e, "draft")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-slate-200 transition"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-slate-200 transition"
           >
             <Save className="h-4 w-4" />
             <span>Save as Draft</span>
@@ -290,9 +290,9 @@ export default function EditServicePage() {
             type="button"
             disabled={isSubmitting}
             onClick={(e) => handleSubmit(e, "published")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#FE0002] px-6 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#CC0002] transition"
           >
-            <Send className="h-4 w-4 text-amber-400" />
+            <Send className="h-4 w-4 text-white" />
             <span>{isSubmitting ? "Updating..." : "Update & Publish"}</span>
           </button>
         </div>

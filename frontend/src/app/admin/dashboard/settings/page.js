@@ -133,7 +133,7 @@ export default function AdminSettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "border-emerald-600 text-emerald-600"
+                    ? "border-[#FE0002] text-[#FE0002]"
                     : "border-transparent text-slate-600 hover:text-[#070707]"
                 }`}
               >
@@ -162,10 +162,10 @@ export default function AdminSettingsPage() {
             
             {/* Site Name */}
             <div className="space-y-3">
-              <label className="block text-xs font-bold text-[#070707]">Site Name (Multilingual)</label>
+              <label className="block text-xs font-bold text-[#070707]">Site Name</label>
               {languages.map((lang) => (
                 <div key={lang.code} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-slate-500 w-12">{lang.label}:</span>
+                  <span className="text-xs font-bold text-slate-500 w-28 shrink-0">{lang.label}:</span>
                   <input
                     type="text"
                     value={settings.siteName?.[lang.code] || ""}
@@ -178,10 +178,10 @@ export default function AdminSettingsPage() {
 
             {/* Site Tagline */}
             <div className="space-y-3">
-              <label className="block text-xs font-bold text-[#070707]">Site Tagline (Multilingual)</label>
+              <label className="block text-xs font-bold text-[#070707]">Site Tagline</label>
               {languages.map((lang) => (
                 <div key={lang.code} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-slate-500 w-12">{lang.label}:</span>
+                  <span className="text-xs font-bold text-slate-500 w-28 shrink-0">{lang.label}:</span>
                   <input
                     type="text"
                     value={settings.siteTagline?.[lang.code] || ""}
@@ -201,7 +201,7 @@ export default function AdminSettingsPage() {
                   type="checkbox"
                   checked={settings.eService.enabled}
                   onChange={(e) => updateSetting('eService.enabled', e.target.checked)}
-                  className="rounded border-slate-300 text-emerald-600"
+                  className="rounded border-slate-300 text-[#FE0002] focus:ring-[#FE0002]"
                 />
                 <span className="text-xs font-bold text-[#070707]">Enable E-Service</span>
               </label>
@@ -215,7 +215,7 @@ export default function AdminSettingsPage() {
                       type="checkbox"
                       checked={settings.eService.eLand.enabled}
                       onChange={(e) => updateSetting('eService.eLand.enabled', e.target.checked)}
-                      className="rounded border-slate-300 text-emerald-600"
+                      className="rounded border-slate-300 text-[#FE0002] focus:ring-[#FE0002]"
                     />
                     <span className="text-xs text-slate-600">Enabled</span>
                   </label>
@@ -238,7 +238,7 @@ export default function AdminSettingsPage() {
                       type="checkbox"
                       checked={settings.eService.eConference.enabled}
                       onChange={(e) => updateSetting('eService.eConference.enabled', e.target.checked)}
-                      className="rounded border-slate-300 text-emerald-600"
+                      className="rounded border-slate-300 text-[#FE0002] focus:ring-[#FE0002]"
                     />
                     <span className="text-xs text-slate-600">Enabled</span>
                   </label>
@@ -258,7 +258,7 @@ export default function AdminSettingsPage() {
                   <div className="flex items-center gap-2">
                     <label className="text-xs font-bold text-[#070707]">E-Library</label>
                     {settings.eService.eLibrary.comingSoon && (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                      <span className="rounded-full bg-slate-100 border border-slate-300 px-2 py-0.5 text-[10px] font-bold text-[#070707]">
                         Coming Soon
                       </span>
                     )}
@@ -268,7 +268,7 @@ export default function AdminSettingsPage() {
                       type="checkbox"
                       checked={settings.eService.eLibrary.enabled}
                       onChange={(e) => updateSetting('eService.eLibrary.enabled', e.target.checked)}
-                      className="rounded border-slate-300 text-emerald-600"
+                      className="rounded border-slate-300 text-[#FE0002] focus:ring-[#FE0002]"
                     />
                     <span className="text-xs text-slate-600">Enabled</span>
                   </label>
@@ -286,7 +286,7 @@ export default function AdminSettingsPage() {
                     type="checkbox"
                     checked={settings.eService.eLibrary.comingSoon}
                     onChange={(e) => updateSetting('eService.eLibrary.comingSoon', e.target.checked)}
-                    className="rounded border-slate-300 text-amber-600"
+                    className="rounded border-slate-300 text-[#FE0002] focus:ring-[#FE0002]"
                   />
                   <span className="text-xs text-slate-600">Mark as "Coming Soon"</span>
                 </label>
@@ -301,7 +301,7 @@ export default function AdminSettingsPage() {
                       type="checkbox"
                       checked={settings.eService.eTrade.enabled}
                       onChange={(e) => updateSetting('eService.eTrade.enabled', e.target.checked)}
-                      className="rounded border-slate-300 text-emerald-600"
+                      className="rounded border-slate-300 text-[#FE0002] focus:ring-[#FE0002]"
                     />
                     <span className="text-xs text-slate-600">Enabled</span>
                   </label>
@@ -352,10 +352,10 @@ export default function AdminSettingsPage() {
             </div>
 
             <div className="space-y-3">
-              <label className="block text-xs font-bold text-[#070707]">Office Address (Multilingual)</label>
+              <label className="block text-xs font-bold text-[#070707]">Office Address</label>
               {languages.map((lang) => (
                 <div key={lang.code} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-slate-500 w-12">{lang.label}:</span>
+                  <span className="text-xs font-bold text-slate-500 w-28 shrink-0">{lang.label}:</span>
                   <div className="relative flex-1">
                     <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                     <input
@@ -370,10 +370,10 @@ export default function AdminSettingsPage() {
             </div>
 
             <div className="space-y-3">
-              <label className="block text-xs font-bold text-[#070707]">Working Hours (Multilingual)</label>
+              <label className="block text-xs font-bold text-[#070707]">Working Hours</label>
               {languages.map((lang) => (
                 <div key={lang.code} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-slate-500 w-12">{lang.label}:</span>
+                  <span className="text-xs font-bold text-slate-500 w-28 shrink-0">{lang.label}:</span>
                   <div className="relative flex-1">
                     <Clock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                     <input
@@ -437,7 +437,7 @@ export default function AdminSettingsPage() {
                 type="checkbox"
                 checked={settings.languageSettings.requireFullTranslations}
                 onChange={(e) => updateSetting('languageSettings.requireFullTranslations', e.target.checked)}
-                className="mt-0.5 rounded border-slate-300 text-emerald-600"
+                className="mt-0.5 rounded border-slate-300 text-[#FE0002] focus:ring-[#FE0002]"
               />
               <div>
                 <p className="text-xs font-bold text-[#070707]">Require Full Translations</p>
@@ -475,7 +475,7 @@ export default function AdminSettingsPage() {
                   type="checkbox"
                   checked={settings.contentSettings.enableSearch}
                   onChange={(e) => updateSetting('contentSettings.enableSearch', e.target.checked)}
-                  className="rounded border-slate-300 text-emerald-600"
+                  className="rounded border-slate-300 text-[#FE0002] focus:ring-[#FE0002]"
                 />
                 <span className="text-xs font-bold text-[#070707]">Enable Search Functionality</span>
               </label>
@@ -485,7 +485,7 @@ export default function AdminSettingsPage() {
                   type="checkbox"
                   checked={settings.contentSettings.enableFilters}
                   onChange={(e) => updateSetting('contentSettings.enableFilters', e.target.checked)}
-                  className="rounded border-slate-300 text-emerald-600"
+                  className="rounded border-slate-300 text-[#FE0002] focus:ring-[#FE0002]"
                 />
                 <span className="text-xs font-bold text-[#070707]">Enable Content Filters</span>
               </label>
@@ -539,7 +539,7 @@ export default function AdminSettingsPage() {
             type="button"
             onClick={handleReset}
             disabled={saving || loading}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-[#070707] hover:bg-slate-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-[#070707] hover:bg-slate-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Reset to Defaults
@@ -548,7 +548,7 @@ export default function AdminSettingsPage() {
           <button
             type="submit"
             disabled={saving || loading}
-            className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#FE0002] px-6 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#CC0002] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className={`h-4 w-4 ${saving ? 'animate-spin' : ''}`} />
             {saving ? "Saving..." : "Save Settings"}

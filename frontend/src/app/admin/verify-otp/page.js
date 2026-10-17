@@ -178,7 +178,7 @@ function VerifyOTPForm() {
             )}
 
             {resendSuccess && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-700 flex items-start gap-2">
+              <div className="rounded-xl border border-[#070707] bg-[#070707] p-3.5 text-xs text-white flex items-start gap-2">
                 <span className="font-bold">Success!</span> New OTP code has been sent to your email.
               </div>
             )}
@@ -200,7 +200,7 @@ function VerifyOTPForm() {
                       value={digit}
                       onChange={(e) => handleChange(index, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(index, e)}
-                      className="w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 bg-[#f8fafc] text-[#070707] focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition"
+                      className="w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 border-slate-300 bg-[#f8fafc] text-[#070707] focus:border-[#FE0002] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FE0002]/10 transition"
                     />
                   ))}
                 </div>
@@ -212,7 +212,7 @@ function VerifyOTPForm() {
               <button
                 type="submit"
                 disabled={loading || otp.join("").length !== 6}
-                className="w-full rounded-lg bg-blue-600 py-3 text-sm font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full rounded-xl bg-[#FE0002] py-3 text-sm font-bold text-white shadow-xs hover:bg-[#CC0002] active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -264,8 +264,8 @@ function VerifyOTPForm() {
         {/* Right Side: Graphic Illustration Showcase */}
         <div className="hidden lg:flex lg:col-span-7 xl:col-span-8 bg-[#eef2f7] items-center justify-center p-12 relative overflow-hidden">
           {/* Subtle Background Geometric Accents */}
-          <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-blue-400/10 blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-indigo-400/10 blur-3xl" />
+          <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#FE0002]/5 blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-black/5 blur-3xl" />
 
           <div className="max-w-xl text-center space-y-8 z-10 flex flex-col items-center">
             {/* OTP Illustration */}
@@ -321,7 +321,7 @@ function VerifyOTPForm() {
 
 export default function VerifyOTPPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><span className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" /></div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><span className="h-6 w-6 animate-spin rounded-full border-2 border-[#FE0002] border-t-transparent" /></div>}>
       <VerifyOTPForm />
     </Suspense>
   );

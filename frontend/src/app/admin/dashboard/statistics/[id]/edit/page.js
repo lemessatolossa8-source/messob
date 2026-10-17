@@ -160,7 +160,7 @@ export default function EditStatisticPage() {
         <button
           type="button"
           onClick={() => setDeleteModalOpen(true)}
-          className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-[#FE0002] hover:bg-rose-100 transition inline-flex items-center gap-1.5"
+          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:border-[#FE0002] hover:text-[#FE0002] transition inline-flex items-center gap-1.5 cursor-pointer"
         >
           <Trash2 className="h-3.5 w-3.5" />
           <span>Delete</span>

@@ -17,6 +17,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
+import LanguageTabs from "@/components/admin/LanguageTabs";
 import { floorService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
 
@@ -426,7 +427,7 @@ export default function AdminFloorManagementPage() {
                     <button
                       type="button"
                       onClick={() => setDeleteTarget(floor)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50/50 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-100 hover:border-rose-300 transition shadow-2xs cursor-pointer"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:border-[#FE0002] hover:text-[#FE0002] transition shadow-2xs cursor-pointer"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       <span>Delete</span>
@@ -473,57 +474,19 @@ export default function AdminFloorManagementPage() {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="mt-5 space-y-5">
-              {/* Language Selection Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-2xl bg-slate-50 p-2.5 border border-slate-200/80">
-                <span className="text-xs font-bold text-[#070707] px-1">
-                  Language Content:
-                </span>
-                <div className="grid grid-cols-3 gap-1 w-full sm:w-auto">
-                  {[
-                    { code: "om", label: "Afaan Oromoo" },
-                    { code: "en", label: "English" },
-                    { code: "am", label: "አማርኛ" },
-                  ].map((tab) => {
-                    const isFilled =
-                      !!floorNames[tab.code]?.trim() &&
-                      !!descriptions[tab.code]?.trim();
-                    const isActive = activeFormLang === tab.code;
-                    return (
-                      <button
-                        key={tab.code}
-                        type="button"
-                        onClick={() => setActiveFormLang(tab.code)}
-                        className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
-                          isActive
-                            ? "bg-[#FE0002] text-white shadow-xs"
-                            : "bg-white text-slate-700 hover:text-[#070707] border border-slate-200/60"
-                        }`}
-                      >
-                        <span>{tab.label}</span>
-                        {isFilled && (
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              isActive ? "bg-white" : "bg-emerald-500"
-                            }`}
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              {/* Language Selection Dropdown */}
+              <LanguageTabs
+                activeTab={activeFormLang}
+                onTabChange={setActiveFormLang}
+                title="Floor Information"
+                label="Editing Language"
+              />
 
               {/* Field 1: Floor Name for selected language */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-[#070707]">
-                    Floor Name (
-                    {activeFormLang === "om"
-                      ? "Afaan Oromoo"
-                      : activeFormLang === "am"
-                      ? "አማርኛ"
-                      : "English"}
-                    ) <span className="text-[#FE0002]">*</span>
+                    Floor Name <span className="text-[#FE0002]">*</span>
                   </label>
                   <span className="text-[11px] font-medium text-slate-400">
                     {activeFormLang === "om"
@@ -550,13 +513,7 @@ export default function AdminFloorManagementPage() {
                       });
                     }
                   }}
-                  placeholder={
-                    activeFormLang === "om"
-                      ? "fkn. Darbii 1"
-                      : activeFormLang === "am"
-                      ? "ምሳሌ፡ ፎቅ 1"
-                      : "e.g. Floor 1"
-                  }
+                  placeholder="e.g. Floor 1"
                   className={`w-full rounded-xl border bg-white px-4 py-2.5 text-xs text-[#070707] placeholder-slate-400 shadow-2xs transition focus:outline-none ${
                     errors.floorName
                       ? "border-rose-400 focus:border-rose-500 bg-rose-50/20"
@@ -574,13 +531,7 @@ export default function AdminFloorManagementPage() {
               {/* Field 2: Description for selected language */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#070707]">
-                  Description (
-                  {activeFormLang === "om"
-                    ? "Afaan Oromoo"
-                    : activeFormLang === "am"
-                    ? "አማርኛ"
-                    : "English"}
-                  ) <span className="text-[#FE0002]">*</span>
+                  Description <span className="text-[#FE0002]">*</span>
                 </label>
                 <textarea
                   rows={4}
@@ -599,13 +550,7 @@ export default function AdminFloorManagementPage() {
                       });
                     }
                   }}
-                  placeholder={
-                    activeFormLang === "om"
-                      ? "Darbii kanaafi tajaajiloota kennaman ibsaa..."
-                      : activeFormLang === "am"
-                      ? "ስለዚህ ፎቅ እና ስለሚሰጡት አገልግሎቶች ይግለጹ..."
-                      : "Describe this floor and the services available on it..."
-                  }
+                  placeholder="Describe this floor and the services available on it..."
                   className={`w-full rounded-xl border bg-white px-4 py-2.5 text-xs text-[#070707] placeholder-slate-400 shadow-2xs transition focus:outline-none ${
                     errors.description
                       ? "border-rose-400 focus:border-rose-500 bg-rose-50/20"
@@ -677,8 +622,8 @@ export default function AdminFloorManagementPage() {
 
                 {imagePreview && (
                   <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-                    <span className="flex items-center gap-1 text-emerald-600 font-semibold">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span className="flex items-center gap-1 text-[#070707] font-semibold">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-[#FE0002]" />
                       {imageFile ? "New image selected" : "Current image active"}
                     </span>
                     <button

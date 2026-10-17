@@ -22,8 +22,8 @@ export default function AdminLoginPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100">
         <div className="text-center space-y-3">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-          <p className="text-sm text-slate-600">Loading...</p>
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#FE0002] border-r-transparent"></div>
+          <p className="text-sm font-medium text-slate-600">Loading...</p>
         </div>
       </div>
     );
@@ -48,11 +48,11 @@ export default function AdminLoginPage() {
     <div className="flex min-h-screen bg-[#f4f6f9] text-[#070707] font-sans antialiased">
       <div className="grid w-full grid-cols-1 lg:grid-cols-12 min-h-screen">
         {/* Left Side: Form Container */}
-        <div className="col-span-1 lg:col-span-5 xl:col-span-4 flex flex-col justify-between bg-white px-6 py-8 sm:px-12 md:px-16 border-r border-slate-200/80 shadow-sm">
+        <div className="col-span-1 lg:col-span-5 xl:col-span-4 flex flex-col justify-between bg-white px-6 py-8 sm:px-12 md:px-16 border-r border-slate-200/80 shadow-xs">
           {/* Top Logo */}
           <div className="flex items-center justify-between">
             <Logo size="md" showText={true} href="/" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
               Admin Portal
             </span>
           </div>
@@ -84,7 +84,7 @@ export default function AdminLoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-[#f8fafc] px-3.5 py-2.5 text-sm text-[#070707] placeholder-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition"
+                  className="w-full rounded-xl border border-slate-300 bg-[#f8fafc] px-3.5 py-2.5 text-sm text-[#070707] placeholder-slate-400 focus:border-[#FE0002] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FE0002]/10 transition"
                 />
               </div>
 
@@ -97,7 +97,7 @@ export default function AdminLoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-[#f8fafc] px-3.5 py-2.5 text-sm text-[#070707] placeholder-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition"
+                  className="w-full rounded-xl border border-slate-300 bg-[#f8fafc] px-3.5 py-2.5 text-sm text-[#070707] placeholder-slate-400 focus:border-[#FE0002] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FE0002]/10 transition"
                 />
               </div>
 
@@ -107,14 +107,14 @@ export default function AdminLoginPage() {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-[#FE0002] focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-slate-300 text-[#FE0002] focus:ring-[#FE0002]"
                   />
                   <span>Remember me</span>
                 </label>
 
                 <Link
                   href="/admin/forgot-password"
-                  className="font-medium text-[#FE0002] hover:text-[#FE0002] hover:underline transition"
+                  className="font-medium text-[#FE0002] hover:underline transition"
                 >
                   Forgot password?
                 </Link>
@@ -123,7 +123,7 @@ export default function AdminLoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-lg bg-blue-600 py-3 text-sm font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full rounded-xl bg-[#FE0002] py-3 text-sm font-bold text-white shadow-xs hover:bg-[#CC0002] active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? "Signing in..." : "Log In"}
               </button>
@@ -151,8 +151,8 @@ export default function AdminLoginPage() {
         {/* Right Side: Graphic Illustration Showcase */}
         <div className="hidden lg:flex lg:col-span-7 xl:col-span-8 bg-[#eef2f7] items-center justify-center p-12 relative overflow-hidden">
           {/* Subtle Background Geometric Accents */}
-          <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-blue-400/10 blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-indigo-400/10 blur-3xl" />
+          <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#FE0002]/5 blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-black/5 blur-3xl" />
 
           <div className="max-w-xl text-center space-y-8 z-10 flex flex-col items-center">
             {/* Civic Announcement Vector Graphic Illustration */}

@@ -199,10 +199,10 @@ export default function SiteHeader() {
     <header
       className={`sticky top-0 z-40 transition-colors duration-500 ease-in-out ${headerBgClass}`}
     >
-      {/* Main Navbar */}
-      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6 py-3.5">
+      {/* Main Navbar - Full width responsive container with clean edge spacing */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6 py-3.5">
         {/* Official Burayu MESOB Logo anchored to the left */}
-        <div className="flex items-center shrink-0 ml-1 sm:ml-3 lg:ml-4">
+        <div className="flex items-center shrink-0">
           <Logo size="md" variant={scrollPhase === "middle" ? "default" : "white"} href="/" />
         </div>
 

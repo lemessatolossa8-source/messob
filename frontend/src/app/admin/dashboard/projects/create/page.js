@@ -244,11 +244,11 @@ export default function CreateProjectPage() {
                   max="100"
                   value={formData.progress}
                   onChange={(e) => handleFieldChange("progress", null, e.target.value)}
-                  className="w-32 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-[#070707] focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition"
+                  className="w-32 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-[#070707] focus:border-[#FE0002] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FE0002]/15 transition"
                 />
                 <div className="flex-1 bg-slate-100 rounded-full h-2.5 overflow-hidden">
                   <div
-                    className="bg-emerald-600 h-2.5 rounded-full transition-all duration-300"
+                    className="bg-[#FE0002] h-2.5 rounded-full transition-all duration-300"
                     style={{ width: `${Math.min(100, Math.max(0, formData.progress))}%` }}
                   />
                 </div>
@@ -268,7 +268,7 @@ export default function CreateProjectPage() {
         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-slate-100 pt-6">
           <Link
             href="/admin/dashboard/projects"
-            className="w-full sm:w-auto rounded-full border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-[#070707] hover:bg-slate-50 transition text-center"
+            className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-[#070707] hover:bg-slate-50 transition text-center"
           >
             Cancel
           </Link>
@@ -277,7 +277,7 @@ export default function CreateProjectPage() {
             type="button"
             disabled={isSubmitting}
             onClick={(e) => handleSubmit(e, "draft")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-slate-200 transition disabled:opacity-60"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-slate-200 transition disabled:opacity-60"
           >
             <Save className="h-4 w-4" />
             <span>Save as Draft</span>
@@ -287,9 +287,9 @@ export default function CreateProjectPage() {
             type="button"
             disabled={isSubmitting}
             onClick={(e) => handleSubmit(e, "published")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition disabled:opacity-60"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#FE0002] px-6 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#CC0002] transition disabled:opacity-60"
           >
-            <Send className="h-4 w-4 text-amber-400" />
+            <Send className="h-4 w-4 text-white" />
             <span>{isSubmitting ? "Saving..." : "Publish Project"}</span>
           </button>
         </div>

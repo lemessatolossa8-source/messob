@@ -160,8 +160,8 @@ export default function AdminStatisticsListPage() {
   return (
     <div className="space-y-6 relative">
       <div>
-        <h2 className="text-2xl font-black text-[#070707] tracking-tight">MESOB STATISTICS</h2>
-        <p className="text-sm text-slate-500 font-medium">Manage the core statistics shown on the public homepage</p>
+        <h2 className="text-xl font-extrabold text-[#070707]">Portal Statistics</h2>
+        <p className="text-xs text-slate-500 font-medium">Manage the key public indicators shown on the municipal homepage</p>
       </div>
 
       {loading ? (
@@ -186,8 +186,8 @@ export default function AdminStatisticsListPage() {
                     onClick={() => handleTogglePublish(item)}
                     className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition ${
                       isPublished 
-                        ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
+                        ? 'bg-[#070707] text-white border border-[#070707]'
+                        : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-300'
                     }`}
                   >
                     {isPublished ? (
@@ -272,20 +272,20 @@ export default function AdminStatisticsListPage() {
 
                 {/* Titles */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-[#070707] uppercase tracking-wider border-b border-slate-100 pb-2">Titles</h4>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">Multilingual Titles</h4>
                   <div className="grid gap-4 sm:grid-cols-3">
                     <TextInput
-                      label="Title OM (Oromo)"
+                      label="Afaan Oromo"
                       value={formData.title.om}
                       onChange={(v) => handleFieldChange("title", "om", v)}
                     />
                     <TextInput
-                      label="Title AM (Amharic)"
+                      label="አማርኛ"
                       value={formData.title.am}
                       onChange={(v) => handleFieldChange("title", "am", v)}
                     />
                     <TextInput
-                      label="Title EN (English)"
+                      label="English"
                       value={formData.title.en}
                       onChange={(v) => handleFieldChange("title", "en", v)}
                     />
@@ -294,22 +294,22 @@ export default function AdminStatisticsListPage() {
 
                 {/* Descriptions */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-[#070707] uppercase tracking-wider border-b border-slate-100 pb-2">Descriptions</h4>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">Multilingual Descriptions</h4>
                   <div className="grid gap-4 sm:grid-cols-3">
                     <TextAreaInput
-                      label="Description OM"
+                      label="Afaan Oromo"
                       value={formData.description.om}
                       onChange={(v) => handleFieldChange("description", "om", v)}
                       rows={3}
                     />
                     <TextAreaInput
-                      label="Description AM"
+                      label="አማርኛ"
                       value={formData.description.am}
                       onChange={(v) => handleFieldChange("description", "am", v)}
                       rows={3}
                     />
                     <TextAreaInput
-                      label="Description EN"
+                      label="English"
                       value={formData.description.en}
                       onChange={(v) => handleFieldChange("description", "en", v)}
                       rows={3}
@@ -323,22 +323,22 @@ export default function AdminStatisticsListPage() {
               <button
                 type="button"
                 onClick={closeEditModal}
-                className="px-6 py-2.5 rounded-full text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition"
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-[#070707] bg-white border border-slate-200 hover:bg-slate-50 transition"
               >
-                CANCEL
+                Cancel
               </button>
               <button
                 type="submit"
                 form="edit-statistic-form"
                 disabled={isSubmitting}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold text-white bg-[#FE0002] hover:bg-[#CC0002] transition shadow-sm disabled:opacity-50"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-[#FE0002] hover:bg-[#CC0002] transition shadow-xs disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent"></div>
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                SAVE
+                <span>Save Changes</span>
               </button>
             </div>
           </div>

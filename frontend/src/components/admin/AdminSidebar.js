@@ -8,8 +8,6 @@ import {
   LayoutDashboard,
   Newspaper,
   Megaphone,
-  BellRing,
-  Calendar,
   Building2,
   Image as ImageIcon,
   Layers,
@@ -21,9 +19,16 @@ import {
   X,
   ExternalLink,
   BarChart2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
-export default function AdminSidebar({ isOpen, onClose }) {
+export default function AdminSidebar({
+  isOpen,
+  onClose,
+  isCollapsed = false,
+  onToggleCollapse,
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -34,7 +39,7 @@ export default function AdminSidebar({ isOpen, onClose }) {
 
   const navSections = [
     {
-      title: null,
+      title: "MAIN",
       items: [
         { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard, exact: true },
       ],
@@ -50,11 +55,11 @@ export default function AdminSidebar({ isOpen, onClose }) {
       ],
     },
     {
-      title: "WEBSITE",
+      title: "SERVICES & PORTAL",
       items: [
         { label: "Services", href: "/admin/dashboard/services", icon: ClipboardList },
-        { label: "Mayor Message", href: "/admin/dashboard/about", icon: UserCheck },
         { label: "City Information", href: "/admin/dashboard/city-information", icon: Info },
+        { label: "Mayor Message", href: "/admin/dashboard/about", icon: UserCheck },
         { label: "Statistics", href: "/admin/dashboard/statistics", icon: BarChart2 },
       ],
     },
@@ -69,42 +74,72 @@ export default function AdminSidebar({ isOpen, onClose }) {
 
   return (
     <>
-      {/* Mobile Backdrop */}
+      {/* Mobile Drawer Backdrop */}
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-xs lg:hidden transition-opacity"
         />
       )}
 
       {/* Sidebar container */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-800 bg-slate-950 text-white transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-neutral-800 bg-[#070707] text-white transition-all duration-200 ease-in-out lg:static ${
+          isCollapsed ? "lg:w-20" : "lg:w-64"
+        } w-64 ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
-        {/* Header with Official Logo */}
-        <div className="flex h-20 items-center justify-between border-b border-slate-800/80 px-6">
-          <Logo variant="admin" size="md" href="/admin/dashboard" />
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden"
-            aria-label="Close sidebar"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        {/* Header with Official Logo & Collapse Toggle */}
+        <div className="flex h-16 items-center justify-between border-b border-neutral-800 px-4">
+          <div className="flex items-center min-w-0 overflow-hidden">
+            <Logo
+              variant="admin"
+              size="sm"
+              showText={!isCollapsed}
+              href="/admin/dashboard"
+            />
+          </div>
+
+          <div className="flex items-center gap-1">
+            {/* Desktop Collapse Toggle */}
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-neutral-800 hover:text-white transition cursor-pointer"
+              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label="Toggle sidebar width"
+            >
+              {isCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </button>
+
+            {/* Mobile Close Button */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-neutral-800 hover:text-white lg:hidden cursor-pointer"
+              aria-label="Close sidebar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation list */}
-        <nav className="flex-1 overflow-y-auto px-4 py-5 space-y-6 scrollbar-thin scrollbar-thumb-slate-800">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5 scrollbar-thin scrollbar-thumb-neutral-800">
           {navSections.map((section, idx) => (
             <div key={idx} className="space-y-1">
-              {section.title && (
-                <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-slate-400">
+              {section.title && !isCollapsed && (
+                <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
                   {section.title}
                 </p>
               )}
+              {isCollapsed && section.title && (
+                <div className="my-2 border-t border-neutral-800" />
+              )}
+
               {section.items.map((item) => {
                 const Icon = item.icon;
                 const isProjects = item.href === "/admin/dashboard/projects" || item.href === "/admin/projects";
@@ -124,10 +159,13 @@ export default function AdminSidebar({ isOpen, onClose }) {
                         item.onClick();
                         onClose && onClose();
                       }}
-                      className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition text-slate-300 hover:bg-slate-900 hover:text-white"
+                      title={isCollapsed ? item.label : undefined}
+                      className={`w-full flex items-center ${
+                        isCollapsed ? "justify-center px-2" : "gap-3 px-3"
+                      } py-2 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-neutral-800 hover:text-white cursor-pointer`}
                     >
                       <Icon className="h-4 w-4 shrink-0 text-slate-400" />
-                      <span className="truncate">{item.label}</span>
+                      {!isCollapsed && <span className="truncate">{item.label}</span>}
                     </button>
                   );
                 }
@@ -137,14 +175,17 @@ export default function AdminSidebar({ isOpen, onClose }) {
                     key={item.href}
                     href={item.href}
                     onClick={() => onClose && onClose()}
-                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition ${
+                    title={isCollapsed ? item.label : undefined}
+                    className={`flex items-center ${
+                      isCollapsed ? "justify-center px-2" : "gap-3 px-3"
+                    } py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
                       isActive
-                        ? "bg-[#FE0002] text-white shadow-sm font-bold"
-                        : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                        ? "bg-[#FE0002] text-white shadow-xs font-bold"
+                        : "text-slate-300 hover:bg-neutral-800 hover:text-white"
                     }`}
                   >
                     <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`} />
-                    <span className="truncate">{item.label}</span>
+                    {!isCollapsed && <span className="truncate">{item.label}</span>}
                   </Link>
                 );
               })}
@@ -153,25 +194,30 @@ export default function AdminSidebar({ isOpen, onClose }) {
         </nav>
 
         {/* Footer info & Public Site Link */}
-        <div className="border-t border-slate-800/80 p-4 space-y-3">
+        <div className="border-t border-neutral-800 p-3 space-y-2">
           <Link
             href="/"
             target="_blank"
-            className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/60 px-3.5 py-2.5 text-xs font-semibold text-slate-300 hover:bg-slate-900 hover:text-white transition"
+            title="Open live website"
+            className={`flex items-center ${
+              isCollapsed ? "justify-center px-2" : "justify-between px-3"
+            } py-2 rounded-xl border border-neutral-800 bg-neutral-900/60 text-xs font-semibold text-slate-300 hover:bg-neutral-800 hover:text-white transition cursor-pointer`}
           >
-            <span className="truncate">View Website</span>
+            {!isCollapsed && <span className="truncate">View Website</span>}
             <ExternalLink className="h-3.5 w-3.5 text-slate-400 shrink-0" />
           </Link>
 
-          <div className="flex items-center gap-3 px-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FE0002] text-xs font-bold text-white">
-              BM
+          {!isCollapsed && (
+            <div className="flex items-center gap-2.5 px-2 pt-1">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FE0002] text-[10px] font-bold text-white shrink-0">
+                BM
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-bold text-white">Burayu MESOB CMS</p>
+                <p className="truncate text-[10px] text-slate-400">Government Portal</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-bold text-white">Burayu MESOB CMS</p>
-              <p className="truncate text-[10px] text-slate-400">Burayu MESOB</p>
-            </div>
-          </div>
+          )}
         </div>
       </aside>
     </>

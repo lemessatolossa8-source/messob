@@ -125,8 +125,8 @@ function ResetPasswordForm() {
             )}
 
             {success && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-700 flex items-start gap-2">
-                <CheckCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <div className="rounded-xl border border-[#070707] bg-[#070707] p-3.5 text-xs text-white flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 flex-shrink-0 mt-0.5 text-[#FE0002]" />
                 <div>
                   <span className="font-bold">Success!</span> Password reset successfully. Redirecting to login...
                 </div>
@@ -146,7 +146,7 @@ function ResetPasswordForm() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Enter new password"
-                    className="w-full rounded-lg border border-slate-300 bg-[#f8fafc] pl-10 pr-10 py-2.5 text-sm text-[#070707] placeholder-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition"
+                    className="w-full rounded-xl border border-slate-300 bg-[#f8fafc] pl-10 pr-10 py-2.5 text-sm text-[#070707] placeholder-slate-400 focus:border-[#FE0002] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FE0002]/10 transition"
                   />
                   <button
                     type="button"
@@ -177,7 +177,7 @@ function ResetPasswordForm() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm new password"
-                    className="w-full rounded-lg border border-slate-300 bg-[#f8fafc] pl-10 pr-10 py-2.5 text-sm text-[#070707] placeholder-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition"
+                    className="w-full rounded-xl border border-slate-300 bg-[#f8fafc] pl-10 pr-10 py-2.5 text-sm text-[#070707] placeholder-slate-400 focus:border-[#FE0002] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FE0002]/10 transition"
                   />
                   <button
                     type="button"
@@ -197,20 +197,20 @@ function ResetPasswordForm() {
                 <div className="space-y-2">
                   <div className="text-xs font-semibold text-[#070707]">Password Strength:</div>
                   <div className="space-y-1">
-                    <div className={`text-xs flex items-center gap-1.5 ${newPassword.length >= 12 ? "text-emerald-600" : "text-slate-400"}`}>
-                      {newPassword.length >= 12 ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3 w-3" />} At least 12 characters
+                    <div className={`text-xs flex items-center gap-1.5 ${newPassword.length >= 12 ? "text-[#070707] font-semibold" : "text-slate-400"}`}>
+                      {newPassword.length >= 12 ? <Check className="h-3.5 w-3.5 text-[#FE0002]" /> : <Circle className="h-3 w-3" />} At least 12 characters
                     </div>
-                    <div className={`text-xs flex items-center gap-1.5 ${/[A-Z]/.test(newPassword) ? "text-emerald-600" : "text-slate-400"}`}>
-                      {/[A-Z]/.test(newPassword) ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3 w-3" />} Uppercase letter
+                    <div className={`text-xs flex items-center gap-1.5 ${/[A-Z]/.test(newPassword) ? "text-[#070707] font-semibold" : "text-slate-400"}`}>
+                      {/[A-Z]/.test(newPassword) ? <Check className="h-3.5 w-3.5 text-[#FE0002]" /> : <Circle className="h-3 w-3" />} Uppercase letter
                     </div>
-                    <div className={`text-xs flex items-center gap-1.5 ${/[0-9]/.test(newPassword) ? "text-emerald-600" : "text-slate-400"}`}>
-                      {/[0-9]/.test(newPassword) ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3 w-3" />} Number
+                    <div className={`text-xs flex items-center gap-1.5 ${/[0-9]/.test(newPassword) ? "text-[#070707] font-semibold" : "text-slate-400"}`}>
+                      {/[0-9]/.test(newPassword) ? <Check className="h-3.5 w-3.5 text-[#FE0002]" /> : <Circle className="h-3 w-3" />} Number
                     </div>
-                    <div className={`text-xs flex items-center gap-1.5 ${/[!@#$%^&*(),.?":{}|<>]/.test(newPassword) ? "text-emerald-600" : "text-slate-400"}`}>
-                      {/[!@#$%^&*(),.?":{}|<>]/.test(newPassword) ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3 w-3" />} Special character
+                    <div className={`text-xs flex items-center gap-1.5 ${/[!@#$%^&*(),.?":{}|<>]/.test(newPassword) ? "text-[#070707] font-semibold" : "text-slate-400"}`}>
+                      {/[!@#$%^&*(),.?":{}|<>]/.test(newPassword) ? <Check className="h-3.5 w-3.5 text-[#FE0002]" /> : <Circle className="h-3 w-3" />} Special character
                     </div>
-                    <div className={`text-xs flex items-center gap-1.5 ${newPassword === confirmPassword && confirmPassword ? "text-emerald-600" : "text-slate-400"}`}>
-                      {newPassword === confirmPassword && confirmPassword ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3 w-3" />} Passwords match
+                    <div className={`text-xs flex items-center gap-1.5 ${newPassword === confirmPassword && confirmPassword ? "text-[#070707] font-semibold" : "text-slate-400"}`}>
+                      {newPassword === confirmPassword && confirmPassword ? <Check className="h-3.5 w-3.5 text-[#FE0002]" /> : <Circle className="h-3 w-3" />} Passwords match
                     </div>
                   </div>
                 </div>
@@ -219,7 +219,7 @@ function ResetPasswordForm() {
               <button
                 type="submit"
                 disabled={loading || success}
-                className="w-full rounded-lg bg-blue-600 py-3 text-sm font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full rounded-xl bg-[#FE0002] py-3 text-sm font-bold text-white shadow-xs hover:bg-[#CC0002] active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -257,8 +257,8 @@ function ResetPasswordForm() {
         {/* Right Side: Graphic Illustration Showcase */}
         <div className="hidden lg:flex lg:col-span-7 xl:col-span-8 bg-[#eef2f7] items-center justify-center p-12 relative overflow-hidden">
           {/* Subtle Background Geometric Accents */}
-          <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-blue-400/10 blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-indigo-400/10 blur-3xl" />
+          <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#FE0002]/5 blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-black/5 blur-3xl" />
 
           <div className="max-w-xl text-center space-y-8 z-10 flex flex-col items-center">
             {/* Password Reset Illustration */}
@@ -311,7 +311,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><span className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" /></div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><span className="h-6 w-6 animate-spin rounded-full border-2 border-[#FE0002] border-t-transparent" /></div>}>
       <ResetPasswordForm />
     </Suspense>
   );

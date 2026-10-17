@@ -3,8 +3,8 @@ export const DEFAULT_LANGUAGE = "om";
 export const LANGUAGES = [
   {
     code: "om",
-    label: "Afan Oromo",
-    name: "Afan Oromo",
+    label: "Afaan Oromo",
+    name: "Afaan Oromo",
     nativeName: "Afaan Oromoo",
     direction: "ltr",
   },

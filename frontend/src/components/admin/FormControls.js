@@ -20,13 +20,13 @@ export function FormField({
       )}
       {children}
       {error && (
-        <p className="flex items-center gap-1 text-xs font-medium text-[#FE0002] animate-in fade-in">
+        <p className="flex items-center gap-1 text-xs font-medium text-[#FE0002]">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           <span>{error}</span>
         </p>
       )}
       {helpText && !error && (
-        <p className="text-[11px] text-slate-400">{helpText}</p>
+        <p className="text-[11px] text-slate-500">{helpText}</p>
       )}
     </div>
   );
@@ -54,10 +54,10 @@ export function TextInput({
         onBlur={onBlur}
         placeholder={placeholder}
         disabled={disabled}
-        className={`w-full rounded-xl border bg-white px-4 py-2.5 text-xs font-medium text-[#070707] placeholder-slate-400 transition duration-200 focus:outline-none focus:ring-2 disabled:bg-slate-100 disabled:opacity-70 ${
+        className={`w-full rounded-xl border bg-white px-3.5 py-2 text-xs font-medium text-[#070707] placeholder-slate-400 transition focus:outline-none focus:ring-2 disabled:bg-slate-100 disabled:opacity-70 ${
           error
-            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/20"
-            : "border-slate-200 focus:border-[#FE0002] focus:ring-[#FE0002]/20"
+            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15"
+            : "border-slate-200 focus:border-[#FE0002] focus:ring-[#FE0002]/15"
         } ${className}`}
       />
     </FormField>
@@ -86,10 +86,10 @@ export function TextAreaInput({
         onBlur={onBlur}
         placeholder={placeholder}
         disabled={disabled}
-        className={`w-full rounded-xl border bg-white p-4 text-xs font-medium text-[#070707] placeholder-slate-400 transition duration-200 focus:outline-none focus:ring-2 disabled:bg-slate-100 disabled:opacity-70 ${
+        className={`w-full rounded-xl border bg-white p-3.5 text-xs font-medium text-[#070707] placeholder-slate-400 transition focus:outline-none focus:ring-2 disabled:bg-slate-100 disabled:opacity-70 ${
           error
-            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/20"
-            : "border-slate-200 focus:border-[#FE0002] focus:ring-[#FE0002]/20"
+            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15"
+            : "border-slate-200 focus:border-[#FE0002] focus:ring-[#FE0002]/15"
         } ${className}`}
       />
     </FormField>
@@ -115,10 +115,10 @@ export function SelectInput({
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
         disabled={disabled}
-        className={`w-full rounded-xl border bg-white px-4 py-2.5 text-xs font-bold text-[#070707] transition duration-200 focus:outline-none focus:ring-2 disabled:bg-slate-100 ${
+        className={`w-full rounded-xl border bg-white px-3.5 py-2 text-xs font-semibold text-[#070707] transition focus:outline-none focus:ring-2 disabled:bg-slate-100 cursor-pointer ${
           error
-            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/20"
-            : "border-slate-200 focus:border-[#FE0002] focus:ring-[#FE0002]/20"
+            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15"
+            : "border-slate-200 focus:border-[#FE0002] focus:ring-[#FE0002]/15"
         } ${className}`}
       >
         {options.map((opt) => (
@@ -132,17 +132,16 @@ export function SelectInput({
 }
 
 export function ImagePickerInput({
-  label = "Cover Image (Upload or URL)",
+  label = "Cover Image",
   required = false,
   error,
   value,
   onChange,
   onBlur,
-  helpText = "Upload a photo directly from your device, or enter an image web URL.",
+  helpText = "Upload a photo from your computer, or enter an image URL.",
 }) {
   const fileInputRef = useRef(null);
   const [uploadError, setUploadError] = useState("");
-
   const [isUploading, setIsUploading] = useState(false);
 
   const handleFileChange = async (e) => {
@@ -155,170 +154,7 @@ export function ImagePickerInput({
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setUploadError("Image size exceeds 5MB limit. Please choose a smaller file.");
-      return;
-    }
-
-    setUploadError("");
-    setIsUploading(true);
-
-    try {
-      const form = new FormData();
-      form.append("file", file);
-
-      const token =
-        typeof window !== "undefined"
-          ? localStorage.getItem("mesob_token") || localStorage.getItem("token")
-          : null;
-
-      const headers = {};
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers,
-        credentials: "same-origin",
-        body: form,
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        setUploadError(data.message || "Upload failed. Please try again.");
-        return;
-      }
-
-      onChange(data.url);
-    } catch {
-      setUploadError("Upload failed. Please check your connection and try again.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const clearImage = () => {
-    onChange("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  return (
-    <FormField label={label} required={required} error={error || uploadError} helpText={helpText}>
-      <div className="space-y-3">
-        {/* Upload Button + URL input */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept="image/*"
-            className="hidden"
-          />
-
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#FE0002]/60 bg-rose-50/70 hover:bg-rose-100/70 px-4 py-2.5 text-xs font-bold text-[#FE0002] transition shadow-sm hover:shadow hover:-translate-y-[1px] active:translate-y-0 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {isUploading ? (
-              <>
-                <svg className="h-4 w-4 animate-spin text-[#FE0002]" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                <span>Uploading…</span>
-              </>
-            ) : (
-              <>
-                <Upload className="h-4 w-4 text-[#FE0002]" />
-                <span>Upload from Computer / Phone</span>
-              </>
-            )}
-          </button>
-
-          <span className="text-center text-xs font-semibold text-slate-400">or</span>
-
-          <input
-            type="text"
-            value={value && !value.startsWith("data:") ? value : ""}
-            onChange={(e) => onChange(e.target.value)}
-            onBlur={onBlur}
-            className={`flex-1 rounded-xl border bg-white px-4 py-2.5 text-xs font-medium text-[#070707] placeholder-slate-400 transition duration-200 focus:outline-none focus:ring-2 ${
-              error || uploadError
-                ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/20"
-                : "border-slate-200 focus:border-[#FE0002] focus:ring-[#FE0002]/20"
-            }`}
-          />
-        </div>
-
-        {/* Live Preview */}
-        {value ? (
-          <div className="relative inline-block overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm max-w-sm">
-            <img
-              src={value}
-              alt="Preview"
-              className="aspect-video w-full object-cover max-h-56"
-            />
-            <button
-              type="button"
-              onClick={clearImage}
-              title="Remove image"
-              className="absolute top-2 right-2 rounded-full bg-slate-900/80 p-1.5 text-white hover:bg-rose-600 transition duration-200 shadow-md hover:scale-105"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-            <div className="bg-white/95 px-3 py-1.5 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-600">
-              <span className="inline-flex items-center gap-1 font-medium">
-                <ImageIcon className="h-3.5 w-3.5 text-[#FE0002]" />
-                <span>Image attached</span>
-              </span>
-              <button
-                type="button"
-                onClick={clearImage}
-                className="text-[#FE0002] font-bold hover:underline"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-xs text-slate-500">
-            <ImageIcon className="h-4 w-4 text-slate-400 shrink-0" />
-            <span>No image selected. Upload a photo or provide a URL for this entry.</span>
-          </div>
-        )}
-      </div>
-    </FormField>
-  );
-}
-
-export function VideoPickerInput({
-  label = "Video (Upload or URL)",
-  required = false,
-  error,
-  value,
-  onChange,
-  onBlur,
-  helpText = "Upload an optional video (MP4, WebM, MOV) up to 50MB.",
-}) {
-  const fileInputRef = useRef(null);
-  const [uploadError, setUploadError] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("video/")) {
-      setUploadError("Please select a valid video file (MP4, WebM, MOV).");
-      return;
-    }
-
-    if (file.size > 50 * 1024 * 1024) {
-      setUploadError("Video size exceeds 50MB limit.");
+      setUploadError("Image size exceeds 5MB limit.");
       return;
     }
 
@@ -352,7 +188,146 @@ export function VideoPickerInput({
 
       onChange(data.url);
     } catch {
-      setUploadError("Upload failed. Please check your connection and try again.");
+      setUploadError("Upload failed. Please check connection and try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const clearImage = () => {
+    onChange("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  return (
+    <FormField label={label} required={required} error={error || uploadError} helpText={helpText}>
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            className="hidden"
+          />
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 px-4 py-2 text-xs font-bold text-[#070707] transition cursor-pointer disabled:opacity-60"
+          >
+            {isUploading ? (
+              <span>Uploading...</span>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 text-[#FE0002]" />
+                <span>Choose Image</span>
+              </>
+            )}
+          </button>
+
+          <span className="text-center text-xs font-semibold text-slate-400">or URL:</span>
+
+          <input
+            type="text"
+            value={value && !value.startsWith("data:") ? value : ""}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={onBlur}
+            placeholder="https://..."
+            className={`flex-1 rounded-xl border bg-white px-3.5 py-2 text-xs font-medium text-[#070707] placeholder-slate-400 transition focus:outline-none focus:ring-2 ${
+              error || uploadError
+                ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15"
+                : "border-slate-200 focus:border-[#FE0002] focus:ring-[#FE0002]/15"
+            }`}
+          />
+        </div>
+
+        {value ? (
+          <div className="relative inline-block overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-xs max-w-sm">
+            <img
+              src={value}
+              alt="Preview"
+              className="aspect-video w-full object-cover max-h-52"
+            />
+            <button
+              type="button"
+              onClick={clearImage}
+              title="Remove image"
+              className="absolute top-2 right-2 rounded-full bg-slate-900/80 p-1.5 text-white hover:bg-[#FE0002] transition shadow-xs cursor-pointer"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-xs text-slate-400">
+            <ImageIcon className="h-4 w-4 text-slate-400 shrink-0" />
+            <span>No image selected</span>
+          </div>
+        )}
+      </div>
+    </FormField>
+  );
+}
+
+export function VideoPickerInput({
+  label = "Video (Upload or URL)",
+  required = false,
+  error,
+  value,
+  onChange,
+  onBlur,
+  helpText = "Upload an optional video file or paste an external video link.",
+}) {
+  const fileInputRef = useRef(null);
+  const [uploadError, setUploadError] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("video/")) {
+      setUploadError("Please select a valid video file.");
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      setUploadError("Video size exceeds 50MB limit.");
+      return;
+    }
+
+    setUploadError("");
+    setIsUploading(true);
+
+    try {
+      const form = new FormData();
+      form.append("file", file);
+
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("mesob_token") || localStorage.getItem("token")
+          : null;
+
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers,
+        credentials: "same-origin",
+        body: form,
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setUploadError(data.message || "Upload failed.");
+        return;
+      }
+
+      onChange(data.url);
+    } catch {
+      setUploadError("Upload failed. Please check connection.");
     } finally {
       setIsUploading(false);
     }
@@ -372,7 +347,7 @@ export function VideoPickerInput({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#FE0002]/60 bg-rose-50/70 hover:bg-rose-100/70 px-4 py-2.5 text-xs font-bold text-[#FE0002] transition shadow-sm hover:shadow hover:-translate-y-[1px] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 px-4 py-2 text-xs font-bold text-[#070707] transition cursor-pointer disabled:opacity-60"
           >
             {isUploading ? (
               <span>Uploading...</span>
@@ -383,34 +358,35 @@ export function VideoPickerInput({
               </>
             )}
           </button>
-          <span className="text-center text-xs font-semibold text-slate-400">or URL</span>
+          <span className="text-center text-xs font-semibold text-slate-400">or URL:</span>
           <input
             type="text"
             value={value && !value.startsWith("data:") ? value : ""}
             onChange={(e) => onChange(e.target.value)}
             onBlur={onBlur}
-            className={`flex-1 rounded-xl border bg-white px-4 py-2.5 text-xs font-medium text-[#070707] placeholder-slate-400 transition duration-200 focus:outline-none focus:ring-2 ${
+            placeholder="https://..."
+            className={`flex-1 rounded-xl border bg-white px-3.5 py-2 text-xs font-medium text-[#070707] placeholder-slate-400 transition focus:outline-none focus:ring-2 ${
               error || uploadError
-                ? "border-rose-400 focus:border-rose-500"
-                : "border-slate-200 focus:border-[#FE0002]"
+                ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15"
+                : "border-slate-200 focus:border-[#FE0002] focus:ring-[#FE0002]/15"
             }`}
           />
         </div>
         {value ? (
-          <div className="relative inline-block overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm max-w-sm w-full">
-            <video src={value} controls className="aspect-video w-full object-cover max-h-56 bg-black" />
+          <div className="relative inline-block overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-xs max-w-sm w-full">
+            <video src={value} controls className="aspect-video w-full object-cover max-h-52 bg-black" />
             <button
               type="button"
               onClick={clearVideo}
               title="Remove video"
-              className="absolute top-2 right-2 rounded-full bg-slate-900/80 p-1.5 text-white hover:bg-rose-600 transition shadow-md hover:scale-105"
+              className="absolute top-2 right-2 rounded-full bg-slate-900/80 p-1.5 text-white hover:bg-[#FE0002] transition shadow-xs cursor-pointer"
             >
               <X className="h-3.5 w-3.5" />
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-xs text-slate-500">
-            <span>No video selected. Optional video attachment.</span>
+          <div className="flex items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-xs text-slate-400">
+            <span>No video selected</span>
           </div>
         )}
       </div>

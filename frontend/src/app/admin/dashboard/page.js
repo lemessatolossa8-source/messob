@@ -96,8 +96,8 @@ export default function AdminDashboardOverviewPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-emerald-600 border-r-transparent"></div>
-          <p className="text-sm text-slate-600">Loading dashboard...</p>
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#FE0002] border-r-transparent"></div>
+          <p className="text-sm font-medium text-slate-600">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -141,14 +141,14 @@ export default function AdminDashboardOverviewPage() {
                 <div className="flex items-center gap-2">
                   <p className="text-xs font-semibold text-slate-500">{card.label}</p>
                   {card.status === "published" && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#070707] border border-[#070707] px-2 py-0.5 text-[10px] font-bold text-white">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#FE0002]" />
                       Live
                     </span>
                   )}
                   {card.status === "draft" && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-600" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-slate-300 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                      <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                       Pending
                     </span>
                   )}
@@ -225,7 +225,7 @@ export default function AdminDashboardOverviewPage() {
                   </div>
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold shrink-0 ${
-                      isPublished ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-amber-50 text-amber-700 border border-amber-200"
+                      isPublished ? "bg-[#070707] text-white border border-[#070707]" : "bg-white text-slate-600 border border-slate-300"
                     }`}
                   >
                     {isPublished ? "Published" : "Draft"}

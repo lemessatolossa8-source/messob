@@ -166,6 +166,9 @@ const am = {
     leadershipDesc: "የህዝብ አገልግሎት የሚሰጡ ዋና ዋና ክፍሎች እና አመራሮች።",
     frameworkTitle: "የወደፊት ዲጂታል መዋቅር",
     frameworkDesc: "ይህ ፖርታል በቀጣይነት ከሙሉ የጀርባ ሲስተሞች እና የመንግስት ኢ-አገልግሎቶች ጋር በቀላሉ እንዲጣመር ታስቦ የተሰራ ነው።",
+    cityOverview: "የከተማው አጠቃላይ መግለጫ",
+    generalInfoTitle: "አጠቃላይ የከተማ መረጃ",
+    generalInfoDesc: "የቡራዩ ከተማ መልክዓ ምድራዊ፣ ኢኮኖሚያዊ እና ሎጂስቲክስ መረጃዎች",
   },
 
   // Services Page

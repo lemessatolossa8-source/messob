@@ -157,7 +157,7 @@ export default function CreateNewsPage() {
           </Link>
           <div>
             <h2 className="text-xl font-extrabold text-[#070707]">Create News Article</h2>
-            <p className="text-xs text-slate-500">Add a new verified municipal story in all 3 languages</p>
+            <p className="text-xs text-slate-500">Publish or draft an official municipal news release</p>
           </div>
         </div>
       </div>
@@ -184,7 +184,7 @@ export default function CreateNewsPage() {
             onChange={(v) => handleFieldChange("title", activeLang, v)}
             onBlur={() => handleBlur("title", activeLang)}
             error={errors[`title_${activeLang}`]}
-            placeholder={`Enter news headline in ${activeLang === "om" ? "Afaan Oromoo" : activeLang === "am" ? "Amharic" : "English"}...`}
+            placeholder="Enter news headline..."
           />
 
           <TextAreaInput
@@ -257,7 +257,7 @@ export default function CreateNewsPage() {
         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-slate-100 pt-6">
           <Link
             href="/admin/dashboard/news"
-            className="w-full sm:w-auto rounded-full border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-[#070707] hover:bg-slate-50 transition text-center"
+            className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-[#070707] hover:bg-slate-50 transition text-center"
           >
             Cancel
           </Link>
@@ -266,7 +266,7 @@ export default function CreateNewsPage() {
             type="button"
             disabled={isSubmitting}
             onClick={(e) => handleSubmit(e, "draft")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-slate-200 transition disabled:opacity-50"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-slate-200 transition disabled:opacity-50"
           >
             <Save className="h-4 w-4" />
             <span>Save as Draft</span>
@@ -276,9 +276,9 @@ export default function CreateNewsPage() {
             type="button"
             disabled={isSubmitting}
             onClick={(e) => handleSubmit(e, "published")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition disabled:opacity-50"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#FE0002] px-6 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#CC0002] transition disabled:opacity-50"
           >
-            <Send className="h-4 w-4 text-amber-400" />
+            <Send className="h-4 w-4 text-white" />
             <span>{isSubmitting ? "Publishing..." : "Publish News"}</span>
           </button>
         </div>

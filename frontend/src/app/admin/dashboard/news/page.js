@@ -47,7 +47,7 @@ export default function AdminNewsListPage() {
         toast.info("News item moved to draft.");
       } else {
         if (!item.title?.om || !item.title?.am || !item.title?.en) {
-          toast.warning("Title in all 3 languages (OM, AM, EN) is recommended before publishing.");
+          toast.warning("Title in all 3 languages (Afaan Oromo, አማርኛ, English) is recommended before publishing.");
         }
         await newsService.publish(item.id);
         toast.success("News item published successfully!");
