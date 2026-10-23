@@ -3,9 +3,9 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Calendar, MapPin, Tag, Building2, BriefcaseBusiness, MapPinned, FileText, Banknote, Users, Play, Video, Layers } from "lucide-react";
-import AccessEServiceButton from "@/components/AccessEserviceButton";
-import { useTranslation } from "@/src/context/LanguageContext";
+import { ArrowRight, Calendar, MapPin, Building2, BriefcaseBusiness, MapPinned, FileText, Banknote, Users, Play, Video } from "lucide-react";
+import { getImageUrl } from "@/lib/imageUrl";
+import { useTranslation } from "@/context/LanguageContext";
 
 export function StatusBadge({ status }) {
   const { t } = useTranslation();
@@ -15,7 +15,7 @@ export function StatusBadge({ status }) {
     Planned: "bg-white text-[#070707] border-slate-300",
     Pilot: "bg-white text-[#070707] border-slate-300",
     Completed: "bg-slate-100 text-[#070707] border-slate-300",
-    Upcoming: "bg-[#FE0002]/10 text-[#FE0002] border-[#FE0002]/30",
+    Upcoming: "bg-[#D71920]/10 text-[#D71920] border-[#D71920]/30",
     published: "bg-[#070707] text-white border-[#070707]",
     draft: "bg-slate-100 text-slate-600 border-slate-300",
   };
@@ -42,8 +42,6 @@ export function StatusBadge({ status }) {
   );
 }
 
-import { getImageUrl } from "@/src/lib/imageUrl";
-
 export function NewsCard({ item }) {
   const { getText, t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -51,7 +49,7 @@ export function NewsCard({ item }) {
   const videoRef = useRef(null);
 
   const title = getText(item.title);
-  const summary = getText(item.summary || item.description);
+  const summary = getText(item.summary || item.description || item.content);
 
   const rawVideo = item.video && typeof item.video === "string" ? item.video.trim() : "";
   const videoUrl = rawVideo
@@ -88,7 +86,7 @@ export function NewsCard({ item }) {
   };
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md hover:border-[#FE0002]/30">
+    <article className="group flex flex-col overflow-hidden rounded-3xl border border-neutral-200/80 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:border-[#D71920]/40">
       {/* Media section: Video preview or standard Image */}
       {videoUrl ? (
         <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-950 group/media">
@@ -110,12 +108,6 @@ export function NewsCard({ item }) {
 
           {!isPlaying && (
             <>
-              {item.category && (
-                <span className="pointer-events-none absolute top-3 left-3 z-10 rounded-full bg-[#FE0002] px-3 py-1 text-[11px] font-bold text-white shadow-xs border border-white/20">
-                  {item.category}
-                </span>
-              )}
-
               <span className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs border border-white/10">
                 <Video className="h-3 w-3 text-white" />
                 <span>Video</span>
@@ -127,7 +119,7 @@ export function NewsCard({ item }) {
                 aria-label="Play video"
                 className="absolute inset-0 z-10 flex items-center justify-center bg-black/25 transition-all duration-300 hover:bg-black/35 group/play cursor-pointer"
               >
-                <span className="flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-[#FE0002] text-white shadow-xl shadow-black/40 ring-4 ring-white/30 transition-transform duration-300 group-hover/play:scale-110 group-active/play:scale-95">
+                <span className="flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-[#D71920] text-white shadow-xl shadow-black/40 ring-4 ring-white/30 transition-transform duration-300 group-hover/play:scale-110 group-active/play:scale-95">
                   <Play className="h-6 w-6 fill-white translate-x-0.5" />
                 </span>
               </button>
@@ -144,48 +136,38 @@ export function NewsCard({ item }) {
             loading="lazy"
             quality={75}
             onError={() => setImgError(true)}
-            className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
-          {item.category && (
-            <span className="absolute top-3 left-3 z-10 rounded-full bg-[#FE0002] px-3 py-1 text-[11px] font-bold text-white shadow-xs border border-white/20">
-              {item.category}
-            </span>
-          )}
         </Link>
       ) : (
         <Link href={`/news/${item.id}`} className="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center text-slate-400 group-hover:text-slate-600 transition block">
           <FileText className="h-10 w-10 text-slate-300 transition-transform group-hover:scale-105" />
-          {item.category && (
-            <span className="absolute top-3 left-3 z-10 rounded-full bg-[#FE0002] px-3 py-1 text-[11px] font-bold text-white shadow-xs border border-white/20">
-              {item.category}
-            </span>
-          )}
         </Link>
       )}
 
       <div className="flex flex-1 flex-col p-6">
         <div className="flex items-center gap-2 text-xs font-semibold text-neutral-500">
-          <Calendar className="h-3.5 w-3.5 text-[#FE0002]" />
+          <Calendar className="h-3.5 w-3.5 text-[#D71920]" />
           <span>{item.date}</span>
         </div>
 
-        <h3 className="mt-3 text-base sm:text-lg font-bold text-[#070707] group-hover:text-[#FE0002] transition line-clamp-2">
+        <h3 className="mt-3 font-serif text-lg sm:text-xl font-bold text-[#070707] group-hover:text-[#D71920] transition-colors leading-snug line-clamp-2">
           <Link href={`/news/${item.id}`}>{title}</Link>
         </h3>
 
-        <p className="mt-2 text-xs sm:text-sm text-neutral-600 leading-relaxed line-clamp-3 flex-1">
+        <p className="mt-2 text-xs sm:text-sm text-neutral-600 leading-relaxed line-clamp-3 flex-1 font-normal">
           {summary}
         </p>
 
         <div className="mt-5 pt-4 border-t border-neutral-100 flex items-center justify-between">
           <Link
             href={`/news/${item.id}`}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FE0002] transition hover:text-[#CC0002]"
+            className="group/btn inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neutral-100 hover:bg-[#D71920] text-xs font-bold text-neutral-800 hover:text-white transition-all duration-300 hover-lift shadow-xs cursor-pointer"
             aria-label={`${t("actions.readMore", "Read More")}: ${title}`}
           >
             <span>{t("actions.readMore", "Read More")}</span>
             <span className="sr-only">: {title}</span>
-            <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:translate-x-1" />
           </Link>
         </div>
       </div>
@@ -197,11 +179,11 @@ export function AnnouncementCard({ item }) {
   const { getText, t } = useTranslation();
   const [imgError, setImgError] = useState(false);
   const title = getText(item.title);
-  const summary = getText(item.summary || item.description);
+  const summary = getText(item.summary || item.description || item.content);
   const imageUrl = getImageUrl(item.image);
 
   return (
-    <div className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#FE0002]/30 hover:shadow-md">
+    <div className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-neutral-200/80 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-[#D71920]/40 hover:shadow-xl">
       {imageUrl && !imgError ? (
         <Link href={`/announcements/${item.id}`} className="relative aspect-[16/9] w-full overflow-hidden bg-neutral-100 block">
           <Image
@@ -212,49 +194,42 @@ export function AnnouncementCard({ item }) {
             loading="lazy"
             quality={75}
             onError={() => setImgError(true)}
-            className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
-          <span className="absolute top-3 left-3 z-10 rounded-full bg-[#FE0002] px-3 py-1 text-[11px] font-bold text-white shadow-xs border border-white/20">
-            {item.category || "Public Notice"}
-          </span>
         </Link>
       ) : (
         <Link href={`/announcements/${item.id}`} className="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-amber-50 to-amber-100/60 flex flex-col items-center justify-center text-amber-700/60 group-hover:text-amber-800 transition block border-b border-amber-100">
           <FileText className="h-10 w-10 text-amber-400/80 transition-transform group-hover:scale-105" />
-          <span className="absolute top-3 left-3 z-10 rounded-full bg-[#FE0002] px-3 py-1 text-[11px] font-bold text-white shadow-xs border border-white/20">
-            {item.category || "Public Notice"}
-          </span>
         </Link>
       )}
 
       <div className="flex flex-1 flex-col p-6">
         <div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="inline-flex items-center rounded-full bg-[#FE0002]/10 border border-[#FE0002]/25 px-3 py-1 text-[11px] font-bold text-[#FE0002]">
-              {item.category || "Public Notice"}
-            </span>
-            <span className="text-xs font-medium text-neutral-500">{item.date}</span>
-          </div>
+          {item.date && (
+            <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-500">
+              <Calendar className="h-3.5 w-3.5 text-[#D71920]" />
+              <span>{item.date}</span>
+            </div>
+          )}
 
-          <h3 className="mt-4 text-base sm:text-lg font-bold text-[#070707] group-hover:text-[#FE0002] transition">
+          <h3 className={`${item.date ? "mt-3" : ""} font-serif text-lg sm:text-xl font-bold text-[#070707] group-hover:text-[#D71920] transition-colors leading-snug line-clamp-2`}>
             <Link href={`/announcements/${item.id}`}>
               {title}
             </Link>
           </h3>
 
-          <p className="mt-2 text-xs sm:text-sm text-neutral-600 leading-relaxed line-clamp-3">
+          <p className="mt-2 text-xs sm:text-sm text-neutral-600 leading-relaxed line-clamp-3 font-normal">
             {summary}
           </p>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
-          <span className="truncate pr-2 font-medium">{item.department || "Burayu MESOB"}</span>
+        <div className="mt-6 pt-4 border-t border-neutral-100 flex items-center justify-end">
           <Link
             href={`/announcements/${item.id}`}
-            className="inline-flex items-center gap-1 text-xs font-bold text-[#FE0002] hover:text-[#CC0002] shrink-0 transition"
+            className="group/btn inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#D71920]/10 hover:bg-[#D71920] border border-[#D71920]/25 text-xs font-bold text-[#D71920] hover:text-white transition-all duration-300 hover-lift shadow-xs shrink-0 cursor-pointer"
           >
             <span>{t("actions.viewNotice", "View Notice")}</span>
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:translate-x-1" />
           </Link>
         </div>
       </div>
@@ -265,19 +240,19 @@ export function AnnouncementCard({ item }) {
 export function NoticeCard({ item }) {
   const { getText, t } = useTranslation();
   const title = getText(item.title);
-  const summary = getText(item.summary || item.description);
+  const summary = getText(item.summary || item.description || item.content);
 
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#FE0002]/30 hover:shadow-md">
+    <div className="flex flex-col justify-between rounded-3xl border border-neutral-200/80 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-[#D71920]/40 hover:shadow-xl">
       <div>
         <div className="flex items-center justify-between gap-4">
-          <span className="inline-flex items-center rounded-full bg-[#FE0002]/10 border border-[#FE0002]/25 px-3 py-1 text-[11px] font-bold text-[#FE0002]">
+          <span className="inline-flex items-center rounded-full bg-[#D71920]/10 border border-[#D71920]/25 px-3 py-1 text-[11px] font-bold text-[#D71920]">
             {item.category || "Notice"}
           </span>
           <span className="text-xs font-medium text-neutral-500">{item.date}</span>
         </div>
 
-        <h3 className="mt-4 text-base sm:text-lg font-bold text-[#070707] hover:text-[#FE0002] transition">
+        <h3 className="mt-4 font-serif text-lg sm:text-xl font-bold text-[#070707] hover:text-[#D71920] transition-colors leading-snug">
           <Link href={`/notices/${item.id}`}>
             {title}
           </Link>
@@ -292,10 +267,10 @@ export function NoticeCard({ item }) {
         <span className="font-mono text-[11px] font-semibold text-[#070707]">{item.referenceNo}</span>
         <Link
           href={`/notices/${item.id}`}
-          className="inline-flex items-center gap-1 text-xs font-bold text-[#FE0002] hover:text-[#CC0002] transition"
+          className="group/btn inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#D71920]/10 hover:bg-[#D71920] border border-[#D71920]/25 text-xs font-bold text-[#D71920] hover:text-white transition-all duration-300 hover-lift shadow-xs shrink-0 cursor-pointer"
         >
           <span>{t("actions.viewNotice", "View Notice")}</span>
-          <ArrowRight className="h-3.5 w-3.5" />
+          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:translate-x-1" />
         </Link>
       </div>
     </div>
@@ -310,7 +285,7 @@ export function EventCard({ item }) {
   const imageUrl = getImageUrl(item.image);
 
   return (
-    <article className="group flex flex-col sm:flex-row overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md hover:border-[#FE0002]/30">
+    <article className="group flex flex-col sm:flex-row overflow-hidden rounded-3xl border border-neutral-200/80 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:border-[#D71920]/40">
       {imageUrl && !imgError ? (
         <Link href={`/events/${item.id}`} className="relative sm:w-2/5 aspect-[16/10] sm:aspect-auto overflow-hidden bg-neutral-100 shrink-0 min-h-[160px] block">
           <Image
@@ -321,7 +296,7 @@ export function EventCard({ item }) {
             loading="lazy"
             quality={75}
             onError={() => setImgError(true)}
-            className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
         </Link>
       ) : (
@@ -332,18 +307,18 @@ export function EventCard({ item }) {
 
       <div className="flex flex-1 flex-col p-6">
         <div className="flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FE0002]">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#D71920]">
             <Calendar className="h-3.5 w-3.5" /> {item.date}
           </span>
           {item.eventStatus ? <StatusBadge status={item.eventStatus} /> : null}
         </div>
 
-        <h3 className="mt-3 text-base sm:text-lg font-bold text-[#070707] group-hover:text-[#FE0002] transition">
+        <h3 className="mt-3 font-serif text-lg sm:text-xl font-bold text-[#070707] group-hover:text-[#D71920] transition-colors leading-snug">
           <Link href={`/events/${item.id}`}>{title}</Link>
         </h3>
 
         <div className="mt-2 flex items-center gap-1.5 text-xs text-neutral-500 font-medium">
-          <MapPin className="h-3.5 w-3.5 text-[#FE0002] shrink-0" />
+          <MapPin className="h-3.5 w-3.5 text-[#D71920] shrink-0" />
           <span className="truncate">{item.location}</span>
         </div>
 
@@ -354,10 +329,10 @@ export function EventCard({ item }) {
         <div className="mt-4 pt-3 border-t border-neutral-100">
           <Link
             href={`/events/${item.id}`}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FE0002] transition hover:text-[#CC0002]"
+            className="group/btn inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neutral-100 hover:bg-[#D71920] text-xs font-bold text-neutral-800 hover:text-white transition-all duration-300 hover-lift shadow-xs cursor-pointer"
           >
             <span>{t("actions.viewDetails", "View Details")}</span>
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:translate-x-1" />
           </Link>
         </div>
       </div>
@@ -374,7 +349,7 @@ export function ProjectCard({ item }) {
   const imageUrl = getImageUrl(item.image);
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md hover:border-[#FE0002]/30">
+    <article className="group flex flex-col overflow-hidden rounded-3xl border border-neutral-200/80 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:border-[#D71920]/40">
       {imageUrl && !imgError ? (
         <Link href={`/projects/${item.id}`} className="relative aspect-[16/9] w-full overflow-hidden bg-neutral-100 block">
           <Image
@@ -385,70 +360,63 @@ export function ProjectCard({ item }) {
             loading="lazy"
             quality={75}
             onError={() => setImgError(true)}
-            className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
-          <div className="absolute top-3 right-3 z-10">
-            <StatusBadge status={item.projectStatus || item.status} />
-          </div>
         </Link>
       ) : (
         <Link href={`/projects/${item.id}`} className="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center text-slate-400 group-hover:text-slate-600 transition block border-b border-neutral-100">
           <Building2 className="h-10 w-10 text-slate-300 transition-transform group-hover:scale-105" />
-          <div className="absolute top-3 left-3 z-10">
-            <span className="rounded-full bg-slate-900/80 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-white">
-              {item.department || item.category || "Infrastructure"}
-            </span>
-          </div>
-          <div className="absolute top-3 right-3 z-10">
-            <StatusBadge status={item.projectStatus || item.status} />
-          </div>
         </Link>
       )}
 
       <div className="flex flex-1 flex-col p-6">
-        <div className="flex items-center justify-between text-xs font-medium text-neutral-500">
+        <div className="flex items-center text-xs font-medium text-neutral-500">
           <div className="flex items-center gap-1.5 truncate">
-            <MapPin className="h-3.5 w-3.5 text-[#FE0002] shrink-0" />
+            <MapPin className="h-3.5 w-3.5 text-[#D71920] shrink-0" />
             <span className="truncate">{item.location || "Burayu"}</span>
           </div>
-          <span className="text-[11px] font-bold text-neutral-400">
-            {item.department || item.category}
-          </span>
         </div>
 
-        <h3 className="mt-2 text-base sm:text-lg font-bold text-[#070707] group-hover:text-[#FE0002] transition">
+        <h3 className="mt-2 font-serif text-lg sm:text-xl font-bold text-[#070707] group-hover:text-[#D71920] transition-colors leading-snug">
           <Link href={`/projects/${item.id}`}>{title}</Link>
         </h3>
 
-        <p className="mt-2 text-xs sm:text-sm text-neutral-600 leading-relaxed line-clamp-3 flex-1">
+        <p className="mt-2 text-xs sm:text-sm text-neutral-600 leading-relaxed line-clamp-3 flex-1 font-normal">
           {description}
         </p>
 
-        {/* Progress Bar */}
-        <div className="mt-4 space-y-1.5">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-neutral-500 font-medium">Progress</span>
-            <span className="font-bold text-[#070707]">{progress}%</span>
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
-            <div
-              className="h-full rounded-full bg-[#070707] transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-
+        {/* View Project row */}
         <div className="mt-5 pt-4 border-t border-neutral-100 flex items-center justify-between">
           <span className="text-[11px] text-neutral-500 font-medium">
             {item.start_date || item.startDate ? `${item.start_date || item.startDate}` : ""}
           </span>
           <Link
             href={`/projects/${item.id}`}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#FE0002] hover:bg-[#CC0002] hover:shadow-md hover:-translate-y-[2px] active:translate-y-0 active:scale-[0.98] px-4 py-1.5 text-xs font-bold text-white transition-all duration-200 shadow-xs"
+            className="group/btn inline-flex items-center gap-2 rounded-full bg-[#D71920] hover:bg-[#b5141a] px-4 py-1.5 text-xs font-bold text-white transition-all duration-300 shadow-md shadow-red-950/20 hover-lift cursor-pointer"
           >
             <span>{t("actions.viewProject", "View Project")}</span>
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:translate-x-1" />
           </Link>
+        </div>
+
+        {/* Under View Project: Progress and Status */}
+        <div className="mt-4 pt-3.5 border-t border-neutral-100 space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">Status:</span>
+              <StatusBadge status={item.projectStatus || item.status} />
+            </div>
+            <div className="flex items-center gap-1 font-bold text-[#070707]">
+              <span className="text-[11px] font-medium text-neutral-500">Progress:</span>
+              <span>{progress}%</span>
+            </div>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
+            <div
+              className="h-full rounded-full bg-[#D71920] transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       </div>
     </article>
@@ -490,7 +458,7 @@ export function FloorCard({ item }) {
   return (
     <article
       id={primaryAnchor}
-      className="scroll-mt-28 relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#FE0002]/40 hover:shadow-md target:ring-2 target:ring-[#FE0002] target:border-[#FE0002] target:shadow-xl group"
+      className="scroll-mt-28 relative flex flex-col overflow-hidden rounded-3xl border border-neutral-200/80 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-[#D71920]/40 hover:shadow-xl target:ring-2 target:ring-[#D71920] target:border-[#D71920] target:shadow-xl group"
     >
       {secondaryAnchor && (
         <span id={secondaryAnchor} className="scroll-mt-28 absolute -top-28 pointer-events-none" />
@@ -499,10 +467,14 @@ export function FloorCard({ item }) {
       {/* Floor Image */}
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-neutral-100 border-b border-neutral-100">
         {imageUrl && !imageError ? (
-          <img
+          <Image
             src={imageUrl}
             alt={floorName || "Floor"}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            loading="lazy"
+            quality={75}
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             onError={() => setImageError(true)}
           />
         ) : (
@@ -515,7 +487,7 @@ export function FloorCard({ item }) {
       {/* Floor Name & Description */}
       <div className="flex flex-1 flex-col p-6 sm:p-7 justify-between gap-3">
         <div className="space-y-2">
-          <h3 className="text-lg sm:text-xl font-bold text-[#070707] group-hover:text-[#FE0002] transition-colors leading-snug">
+          <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#070707] group-hover:text-[#D71920] transition-colors leading-snug">
             {floorName || "Untitled Floor"}
           </h3>
 
@@ -545,9 +517,9 @@ export function ServiceCard({ item }) {
   const Icon = typeof item.icon === "string" ? iconMap[item.icon] || Building2 : item.icon || Building2;
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-neutral-200/80 bg-white p-6 sm:p-7 shadow-xs transition hover:border-[#FE0002]/40 hover:shadow-md group">
+    <div className="flex flex-col overflow-hidden rounded-3xl border border-neutral-200/80 bg-white p-7 sm:p-8 shadow-sm transition-all duration-300 ease-out hover:-translate-y-2 hover:border-[#D71920]/40 hover:shadow-2xl group">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#070707] text-white shadow-xs group-hover:bg-[#FE0002] transition-colors">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#D71920]/10 text-[#D71920] border border-[#D71920]/20 shadow-xs group-hover:bg-[#D71920] group-hover:text-white transition-all duration-300">
           <Icon className="h-6 w-6" />
         </div>
         {item.category && (
@@ -557,7 +529,7 @@ export function ServiceCard({ item }) {
         )}
       </div>
 
-      <h3 className="mt-4 text-lg font-bold text-[#070707] group-hover:text-[#FE0002] transition-colors">
+      <h3 className="mt-5 font-serif text-xl font-bold text-[#070707] group-hover:text-[#D71920] transition-colors">
         {title}
       </h3>
       <p className="mt-2 text-xs sm:text-sm leading-relaxed text-neutral-600 font-normal flex-1">
@@ -570,8 +542,8 @@ export function ServiceCard({ item }) {
 export function InvestmentCard({ item }) {
   const Icon = item.icon || Building2;
   return (
-    <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md hover:border-[#FE0002]/30 group">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#070707] text-white shadow-xs transition-colors group-hover:bg-[#FE0002]">
+    <div className="flex flex-col rounded-3xl border border-neutral-200/80 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:border-[#D71920]/40 group">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#070707] text-white shadow-xs transition-colors group-hover:bg-[#D71920]">
         <Icon className="h-6 w-6" />
       </div>
 

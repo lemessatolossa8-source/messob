@@ -3,14 +3,12 @@
  * All service files import this.
  */
 
-const getApiBase = () => {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
+export const getApiBase = () => {
   if (typeof window !== "undefined") {
+    // In browser: same-origin /api eliminates CORS preflight delays and allows socket reuse
     return `${window.location.origin}/api`;
   }
-  return "http://localhost:3000/api";
+  return process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000/api";
 };
 
 // Retrieve the JWT from localStorage (client-side only)

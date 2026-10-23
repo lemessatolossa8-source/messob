@@ -1,14 +1,13 @@
 import HomeClient from "@/components/HomeClient";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
-const API_BASE = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000/api";
 
 async function fetchJson(endpoint) {
   try {
     const res = await fetch(`${API_BASE}${endpoint}`, {
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     if (!res.ok) return { items: [] };
     const json = await res.json();

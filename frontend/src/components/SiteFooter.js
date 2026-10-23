@@ -11,6 +11,10 @@ export default function SiteFooter() {
   const { settings } = useSiteSettings();
   const contact = settings?.contactInfo || {};
   const social = settings?.socialMedia || {};
+  const eServiceConfig = settings?.eServiceConfig || {};
+  const eConferenceUrl = eServiceConfig?.eConference?.enabled !== false ? (eServiceConfig?.eConference?.url || "https://meeting.shaggarcity.et/") : "https://meeting.shaggarcity.et/";
+  const eLandUrl = eServiceConfig?.eLand?.enabled !== false ? (eServiceConfig?.eLand?.url || "https://shaggareland.gov.et/") : "https://shaggareland.gov.et/";
+  const eTradeUrl = eServiceConfig?.eTrade?.enabled !== false ? (eServiceConfig?.eTrade?.url || "https://etrade.gov.et/") : "https://etrade.gov.et/";
   const aboutText =
     getText(settings?.siteDescription) ||
     t(
@@ -39,8 +43,8 @@ export default function SiteFooter() {
 
   return (
     <footer className="mt-20 relative bg-black text-white">
-      {/* Top Accent Line */}
-      <div className="h-[3px] w-full bg-[#FE0002]"></div>
+      {/* Top Accent Line (Abba Gadaa Red #D71920) */}
+      <div className="h-[4px] w-full bg-[#D71920]"></div>
 
       <div className="container-shell grid gap-10 py-14 lg:grid-cols-[1.3fr_0.8fr_0.8fr_1fr]">
         {/* Brand & About */}
@@ -59,7 +63,7 @@ export default function SiteFooter() {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full border border-white/20 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-neutral-200 transition hover:border-[#FE0002] hover:text-[#FE0002]"
+                  className="rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs font-semibold text-neutral-200 transition-all duration-300 hover:border-[#D71920] hover:bg-[#D71920] hover:text-white hover-lift shadow-xs cursor-pointer"
                 >
                   {item.label}
                 </a>
@@ -70,7 +74,7 @@ export default function SiteFooter() {
 
         {/* Quick Links */}
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#FE0002]">
+          <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#D71920]">
             {t("footer.quickLinks", "Quick Links")}
           </h3>
           <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
@@ -78,7 +82,7 @@ export default function SiteFooter() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="py-1 text-neutral-200/90 transition hover:text-[#FE0002] hover:underline"
+                className="py-1 text-neutral-300 transition hover:text-[#D71920] hover:underline"
               >
                 {item.label}
               </Link>
@@ -86,52 +90,103 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        {/* Services & Gateway */}
+        {/* E-Services */}
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#FE0002]">
-            {t("footer.services", "Services")}
+          <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#D71920]">
+            {t("footer.eServices", "E-Services")}
           </h3>
-          <div className="mt-4 space-y-2.5 text-xs text-neutral-200/90">
-            <p>Municipal Guidance</p>
-            <p>Business Support & Permits</p>
-            <p>Urban Planning & Land Desk</p>
-            <p>Investment Facilitation</p>
+          <div className="mt-4 space-y-2.5 text-xs">
+            <p className="text-neutral-400">
+              E-Library — Coming Soon
+            </p>
+            <p>
+              <a
+                href={eLandUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-neutral-300 transition hover:text-[#D71920] hover:underline"
+              >
+                E-Land
+              </a>
+            </p>
+            <p>
+              <a
+                href={eConferenceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-neutral-300 transition hover:text-[#D71920] hover:underline"
+              >
+                E-Conference
+              </a>
+            </p>
+            <p>
+              <a
+                href="https://eservice.shaggarcity.et/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-neutral-300 transition hover:text-[#D71920] hover:underline"
+              >
+                E-Service
+              </a>
+            </p>
+            <p>
+              <Link
+                href="/investment"
+                className="text-neutral-300 transition hover:text-[#D71920] hover:underline"
+              >
+                E-Investment
+              </Link>
+            </p>
+            <p>
+              <a
+                href={eTradeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-neutral-300 transition hover:text-[#D71920] hover:underline"
+              >
+                E-Trade
+              </a>
+            </p>
           </div>
         </div>
 
         {/* Contact Info */}
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#FE0002]">
+          <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#D71920]">
             {t("footer.contact", "Contact")}
           </h3>
-          <div className="mt-4 space-y-3 text-xs">
-            <div className="flex gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#FE0002]">
+          <div className="mt-4 space-y-3.5 text-xs">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[#D71920] border border-white/15">
                 <MapPin className="h-4 w-4" />
               </div>
               <div>
                 <p className="font-bold text-white">{getText(contact.address) || "Burayu Administration"}</p>
-                <p className="text-neutral-300">Burayu, Oromia, Ethiopia</p>
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#FE0002]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[#D71920] border border-white/15">
                 <Phone className="h-4 w-4" />
               </div>
               <div>
-                <p className="font-bold text-white">{contact.phone || "+251944664433"}</p>
-                <p className="text-neutral-300">Public Hotline</p>
+                <p className="font-bold text-white">
+                  {(contact.phone && !contact.phone.includes("284")
+                    ? contact.phone
+                    : "+251 94 466 4433"
+                  ).replace(/\s+/g, "") === "+251944664433"
+                    ? "+251 94 466 4433"
+                    : contact.phone || "+251 94 466 4433"}
+                </p>
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#FE0002]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[#D71920] border border-white/15">
                 <Mail className="h-4 w-4" />
               </div>
               <div>
                 <p className="font-bold text-white">{contact.email || "mesobburayubranch@gmail.com"}</p>
-                <p className="text-neutral-300">Inquiry Desk</p>
               </div>
             </div>
           </div>
@@ -144,10 +199,10 @@ export default function SiteFooter() {
             Copyright © {new Date().getFullYear()} {getText(settings?.siteName) || "Burayu MESOB"}. {t("footer.rights", "All rights reserved.")}
           </p>
           <div className="flex gap-5">
-            <Link href="#" className="transition hover:text-[#FE0002]">
+            <Link href="/privacy" className="transition hover:text-[#D71920]">
               {t("footer.privacy", "Privacy Policy")}
             </Link>
-            <Link href="#" className="transition hover:text-[#FE0002]">
+            <Link href="/terms" className="transition hover:text-[#D71920]">
               {t("footer.terms", "Terms of Service")}
             </Link>
           </div>

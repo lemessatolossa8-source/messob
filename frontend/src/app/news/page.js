@@ -36,7 +36,7 @@ export default function NewsPage() {
     return () => unsub();
   }, []);
 
-  const categories = ["All", ...new Set(news.map((item) => item.category).filter(Boolean))];
+  const categories = ["All", ...new Set(news.map((item) => item.category).filter((c) => c && c.toLowerCase() !== "general"))];
 
   const filteredItems = news.filter((item) => {
     const title = getText(item.title).toLowerCase();
@@ -78,7 +78,7 @@ export default function NewsPage() {
               </div>
             )}
 
-            {enableFilters && (
+            {enableFilters && categories.length > 1 && (
               <CategoryFilter
                 categories={categories}
                 activeCategory={activeCategory}

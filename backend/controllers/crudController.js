@@ -24,17 +24,41 @@ const deleteUploadedFile = (imageValue) => {
  * Usage: const ctrl = createCRUDController(News, "news");
  */
 const createCRUDController = (Model, resourceName = "item") => {
+  const publicCache = new Map();
+  const CACHE_TTL_MS = 60 * 1000;
+
+  const invalidateCache = () => {
+    publicCache.clear();
+  };
+
   // @desc   Get all (public can only see published; admins see all)
   // @route  GET /api/<resource>
   const getAll = async (req, res) => {
     const { status, category, search, page = 1, limit = 20 } = req.query;
+    const isAuth = !!req.user;
+    const parsedLimit = parseInt(limit, 10);
+    const parsedPage = parseInt(page, 10);
+    const offset = (parsedPage - 1) * parsedLimit;
+
+    // Check fast cache for public non-search queries
+    const cacheKey = !isAuth && !search ? `all_${status || "pub"}_${category || "all"}_${parsedPage}_${parsedLimit}` : null;
+    if (cacheKey && publicCache.has(cacheKey)) {
+      const entry = publicCache.get(cacheKey);
+      if (Date.now() - entry.time < CACHE_TTL_MS) {
+        res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+        return res.json({
+          success: true,
+          data: entry.data,
+        });
+      }
+    }
+
     const where = {};
 
     // Only apply status filter if the model has a 'status' column
     const hasStatusCol = !!Model.rawAttributes?.status;
 
     // Public access: only published items
-    const isAuth = !!req.user;
     if (hasStatusCol) {
       if (!isAuth) {
         where.status = "published";
@@ -54,10 +78,6 @@ const createCRUDController = (Model, resourceName = "item") => {
       ];
     }
 
-    const parsedLimit = parseInt(limit, 10);
-    const parsedPage = parseInt(page, 10);
-    const offset = (parsedPage - 1) * parsedLimit;
-
     const { rows, count: total } = await Model.findAndCountAll({
       where,
       order: [["createdAt", "DESC"]],
@@ -66,6 +86,16 @@ const createCRUDController = (Model, resourceName = "item") => {
     });
 
     const items = rows.map((item) => item.toJSON());
+    const responseData = {
+      items,
+      total,
+      totalPages: Math.ceil(total / parsedLimit) || 1,
+      currentPage: parsedPage,
+    };
+
+    if (cacheKey) {
+      publicCache.set(cacheKey, { time: Date.now(), data: responseData });
+    }
 
     // Public responses can be cached safely for 60s; authenticated admin responses are strictly private no-cache
     if (!isAuth) {
@@ -76,12 +106,7 @@ const createCRUDController = (Model, resourceName = "item") => {
 
     res.json({
       success: true,
-      data: {
-        items,
-        total,
-        totalPages: Math.ceil(total / parsedLimit) || 1,
-        currentPage: parsedPage,
-      },
+      data: responseData,
     });
   };
 
@@ -111,6 +136,7 @@ const createCRUDController = (Model, resourceName = "item") => {
     if (req.user) payload.authorId = req.user.id || req.user._id;
 
     const item = await Model.create(payload);
+    invalidateCache();
     res.status(201).json({
       success: true,
       message: `${resourceName} created successfully`,
@@ -131,6 +157,7 @@ const createCRUDController = (Model, resourceName = "item") => {
     let payload = { ...req.body };
     payload = await autoTranslateModelData(payload);
     await item.update(payload);
+    invalidateCache();
 
     res.json({
       success: true,
@@ -148,11 +175,12 @@ const createCRUDController = (Model, resourceName = "item") => {
       return res.status(404).json({ success: false, message: `${resourceName} not found` });
     }
     await item.destroy();
+    invalidateCache();
     if (item.image) deleteUploadedFile(item.image);
     res.json({ success: true, message: `${resourceName} deleted successfully` });
   };
 
-  return { getAll, getById, create, update, remove };
+  return { getAll, getById, create, update, remove, invalidateCache };
 };
 
 module.exports = createCRUDController;

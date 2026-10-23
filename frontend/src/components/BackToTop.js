@@ -9,16 +9,19 @@ export default function BackToTop() {
   const { t } = useTranslation();
 
   useEffect(() => {
+    let ticking = false;
     const toggleVisibility = () => {
-      // Show button after scrolling down 300px
-      if (window.scrollY > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsVisible(window.scrollY > 300);
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
-    window.addEventListener("scroll", toggleVisibility);
+    window.addEventListener("scroll", toggleVisibility, { passive: true });
+    toggleVisibility();
     return () => window.removeEventListener("scroll", toggleVisibility);
   }, []);
 
@@ -33,20 +36,19 @@ export default function BackToTop() {
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 flex flex-col items-center justify-center gap-1 transition-all duration-300 ease-in-out ${
+      className={`fixed bottom-6 right-6 z-50 transition-all duration-300 ease-in-out ${
         isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0 pointer-events-none"
       }`}
     >
       <button
         type="button"
         onClick={scrollToTop}
-        className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FE0002] text-white shadow-lg transition-all duration-300 hover:bg-[#070707] hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[#FE0002]/40 active:scale-95"
+        className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-black/85 hover:bg-[#D71920] text-white border border-white/20 hover:border-[#D71920] shadow-2xl backdrop-blur-md transition-all duration-300 hover-lift active:scale-95 cursor-pointer focus:outline-none focus:ring-4 focus:ring-[#D71920]/40"
         aria-label={t("common.backToTop", "Back to top")}
         title={t("common.backToTop", "Back to top")}
       >
-        <ArrowUp className="h-6 w-6" />
+        <ArrowUp className="h-5 w-5 stroke-[2.5] transition-transform duration-300 group-hover:-translate-y-0.5" />
       </button>
-      <span className="text-xs font-bold text-[#FE0002] uppercase tracking-wider">Top</span>
     </div>
   );
 }

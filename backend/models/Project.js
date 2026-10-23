@@ -87,12 +87,15 @@ Project.prototype.toJSON = function () {
   // Compatibility aliases for UI cards and forms
   values.startDate = values.start_date || "";
   values.targetCompletion = values.end_date || "";
+  values.endDate = values.end_date || "";
+  values.expectedCompletionDate = values.end_date || "";
   values.category = values.department || "Infrastructure";
   values.projectStatus = values.status || "Planned";
 
   // Map is_published to status 'published'/'draft' for components checking item.status
   // while preserving raw status in projectStatus
   values.is_published = !!values.is_published;
+  values.publishStatus = values.is_published ? "published" : "draft";
   values.status = values.is_published ? "published" : "draft";
 
   return values;

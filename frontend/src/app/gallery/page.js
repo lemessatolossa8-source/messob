@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import PageHero from "@/components/PageHero";
 import GalleryGrid from "@/components/GalleryGrid";
 
-import { galleryService } from "@/src/services";
-import { useTranslation } from "@/src/context/LanguageContext";
+import { galleryService } from "@/services";
+import { useTranslation } from "@/context/LanguageContext";
 
 export default function GalleryPage() {
-  const { t, getText } = useTranslation();
+  const { t } = useTranslation();
   const [images, setImages] = useState([]);
 
   const loadImages = async () => {

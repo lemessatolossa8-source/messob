@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Settings, Globe2, Bell, Mail, Phone, MapPin, 
   Building2, Clock, CheckCircle2, Save, RefreshCw,
   Shield, FileText, Image, Link, Calendar
 } from "lucide-react";
-import { useLanguage } from "@/src/context/LanguageContext";
-import { useToast } from "@/src/context/ToastContext";
-import settingService from "@/src/services/settingService";
+import { useLanguage } from "@/context/LanguageContext";
+import { useToast } from "@/context/ToastContext";
+import settingService from "@/services/settingService";
 import {
   DEFAULT_SITE_SETTINGS,
   mergeSiteSettings,
   validateSiteSettings,
-} from "@/src/data/defaultSiteSettings";
+} from "@/data/defaultSiteSettings";
 
 export default function AdminSettingsPage() {
   const { languages } = useLanguage();
@@ -25,12 +25,7 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // Load settings from backend on mount
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
       const data = await settingService.getAll();
@@ -41,7 +36,12 @@ export default function AdminSettingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  // Load settings from backend on mount
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -288,7 +288,7 @@ export default function AdminSettingsPage() {
                     onChange={(e) => updateSetting('eService.eLibrary.comingSoon', e.target.checked)}
                     className="rounded border-slate-300 text-[#FE0002] focus:ring-[#FE0002]"
                   />
-                  <span className="text-xs text-slate-600">Mark as "Coming Soon"</span>
+                  <span className="text-xs text-slate-600">Mark as &quot;Coming Soon&quot;</span>
                 </label>
               </div>
 

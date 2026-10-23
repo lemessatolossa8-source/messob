@@ -1,49 +1,70 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Send, Trash2 } from "lucide-react";
-import LanguageTabs from "@/components/admin/LanguageTabs";
-import { TextInput, TextAreaInput, SelectInput, ImagePickerInput } from "@/components/admin/FormControls";
+import { ArrowLeft, Trash2, X, ImageIcon, AlertCircle } from "lucide-react";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { projectService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
-import { PROJECT_CATEGORIES, PROJECT_STATUS_OPTIONS, categoriesToOptions, getDefaultCategory } from "@/src/constants/categories";
-import { autoTranslateForm } from "@/src/lib/autoTranslate";
+import { getLocalizedText } from "@/src/i18n";
 
 export default function EditProjectPage() {
   const router = useRouter();
   const routeParams = useParams();
   const id = routeParams?.id;
   const toast = useToast();
+  const fileInputRef = useRef(null);
 
-  const [activeLang, setActiveLang] = useState("om");
-  const [formData, setFormData] = useState(null);
-  const [errors, setErrors] = useState({});
+  // 8 Required Fields
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("Planned");
+  const [startDate, setStartDate] = useState("");
+  const [expectedCompletionDate, setExpectedCompletionDate] = useState("");
+  const [location, setLocation] = useState("");
+  const [progress, setProgress] = useState(0);
+  const [image, setImage] = useState("");
+
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isTranslating, setIsTranslating] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (!id) return;
     const fetchProject = async () => {
       try {
+        setIsLoading(true);
         const item = await projectService.getById(id);
         if (item) {
-          setFormData({
-            title: typeof item.title === "object" ? item.title : { om: item.title, am: item.title, en: item.title },
-            description: typeof item.description === "object" ? item.description : { om: item.description || "", am: item.description || "", en: item.description || "" },
-            category: item.department || item.category || getDefaultCategory("project"),
-            location: item.location || "Burayu",
-            projectStatus: item.status && ["Planned", "Ongoing", "Completed", "Suspended"].includes(item.status) ? item.status : (item.projectStatus || PROJECT_STATUS_OPTIONS[0]),
-            startDate: item.start_date || item.startDate || "",
-            targetCompletion: item.end_date || item.targetCompletion || "",
-            budget: item.budget || "",
-            progress: item.progress ?? 0,
-            image: item.image || "",
-            status: item.is_published ? "published" : (item.status === "published" ? "published" : "draft"),
-          });
+          const rawTitle = typeof item.title === "object"
+            ? (getLocalizedText(item.title, "en") || getLocalizedText(item.title, "om") || getLocalizedText(item.title, "am") || "")
+            : (item.title || "");
+          const rawDesc = typeof item.description === "object"
+            ? (getLocalizedText(item.description, "en") || getLocalizedText(item.description, "om") || getLocalizedText(item.description, "am") || "")
+            : (item.description || "");
+
+          setName(rawTitle);
+          setDescription(rawDesc);
+
+          // Lifecycle status
+          const validStatuses = ["Planned", "Ongoing", "Completed"];
+          if (validStatuses.includes(item.projectStatus)) {
+            setStatus(item.projectStatus);
+          } else if (validStatuses.includes(item.status)) {
+            setStatus(item.status);
+          } else {
+            setStatus("Planned");
+          }
+
+          setStartDate(item.start_date || item.startDate || "");
+          setExpectedCompletionDate(item.end_date || item.expectedCompletionDate || item.targetCompletion || item.endDate || "");
+          setLocation(item.location || "");
+          setProgress(item.progress ?? 0);
+          setImage(item.image || "");
         } else {
           toast.error("Project not found.");
           router.push("/admin/dashboard/projects");
@@ -51,282 +72,497 @@ export default function EditProjectPage() {
       } catch (err) {
         toast.error("Failed to load project: " + (err?.message || "Server error"));
         router.push("/admin/dashboard/projects");
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchProject();
   }, [id, router, toast]);
 
-  if (!formData) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#FE0002] border-t-transparent" />
-          <span>Loading project...</span>
-        </div>
-      </div>
-    );
-  }
-
-  const handleFieldChange = (field, lang, value) => {
-    if (lang) {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: {
-          ...prev[field],
-          [lang]: value,
-        },
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload a valid image file.");
+      return;
     }
-
-    const errorKey = lang ? `${field}_${lang}` : field;
-    if (errors[errorKey]) {
-      setErrors((prev) => {
-        const copy = { ...prev };
-        delete copy[errorKey];
-        return copy;
+    setImageUploading(true);
+    try {
+      const uploadData = new FormData();
+      uploadData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: uploadData,
       });
+      const result = await res.json();
+      if (result.success && result.url) {
+        setImage(result.url);
+        toast.success("Image uploaded successfully.");
+        if (errors.image) {
+          setErrors((prev) => {
+            const copy = { ...prev };
+            delete copy.image;
+            return copy;
+          });
+        }
+      } else {
+        toast.error(result.message || "Failed to upload image.");
+      }
+    } catch (err) {
+      toast.error("Upload failed: " + (err?.message || "Network error"));
+    } finally {
+      setImageUploading(false);
     }
   };
 
-  const validateForm = () => {
+  const validate = () => {
     const newErrors = {};
-    const hasAnyTitle = !!(
-      formData.title.om?.trim() ||
-      formData.title.am?.trim() ||
-      formData.title.en?.trim()
-    );
-    if (!hasAnyTitle) {
-      newErrors.title_om = "Please enter a project title in at least one language.";
+
+    if (!name.trim()) {
+      newErrors.name = "Project name is required.";
     }
+
+    if (!description.trim()) {
+      newErrors.description = "Project description is required.";
+    }
+
+    if (!location.trim()) {
+      newErrors.location = "Location is required.";
+    }
+
+    if (!status) {
+      newErrors.status = "Project status is required.";
+    }
+
+    if (startDate && expectedCompletionDate && expectedCompletionDate < startDate) {
+      newErrors.expectedCompletionDate = "Expected completion date cannot be before the start date.";
+    }
+
+    const numProgress = Number(progress);
+    if (isNaN(numProgress) || numProgress < 0 || numProgress > 100) {
+      newErrors.progress = "Progress must be between 0 and 100%.";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e, targetStatus) => {
-    if (e) e.preventDefault();
-    setIsSubmitting(true);
-
-    if (!validateForm()) {
-      setIsSubmitting(false);
-      toast.error("Please fix project validation errors.");
+  const handleSubmit = async (publishStatus) => {
+    if (!validate()) {
+      toast.error("Please check the form for errors.");
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      await projectService.update(id, {
-        ...formData,
-        department: formData.category,
-        category: formData.category,
-        start_date: formData.startDate || null,
-        end_date: formData.targetCompletion || null,
-        status: formData.projectStatus,
-        projectStatus: formData.projectStatus,
-        is_published: targetStatus === "published",
-        progress: Number(formData.progress) || 0,
-      });
-      toast.success(targetStatus === "published" ? "Project updated & published!" : "Project saved as draft!");
+      const payload = {
+        title: name.trim(),
+        description: description.trim(),
+        projectStatus: status,
+        status: publishStatus,
+        is_published: publishStatus === "published",
+        publishStatus,
+        startDate: startDate || null,
+        expectedCompletionDate: expectedCompletionDate || null,
+        location: location.trim(),
+        progress: Math.min(100, Math.max(0, parseInt(progress, 10) || 0)),
+        image: image || "",
+      };
+
+      await projectService.update(id, payload);
+
+      toast.success(
+        publishStatus === "published"
+          ? "Project updated and published successfully!"
+          : "Project saved as draft."
+      );
       router.push("/admin/dashboard/projects");
     } catch (err) {
-      toast.error("Failed to update project: " + (err?.message || "Server error"));
+      console.error("Update project error:", err);
+      toast.error(err?.message || "Failed to update project.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
+    setIsDeleting(true);
     try {
       await projectService.delete(id);
-      toast.success("Project deleted.");
+      toast.success("Project deleted successfully.");
       router.push("/admin/dashboard/projects");
     } catch (err) {
       toast.error("Failed to delete project: " + (err?.message || "Server error"));
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="inline-flex items-center gap-2 text-xs font-semibold text-neutral-500">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#D71920] border-t-transparent" />
+          <span>Loading project...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="mx-auto max-w-3xl space-y-6 pb-12">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
             href="/admin/dashboard/projects"
-            className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50 transition"
+            className="rounded-xl border border-neutral-200 bg-white p-2.5 text-[#000000] hover:bg-neutral-50 transition"
+            title="Back to Projects"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <h2 className="text-xl font-extrabold text-[#070707]">Edit Project</h2>
-            <p className="text-xs text-slate-500">Update project progress, scope, and translations</p>
+            <h1 className="text-2xl font-black text-[#000000] tracking-tight">Edit Development Project</h1>
           </div>
         </div>
 
         <button
           type="button"
           onClick={() => setDeleteModalOpen(true)}
-          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:border-[#FE0002] hover:text-[#FE0002] transition inline-flex items-center gap-1.5 cursor-pointer"
+          className="rounded-xl border border-neutral-200 bg-white px-3.5 py-2 text-xs font-bold text-[#000000] hover:border-[#D71920] hover:text-[#D71920] transition inline-flex items-center gap-1.5 cursor-pointer"
         >
           <Trash2 className="h-3.5 w-3.5" />
           <span>Delete</span>
         </button>
       </div>
 
-      <form className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-        <LanguageTabs
-          title="Edit Project Details"
-          activeTab={activeLang}
-          onTabChange={async (newLang) => {
-            if (activeLang !== newLang) {
-              await autoTranslateForm(formData, setFormData, activeLang, newLang, toast, setIsTranslating);
-              setActiveLang(newLang);
-            }
-          }}
-        />
-
-        <div className="space-y-5">
-          <TextInput
-            label={`Project Name`}
-            required={activeLang === "om"}
-            value={formData.title[activeLang]}
-            onChange={(v) => handleFieldChange("title", activeLang, v)}
-            error={errors[`title_${activeLang}`]}
-            placeholder="Project name..."
+      {/* Main Form */}
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className="space-y-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-xs"
+      >
+        {/* Field 1: Project Name */}
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-[#000000] uppercase tracking-wide">
+            Project Name <span className="text-[#D71920]">*</span>
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (errors.name) {
+                setErrors((prev) => {
+                  const copy = { ...prev };
+                  delete copy.name;
+                  return copy;
+                });
+              }
+            }}
+            placeholder="Enter the project name..."
+            className={`w-full rounded-xl border bg-white px-4 py-3 text-sm font-medium text-[#000000] placeholder-neutral-400 transition focus:outline-none focus:ring-2 ${
+              errors.name
+                ? "border-[#D71920] focus:ring-[#D71920]/20"
+                : "border-neutral-200 focus:border-[#D71920] focus:ring-[#D71920]/15"
+            }`}
           />
-
-          <TextAreaInput
-            label={`Description`}
-            rows={2}
-            value={formData.description[activeLang]}
-            onChange={(v) => handleFieldChange("description", activeLang, v)}
-            error={errors[`description_${activeLang}`]}
-            placeholder="Short description..."
-          />
+          {errors.name && (
+            <p className="flex items-center gap-1.5 text-xs font-semibold text-[#D71920]">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <span>{errors.name}</span>
+            </p>
+          )}
         </div>
 
-        <div className="border-t border-slate-100 pt-6 space-y-5">
-          <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-            Timelines & Status
-          </h3>
+        {/* Field 2: Description */}
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-[#000000] uppercase tracking-wide">
+            Description <span className="text-[#D71920]">*</span>
+          </label>
+          <textarea
+            rows={4}
+            value={description}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              if (errors.description) {
+                setErrors((prev) => {
+                  const copy = { ...prev };
+                  delete copy.description;
+                  return copy;
+                });
+              }
+            }}
+            placeholder="Describe the project scope, objectives, and details..."
+            className={`w-full rounded-xl border bg-white px-4 py-3 text-sm font-medium text-[#000000] placeholder-neutral-400 transition focus:outline-none focus:ring-2 leading-relaxed resize-y ${
+              errors.description
+                ? "border-[#D71920] focus:ring-[#D71920]/20"
+                : "border-neutral-200 focus:border-[#D71920] focus:ring-[#D71920]/15"
+            }`}
+          />
+          {errors.description && (
+            <p className="flex items-center gap-1.5 text-xs font-semibold text-[#D71920]">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <span>{errors.description}</span>
+            </p>
+          )}
+        </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <SelectInput
-              label="Status"
-              required
-              value={formData.projectStatus}
-              onChange={(v) => handleFieldChange("projectStatus", null, v)}
-              options={categoriesToOptions(PROJECT_STATUS_OPTIONS)}
-            />
+        {/* Field 3, 4, 5: Status, Start Date, Expected Completion Date */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          {/* Field 3: Status */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-[#000000] uppercase tracking-wide">
+              Status <span className="text-[#D71920]">*</span>
+            </label>
+            <select
+              value={status}
+              onChange={(e) => {
+                setStatus(e.target.value);
+                if (errors.status) {
+                  setErrors((prev) => {
+                    const copy = { ...prev };
+                    delete copy.status;
+                    return copy;
+                  });
+                }
+              }}
+              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-semibold text-[#000000] transition focus:border-[#D71920] focus:outline-none focus:ring-2 focus:ring-[#D71920]/15"
+            >
+              <option value="Planned">Planned</option>
+              <option value="Ongoing">Ongoing</option>
+              <option value="Completed">Completed</option>
+            </select>
+            {errors.status && (
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-[#D71920]">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>{errors.status}</span>
+              </p>
+            )}
+          </div>
 
-            <TextInput
-              label="Start Date"
+          {/* Field 4: Start Date */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-[#000000] uppercase tracking-wide">
+              Start Date
+            </label>
+            <input
               type="date"
-              value={formData.startDate}
-              onChange={(v) => handleFieldChange("startDate", null, v)}
-            />
-
-            <TextInput
-              label="Expected Completion Date"
-              type="date"
-              value={formData.targetCompletion}
-              onChange={(v) => handleFieldChange("targetCompletion", null, v)}
-              error={errors.targetCompletion}
+              value={startDate}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                if (expectedCompletionDate && e.target.value && expectedCompletionDate < e.target.value) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    expectedCompletionDate: "Expected completion date cannot be before the start date.",
+                  }));
+                } else if (errors.expectedCompletionDate) {
+                  setErrors((prev) => {
+                    const copy = { ...prev };
+                    delete copy.expectedCompletionDate;
+                    return copy;
+                  });
+                }
+              }}
+              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-medium text-[#000000] transition focus:border-[#D71920] focus:outline-none focus:ring-2 focus:ring-[#D71920]/15"
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <TextInput
-              label="Location"
-              value={formData.location}
-              onChange={(v) => handleFieldChange("location", null, v)}
+          {/* Field 5: Expected Completion Date */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-[#000000] uppercase tracking-wide">
+              Expected Completion Date
+            </label>
+            <input
+              type="date"
+              value={expectedCompletionDate}
+              min={startDate || undefined}
+              onChange={(e) => {
+                setExpectedCompletionDate(e.target.value);
+                if (startDate && e.target.value && e.target.value < startDate) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    expectedCompletionDate: "Expected completion date cannot be before the start date.",
+                  }));
+                } else if (errors.expectedCompletionDate) {
+                  setErrors((prev) => {
+                    const copy = { ...prev };
+                    delete copy.expectedCompletionDate;
+                    return copy;
+                  });
+                }
+              }}
+              className={`w-full rounded-xl border bg-white px-4 py-2.5 text-xs font-medium text-[#000000] transition focus:outline-none focus:ring-2 ${
+                errors.expectedCompletionDate
+                  ? "border-[#D71920] focus:ring-[#D71920]/20"
+                  : "border-neutral-200 focus:border-[#D71920] focus:ring-[#D71920]/15"
+              }`}
             />
+            {errors.expectedCompletionDate && (
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-[#D71920]">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>{errors.expectedCompletionDate}</span>
+              </p>
+            )}
+          </div>
+        </div>
 
-            <SelectInput
-              label="Responsible Department"
-              value={formData.category}
-              onChange={(v) => handleFieldChange("category", null, v)}
-              options={categoriesToOptions(PROJECT_CATEGORIES)}
+        {/* Field 6 & 7: Location and Progress */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Field 6: Location */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-[#000000] uppercase tracking-wide">
+              Location <span className="text-[#D71920]">*</span>
+            </label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                if (errors.location) {
+                  setErrors((prev) => {
+                    const copy = { ...prev };
+                    delete copy.location;
+                    return copy;
+                  });
+                }
+              }}
+              placeholder="e.g. Burayu, Keta, Gefersa..."
+              className={`w-full rounded-xl border bg-white px-4 py-2.5 text-xs font-medium text-[#000000] placeholder-neutral-400 transition focus:outline-none focus:ring-2 ${
+                errors.location
+                  ? "border-[#D71920] focus:ring-[#D71920]/20"
+                  : "border-neutral-200 focus:border-[#D71920] focus:ring-[#D71920]/15"
+              }`}
             />
-
-            <TextInput
-              label="Funding / Budget Program"
-              value={formData.budget}
-              onChange={(v) => handleFieldChange("budget", null, v)}
-            />
+            {errors.location && (
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-[#D71920]">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>{errors.location}</span>
+              </p>
+            )}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-semibold text-[#070707] mb-1.5">
-                Progress: 0–100%
+          {/* Field 7: Progress */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-[#000000] uppercase tracking-wide">
+                Progress (0–100%)
               </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.progress}
-                  onChange={(e) => handleFieldChange("progress", null, e.target.value)}
-                  className="w-32 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-[#070707] focus:border-[#FE0002] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FE0002]/15 transition"
+              <span className="text-xs font-bold text-[#000000]">{progress}%</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={progress}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? 0 : Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0));
+                  setProgress(val);
+                }}
+                className="w-24 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold text-[#000000] focus:border-[#D71920] focus:outline-none focus:ring-2 focus:ring-[#D71920]/15"
+              />
+              <div className="flex-1 bg-neutral-100 rounded-full h-2.5 overflow-hidden">
+                <div
+                  className="bg-[#D71920] h-2.5 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(100, Math.max(0, Number(progress) || 0))}%` }}
                 />
-                <div className="flex-1 bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                  <div
-                    className="bg-[#FE0002] h-2.5 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min(100, Math.max(0, formData.progress))}%` }}
-                  />
-                </div>
-                <span className="text-xs font-bold text-slate-600">{formData.progress}%</span>
               </div>
             </div>
+            {errors.progress && (
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-[#D71920]">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>{errors.progress}</span>
+              </p>
+            )}
           </div>
-
-          <ImagePickerInput
-            label="Project Image / Blueprint"
-            value={formData.image}
-            onChange={(v) => handleFieldChange("image", null, v)}
-            error={errors.image}
-          />
         </div>
 
-        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-slate-100 pt-6">
+        {/* Field 8: Project Image / Blueprint (Optional) */}
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-[#000000] uppercase tracking-wide">
+            Project Image / Blueprint <span className="text-neutral-400 font-normal lowercase">(optional)</span>
+          </label>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={(e) => handleImageUpload(e.target.files?.[0])}
+            accept="image/*"
+            className="hidden"
+          />
+
+          {image ? (
+            <div className="relative overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 max-w-md">
+              <img
+                src={image}
+                alt="Project preview"
+                className="aspect-video w-full object-cover max-h-56"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setImage("");
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                className="absolute top-2.5 right-2.5 rounded-full bg-[#000000]/80 p-1.5 text-white hover:bg-[#D71920] transition cursor-pointer"
+                title="Remove image"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50/70 p-6 text-center hover:bg-neutral-100/60 transition cursor-pointer"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-xs border border-neutral-200">
+                <ImageIcon className="h-5 w-5 text-neutral-600" />
+              </div>
+              <p className="text-xs font-bold text-[#000000]">
+                {imageUploading ? "Uploading image..." : "Click to upload project image or blueprint"}
+              </p>
+              <p className="text-[11px] text-neutral-400">PNG, JPG, or WEBP (optional)</p>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons: Cancel, Save as Draft, Publish Project */}
+        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-neutral-200 pt-6">
           <Link
             href="/admin/dashboard/projects"
-            className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-[#070707] hover:bg-slate-50 transition text-center"
+            className="w-full sm:w-auto rounded-xl border border-neutral-300 bg-white px-5 py-2.5 text-xs font-bold text-[#000000] hover:bg-neutral-50 transition text-center"
           >
             Cancel
           </Link>
 
           <button
             type="button"
-            disabled={isSubmitting}
-            onClick={(e) => handleSubmit(e, "draft")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-slate-200 transition disabled:opacity-60"
+            disabled={isSubmitting || imageUploading}
+            onClick={() => handleSubmit("draft")}
+            className="w-full sm:w-auto rounded-xl border border-[#000000] bg-[#FFFFFF] px-5 py-2.5 text-xs font-bold text-[#000000] hover:bg-neutral-100 transition disabled:opacity-50 cursor-pointer"
           >
-            <Save className="h-4 w-4" />
-            <span>Save as Draft</span>
+            Save as Draft
           </button>
 
           <button
             type="button"
-            disabled={isSubmitting}
-            onClick={(e) => handleSubmit(e, "published")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#FE0002] px-6 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#CC0002] transition disabled:opacity-60"
+            disabled={isSubmitting || imageUploading}
+            onClick={() => handleSubmit("published")}
+            className="w-full sm:w-auto rounded-xl bg-[#D71920] px-6 py-2.5 text-xs font-bold text-white hover:bg-[#b5141a] transition disabled:opacity-50 shadow-sm cursor-pointer"
           >
-            <Send className="h-4 w-4 text-white" />
-            <span>{isSubmitting ? "Updating..." : "Update & Publish"}</span>
+            {isSubmitting ? "Updating..." : "Publish Project"}
           </button>
         </div>
       </form>
 
+      {/* Delete Confirmation Modal */}
       <ConfirmDialog
         isOpen={deleteModalOpen}
         title="Delete Project"
-        message="Are you sure you want to delete this project? This action cannot be undone."
-        itemName={formData?.title?.om || formData?.title?.en || ""}
+        message="Are you sure you want to delete this development project? This action cannot be undone."
+        itemName={name}
         onConfirm={handleDelete}
         onCancel={() => setDeleteModalOpen(false)}
+        isProcessing={isDeleting}
       />
     </div>
   );

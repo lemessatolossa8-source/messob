@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ExternalLink, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/src/context/LanguageContext";
 import { useSiteSettings } from "@/src/context/SiteSettingsContext";
@@ -39,21 +40,21 @@ export default function AccessEServiceButton({
   const isBottom = variant === "header-bottom";
 
   const baseStyles =
-    "inline-flex items-center justify-center gap-2 font-bold transition focus:outline-none focus:ring-2 focus:ring-[#FE0002] focus:ring-offset-2 rounded-[25px] shadow-sm active:scale-[0.98]";
+    "inline-flex items-center justify-center gap-2 font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#D71920] focus:ring-offset-2 rounded-full shadow-md hover-lift active:scale-[0.98] cursor-pointer";
 
   const variants = {
-    primary: "bg-[#FE0002] text-white hover:bg-[#CC0002]",
-    accent: "bg-[#FE0002] text-white hover:bg-[#CC0002]",
-    secondary: "bg-[#070707] text-white hover:bg-black",
-    outline: "bg-white text-[#070707] border border-slate-300 hover:bg-slate-50",
-    white: "bg-white text-[#FE0002] border border-slate-300 hover:bg-slate-50",
+    primary: "bg-[#D71920] text-white hover:bg-[#b5141a] shadow-red-950/25",
+    accent: "bg-[#D71920] text-white hover:bg-[#b5141a] shadow-red-950/25",
+    secondary: "bg-[#070707] text-white hover:bg-black shadow-black/20",
+    outline: "bg-white text-[#070707] border-2 border-[#070707] hover:bg-[#070707] hover:text-white",
+    white: "bg-white text-[#D71920] border-2 border-neutral-200 hover:border-[#D71920] hover:bg-neutral-50",
     header: "text-[#070707] hover:text-[#070707]",
   };
 
   const sizes = {
-    sm: "px-5 py-2.5 text-xs h-[38px]",
-    md: "px-6 py-3 text-sm h-[42px]",
-    lg: "px-7 py-3.5 text-base h-[46px]",
+    sm: "px-5 py-2 text-xs min-h-[36px]",
+    md: "px-6 py-2.5 text-sm min-h-[42px]",
+    lg: "px-7 py-3 text-base min-h-[48px]",
   };
 
   const closeDropdown = useCallback(() => setDropdownOpen(false), []);
@@ -77,11 +78,8 @@ export default function AccessEServiceButton({
     if (canHover()) scheduleClose();
   };
 
-  // Keyboard: focus anywhere in the group opens, focus leaving closes, Escape closes
+  // Keyboard: focus anywhere in the group opens, Escape closes
   const handleFocus = () => openDropdown();
-  const handleBlur = (e) => {
-    if (!e.currentTarget.contains(e.relatedTarget)) closeDropdown();
-  };
   const handleKeyDown = (e) => {
     if (e.key === "Escape") {
       closeDropdown();
@@ -112,8 +110,8 @@ export default function AccessEServiceButton({
   const buttonClassNames = isHeaderVariant
     ? `relative inline-flex items-center gap-1 py-2 text-sm font-bold transition-colors duration-300 ease-in-out whitespace-nowrap focus:outline-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:transition-transform after:duration-300 after:origin-left ${
         isDarkText
-          ? (dropdownOpen ? "text-[#070707] after:bg-[#FE0002] after:scale-x-100" : "text-[#070707] hover:text-[#070707] after:bg-[#FE0002] after:scale-x-0 hover:after:scale-x-100")
-          : isBottom ? (dropdownOpen ? "text-white after:bg-[#FE0002] after:scale-x-100" : "text-white/80 hover:text-white after:bg-[#FE0002] after:scale-x-0 hover:after:scale-x-100") : (dropdownOpen ? "text-white after:bg-white after:scale-x-100" : "text-white/80 hover:text-white after:bg-white after:scale-x-0 hover:after:scale-x-100")
+          ? (dropdownOpen ? "text-[#070707] after:bg-[#D71920] after:scale-x-100" : "text-[#070707] hover:text-[#070707] after:bg-[#D71920] after:scale-x-0 hover:after:scale-x-100")
+          : isBottom ? (dropdownOpen ? "text-white after:bg-[#D71920] after:scale-x-100" : "text-white/80 hover:text-white after:bg-[#D71920] after:scale-x-0 hover:after:scale-x-100") : (dropdownOpen ? "text-white after:bg-white after:scale-x-100" : "text-white/80 hover:text-white after:bg-white after:scale-x-0 hover:after:scale-x-100")
       }`
     : `${baseStyles} ${variants[variant] || variants.primary} ${sizes[size] || sizes.md} w-full`;
 
@@ -124,7 +122,6 @@ export default function AccessEServiceButton({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onFocus={handleFocus}
-      onBlur={handleBlur}
       onKeyDown={handleKeyDown}
     >
       <button
@@ -168,17 +165,36 @@ export default function AccessEServiceButton({
                 );
               }
               const isExternal = /^https?:\/\//.test(item.url);
+              const handleLinkClick = () => {
+                setDropdownOpen(false);
+              };
+
+              if (isExternal) {
+                return (
+                  <a
+                    key={item.name}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-[#070707] transition hover:bg-slate-100 hover:text-[#D71920]"
+                    onClick={handleLinkClick}
+                  >
+                    <span>{item.name}</span>
+                    <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
+                  </a>
+                );
+              }
+
               return (
-                <a
+                <Link
                   key={item.name}
                   href={item.url}
-                  {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                  className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-[#070707] transition hover:bg-slate-100 hover:text-[#FE0002]"
-                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-[#070707] transition hover:bg-slate-100 hover:text-[#D71920]"
+                  onClick={handleLinkClick}
                 >
                   <span>{item.name}</span>
                   <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
-                </a>
+                </Link>
               );
             })}
           </div>

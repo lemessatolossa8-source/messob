@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
 import MesobStats from "@/components/MesobStats";
 import {
   AnnouncementCard,
   NewsCard,
-  ServiceCard,
   FloorCard,
   ProjectCard,
 } from "@/components/Cards";
@@ -20,12 +18,11 @@ import {
   projectService,
   galleryService,
   slideService,
-  siteService,
   statisticService,
-} from "@/src/services";
-import { useTranslation } from "@/src/context/LanguageContext";
-import { useSiteSettings } from "@/src/context/SiteSettingsContext";
-import AnimatedWelcomeText from "@/components/AnimatedWelcomeText";
+} from "@/services";
+import { useTranslation } from "@/context/LanguageContext";
+import { useSiteSettings } from "@/context/SiteSettingsContext";
+import { getImageUrl } from "@/lib/imageUrl";
 
 // Dynamically import below-the-fold GalleryGrid to defer bundle size and main-thread work
 const GalleryGrid = dynamic(() => import("@/components/GalleryGrid"), {
@@ -49,10 +46,29 @@ const LocationMap = dynamic(() => import("@/components/LocationMap"), {
   ),
 });
 
-import { getImageUrl } from "@/src/lib/imageUrl";
+const OFFICIAL_SLIDESHOW_HEADINGS_BRW = {
+  om: {
+    black: "WIIRTUU TAJAAJILA TOKKOFFAA (MESOB)",
+    red: "BULCHIINSA MAGAALAA SHAGGARITTI",
+    white: "DAMEE BURAAYYUU",
+  },
+  am: {
+    black: "የሸገር ከተማ አስተዳደር",
+    red: "የአንድ ማዕከል አገልግሎት (ሜሶብ)",
+    white: "ቡራዩ ቅርንጫፍ",
+  },
+  en: {
+    black: "SHAGGAR CITY ADMINISTRATION",
+    red: "FIRST SERVICE CENTER,",
+    white: "BURAYU BRANCH",
+  },
+};
 
 export default function HomeClient({ initialData = {} }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const headingBRW =
+    OFFICIAL_SLIDESHOW_HEADINGS_BRW[language] ||
+    OFFICIAL_SLIDESHOW_HEADINGS_BRW.om;
   const { settings: siteSettings } = useSiteSettings();
 
   const [news, setNews] = useState(initialData.news || []);
@@ -68,9 +84,28 @@ export default function HomeClient({ initialData = {} }) {
     Array.isArray(initialData.slides) ? initialData.slides : []
   );
   const [statistics, setStatistics] = useState(initialData.statistics || []);
-  const [cityInfo, setCityInfo] = useState({});
-  const [contactInfo, setContactInfo] = useState({});
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [prevSlide, setPrevSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  const goToSlide = useCallback((index) => {
+    if (slides.length <= 1) return;
+    const target = ((index % slides.length) + slides.length) % slides.length;
+    setCurrentSlide((curr) => {
+      setPrevSlide(curr);
+      return target;
+    });
+  }, [slides.length]);
+
+  const nextSlide = useCallback(() => {
+    goToSlide(currentSlide + 1);
+  }, [goToSlide, currentSlide]);
+
+  const prevSlideAction = useCallback(() => {
+    goToSlide(currentSlide - 1);
+  }, [goToSlide, currentSlide]);
 
   const loadData = useCallback(async () => {
     try {
@@ -105,32 +140,81 @@ export default function HomeClient({ initialData = {} }) {
       setFloorsLoading(false);
     }
 
-    setCityInfo(siteService.getCityInfo() || {});
-    setContactInfo(siteService.getContactInfo() || {});
   }, []);
 
-  // Fetch fresh data and listen for CMS updates / window focus
+  const hasInitialData = useRef(
+    Boolean(
+      (initialData.news && initialData.news.length > 0) ||
+      (initialData.floors && initialData.floors.length > 0) ||
+      (initialData.slides && initialData.slides.length > 0)
+    )
+  );
+
+  // Fetch fresh data only on real CMS updates (avoid duplicate fetch on initial SSR mount)
   useEffect(() => {
-    loadData();
+    if (!hasInitialData.current) {
+      loadData();
+    }
     const handleSync = () => loadData();
     const unsubFloor = floorService.subscribe(loadData);
-    window.addEventListener("focus", handleSync);
     window.addEventListener("mesob_content_updated", handleSync);
     return () => {
       unsubFloor();
-      window.removeEventListener("focus", handleSync);
       window.removeEventListener("mesob_content_updated", handleSync);
     };
   }, [loadData]);
 
-  // Carousel auto-advance: rotates every 6 seconds when more than 1 slide exists
+  // Carousel auto-advance: rotates every 6s (6000ms) when not paused and more than 1 slide exists
   useEffect(() => {
-    if (slides.length <= 1) return;
+    if (slides.length <= 1 || isPaused) return;
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
+      goToSlide(currentSlide + 1);
     }, 6000);
     return () => clearInterval(interval);
-  }, [slides.length]);
+  }, [slides.length, isPaused, currentSlide, goToSlide]);
+
+  // Touch swipe support for mobile devices
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    if (isLeftSwipe) {
+      nextSlide();
+    } else if (isRightSwipe) {
+      prevSlideAction();
+    }
+  };
+
+  // Keyboard navigation for accessibility
+  const handleSliderKeyDown = (e) => {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      prevSlideAction();
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      nextSlide();
+    }
+  };
+
+  const getSubtleZoomStyle = (isActive) => {
+    return {
+      transform: isActive ? "scale(1.04)" : "scale(1)",
+      transition: isActive
+        ? "transform 6000ms cubic-bezier(0.25, 1, 0.5, 1)"
+        : "transform 800ms ease-out",
+      transformOrigin: "center center",
+    };
+  };
 
   // Smooth scroll to targeted floor or section when hash is present or changes
   useEffect(() => {
@@ -159,108 +243,163 @@ export default function HomeClient({ initialData = {} }) {
     return () => window.removeEventListener("hashchange", handleHashScroll);
   }, [floors]);
 
+  const activeSlideIndex = slides.length > 0
+    ? ((currentSlide % slides.length) + slides.length) % slides.length
+    : 0;
+
   return (
     <>
       {/* Main Content wrapper */}
       <div className="space-y-16 sm:space-y-24 pb-12">
         {/* ================================================== */}
-        {/* 1. HERO SECTION                                   */}
+        {/* 1. HOMEPAGE HERO SLIDER — Premium Presentation     */}
         {/* ================================================== */}
-        <section className="relative overflow-hidden text-white min-h-[580px] sm:min-h-[640px] flex flex-col justify-between">
-          {/* City/Community Images Background - Image-only carousel */}
+        <section
+          className="relative overflow-hidden w-full min-h-[580px] sm:min-h-[640px] md:min-h-[700px] lg:h-[82vh] max-h-[860px] bg-black select-none focus:outline-none"
+          tabIndex={0}
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="Homepage Hero Carousel"
+          aria-live="polite"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onKeyDown={handleSliderKeyDown}
+        >
+          {/* Slide images — Smooth Fade with subtle Zoom effect */}
           <div className="absolute inset-0 overflow-hidden">
             {slides.length > 0 ? (
               slides.map((slide, index) => {
-                const activeSlideIndex = ((currentSlide % slides.length) + slides.length) % slides.length;
                 const isActive = index === activeSlideIndex;
+                const isPrev = index === (((activeSlideIndex - 1) % slides.length) + slides.length) % slides.length;
+                const isNext = index === (activeSlideIndex + 1) % slides.length;
+                const isOutgoing = index === prevSlide && !isActive;
                 const isFirst = index === 0;
+
+                // Render active, previous/outgoing (for smooth 800ms crossfade), next (for instant prefetch), or first
+                if (!isActive && !isPrev && !isNext && !isOutgoing && !isFirst) return null;
+
                 const slideSrc = getImageUrl(slide.image);
                 if (!slideSrc) return null;
+
                 return (
                   <div
                     key={slide.id || index}
-                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                      isActive ? "opacity-100 z-0" : "opacity-0 -z-10 pointer-events-none"
-                    }`}
+                    className={`absolute inset-0 transition-opacity ease-in-out ${isActive
+                        ? "opacity-100 z-10"
+                        : isPrev || isOutgoing
+                          ? "opacity-0 z-[5] pointer-events-none"
+                          : "opacity-0 z-0 pointer-events-none"
+                      }`}
+                    style={{
+                      transitionDuration: "800ms",
+                    }}
+                    aria-hidden={!isActive}
                   >
-                    <Image
-                      src={slideSrc}
-                      alt={`Burayu MESOB Slide ${index + 1}`}
-                      fill
-                      priority={isFirst}
-                      fetchPriority={isFirst ? "high" : "low"}
-                      loading={isFirst ? undefined : "lazy"}
-                      sizes="(max-width: 640px) 435px, 100vw"
-                      quality={75}
-                      className="object-cover object-center"
-                    />
+                    {/* Inner subtle zoom container */}
+                    <div
+                      className="relative w-full h-full will-change-transform motion-reduce:transform-none motion-reduce:transition-none"
+                      style={getSubtleZoomStyle(isActive)}
+                    >
+                      <Image
+                        src={slideSrc}
+                        alt={`Burayu MESOB Slide ${index + 1}`}
+                        fill
+                        priority={isFirst}
+                        sizes="100vw"
+                        quality={75}
+                        className="object-cover object-center filter brightness-[0.88] contrast-[1.05] saturate-[1.04]"
+                      />
+                    </div>
                   </div>
                 );
               })
             ) : (
-              <div className="absolute inset-0 bg-slate-950" />
+              <div className="absolute inset-0 bg-neutral-900" />
             )}
           </div>
 
-          <div className="container-shell relative z-10 py-16 sm:py-24 lg:py-28 flex-1 flex flex-col items-center justify-center text-center">
-            <div className="max-w-5xl mx-auto w-full">
-              <AnimatedWelcomeText />
+          {/* Multi-layer contrast scrim for crisp text legibility across all slides */}
+          <div
+            className="absolute inset-0 bg-black/35 pointer-events-none z-[11]"
+            aria-hidden="true"
+          />
+          <div
+            className="absolute top-0 inset-x-0 h-72 sm:h-80 bg-gradient-to-b from-black/85 via-black/50 to-transparent pointer-events-none z-[12]"
+            aria-hidden="true"
+          />
+          <div
+            className="absolute bottom-0 inset-x-0 h-36 bg-gradient-to-t from-black/75 to-transparent pointer-events-none z-[12]"
+            aria-hidden="true"
+          />
+
+          {/* Slide Content: Official Multilingual Heading positioned at top with BRW colors */}
+          <div className="absolute top-0 inset-x-0 z-20 flex flex-col items-center justify-start pt-7 sm:pt-9 md:pt-12 lg:pt-14 px-4 sm:px-6 md:px-10 text-center pointer-events-none">
+            <div className="w-full max-w-5xl mx-auto flex flex-col items-center justify-center text-center">
+              <h1
+                key={language}
+                className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[2.65rem] font-black text-center tracking-tight leading-[1.24] select-text"
+              >
+                <span
+                  className="text-black inline"
+                  style={{
+                    WebkitTextStroke: "1.25px #FFFFFF",
+                    textShadow: "0 0 16px rgba(255, 255, 255, 0.95), 0 2px 8px rgba(0, 0, 0, 0.9)",
+                  }}
+                >
+                  {headingBRW.black}
+                </span>{" "}
+                <span
+                  className="text-[#D71920] inline"
+                  style={{
+                    textShadow: "0 2px 16px rgba(0, 0, 0, 0.95), 0 0 12px rgba(215, 25, 32, 0.5)",
+                  }}
+                >
+                  {headingBRW.red}
+                </span>{" "}
+                <span
+                  className="text-white inline"
+                  style={{
+                    textShadow: "0 2px 16px rgba(0, 0, 0, 0.95)",
+                  }}
+                >
+                  {headingBRW.white}
+                </span>
+              </h1>
             </div>
           </div>
 
-          {/* Slide Indicators */}
+          {/* Small pagination dots */}
           {slides.length > 1 && (
-            <div className="relative z-10 container-shell pb-4 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-                  }}
-                  aria-label="Previous slide"
-                  className="rounded-full bg-black/50 hover:bg-black/80 p-2 text-white transition min-h-[36px] min-w-[36px] inline-flex items-center justify-center cursor-pointer"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-
+            <div className="absolute bottom-6 sm:bottom-8 inset-x-0 z-30 flex items-center justify-center gap-2 pointer-events-auto">
+              <div className="flex items-center gap-2 bg-black/35 backdrop-blur-xs px-3 py-1.5 rounded-full border border-white/10">
                 {slides.map((slide, index) => {
-                  const activeSlideIndex = ((currentSlide % slides.length) + slides.length) % slides.length;
+                  const isActive = index === activeSlideIndex;
                   return (
                     <button
                       key={slide.id || index}
-                      onClick={() => {
-                        setCurrentSlide(index);
-                      }}
+                      type="button"
+                      onClick={() => goToSlide(index)}
                       aria-label={`Slide ${index + 1}`}
-                      className="p-2 inline-flex items-center justify-center min-h-[32px] min-w-[32px] cursor-pointer"
+                      className="p-1 inline-flex items-center justify-center cursor-pointer focus:outline-none"
                     >
                       <span
-                        className={`h-2.5 rounded-full transition-colors duration-200 block ${
-                          index === activeSlideIndex
-                            ? "w-8 bg-[#F2C94C] shadow-sm"
-                            : "w-2.5 bg-white/60 hover:bg-white"
-                        }`}
+                        className={`rounded-full transition-all duration-300 block ${isActive
+                            ? "w-2.5 h-2.5 bg-[#C62828] shadow-[0_0_8px_rgba(198,40,40,0.8)]"
+                            : "w-2 h-2 bg-white/40 hover:bg-white/80"
+                          }`}
                       />
                     </button>
                   );
                 })}
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentSlide((prev) => (prev + 1) % slides.length);
-                  }}
-                  aria-label="Next slide"
-                  className="rounded-full bg-black/50 hover:bg-black/80 p-2 text-white transition min-h-[36px] min-w-[36px] inline-flex items-center justify-center cursor-pointer"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
               </div>
             </div>
           )}
 
-          {/* Bottom Accent Line (Red) */}
-          <div className="h-[4px] w-full bg-[#FE0002]"></div>
+          {/* Abba Gadaa Red accent line */}
+          <div className="absolute bottom-0 inset-x-0 h-[4px] w-full bg-[#C62828] shadow-[0_-2px_12px_rgba(198,40,40,0.5)] z-30" />
         </section>
 
         {/* ================================================== */}
@@ -269,6 +408,7 @@ export default function HomeClient({ initialData = {} }) {
         <section className="container-shell pt-4">
           <MesobStats stats={statistics} />
         </section>
+
 
         {/* ================================================== */}
         {/* 3. OUR SERVICES SECTION (BUILDING FLOORS)         */}
@@ -309,8 +449,9 @@ export default function HomeClient({ initialData = {} }) {
           </div>
         </section>
 
+
         {/* ================================================== */}
-        {/* 5. PROJECTS SECTION                               */}
+        {/* 4. PROJECTS SECTION                               */}
         {/* ================================================== */}
         <section className="container-shell space-y-8" id="projects-section">
           <SectionHeading
@@ -332,7 +473,7 @@ export default function HomeClient({ initialData = {} }) {
         </section>
 
         {/* ================================================== */}
-        {/* 6. NEWS SECTION                                   */}
+        {/* 5. NEWS SECTION                                   */}
         {/* ================================================== */}
         <section className="bg-[#F5F7F6] py-16 border-y border-neutral-200/70">
           <div className="container-shell">
@@ -356,7 +497,7 @@ export default function HomeClient({ initialData = {} }) {
         </section>
 
         {/* ================================================== */}
-        {/* 7. ANNOUNCEMENTS SECTION                          */}
+        {/* 6. ANNOUNCEMENTS SECTION                          */}
         {/* ================================================== */}
         <section className="container-shell">
           <SectionHeading
@@ -374,7 +515,7 @@ export default function HomeClient({ initialData = {} }) {
         </section>
 
         {/* ================================================== */}
-        {/* 9. MEDIA GALLERY PREVIEW                         */}
+        {/* 7. MEDIA GALLERY PREVIEW                         */}
         {/* ================================================== */}
         {gallery.length > 0 && (
           <section className="container-shell">
@@ -389,7 +530,7 @@ export default function HomeClient({ initialData = {} }) {
         )}
 
         {/* ================================================== */}
-        {/* 10. FIND US — LOCATION SECTION                    */}
+        {/* 8. FIND US — LOCATION SECTION                    */}
         {/* ================================================== */}
         <section className="container-shell space-y-8" id="find-us">
           <SectionHeading

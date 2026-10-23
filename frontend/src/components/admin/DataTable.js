@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -10,9 +9,8 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
 } from "lucide-react";
-import { getLocalizedText } from "@/src/i18n";
+import { getLocalizedText } from "@/i18n";
 
 export default function DataTable({
   title,
@@ -37,21 +35,21 @@ export default function DataTable({
   onTogglePublish,
   isLoading = false,
   emptyMessage = "No items found.",
-  customColumns = [],
+  _customColumns = [],
 }) {
   return (
     <div className="space-y-6">
       {/* Top action & title bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-extrabold text-[#070707] tracking-tight">{title}</h2>
-          {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+          <h2 className="font-serif text-2xl sm:text-3xl font-medium text-[#070707] tracking-tight">{title}</h2>
+          {subtitle && <p className="text-xs sm:text-sm text-neutral-500 mt-0.5 font-normal">{subtitle}</p>}
         </div>
 
         {createHref && (
           <Link
             href={createHref}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FE0002] px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#CC0002] cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#D71920] hover:bg-[#b5141a] px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-red-950/30 hover-lift transition-all cursor-pointer"
           >
             <Plus className="h-4 w-4 text-white" />
             <span>{createLabel}</span>
@@ -60,16 +58,16 @@ export default function DataTable({
       </div>
 
       {/* Filter and Search Row */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 rounded-3xl border border-neutral-200/80 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
         {/* Search Input */}
         <div className="relative flex-1 max-w-md">
-          <Search className="pointer-events-none absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
+          <Search className="pointer-events-none absolute left-4 top-3 h-4 w-4 text-neutral-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
             placeholder="Search records..."
-            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2 pl-10 pr-4 text-xs font-medium text-[#070707] placeholder-slate-400 focus:border-[#070707] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#070707]/15 transition"
+            className="w-full rounded-full border border-neutral-200 bg-[#F9FAFB] py-2.5 pl-11 pr-5 text-xs font-medium text-[#070707] placeholder-neutral-400 focus:border-[#D71920] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D71920]/15 transition"
           />
         </div>
 
@@ -77,14 +75,14 @@ export default function DataTable({
         <div className="flex flex-wrap items-center gap-2">
           {/* Status Filter Tabs */}
           {onStatusFilterChange && (
-            <div className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50/80 p-1 text-xs">
+            <div className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-[#F9FAFB] p-1 text-xs">
               <button
                 type="button"
                 onClick={() => onStatusFilterChange("all")}
-                className={`rounded-lg px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                className={`rounded-full px-3.5 py-1 text-xs font-bold transition cursor-pointer ${
                   statusFilter === "all"
                     ? "bg-[#070707] text-white shadow-xs"
-                    : "text-slate-600 hover:text-[#070707]"
+                    : "text-neutral-600 hover:text-[#070707]"
                 }`}
               >
                 All
@@ -92,10 +90,10 @@ export default function DataTable({
               <button
                 type="button"
                 onClick={() => onStatusFilterChange("published")}
-                className={`rounded-lg px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                className={`rounded-full px-3.5 py-1 text-xs font-bold transition cursor-pointer ${
                   statusFilter === "published"
                     ? "bg-[#070707] text-white shadow-xs"
-                    : "text-slate-600 hover:text-[#070707]"
+                    : "text-neutral-600 hover:text-[#070707]"
                 }`}
               >
                 Published
@@ -103,10 +101,10 @@ export default function DataTable({
               <button
                 type="button"
                 onClick={() => onStatusFilterChange("draft")}
-                className={`rounded-lg px-3 py-1 text-xs font-bold transition cursor-pointer ${
+                className={`rounded-full px-3.5 py-1 text-xs font-bold transition cursor-pointer ${
                   statusFilter === "draft"
                     ? "bg-[#070707] text-white shadow-xs"
-                    : "text-slate-600 hover:text-[#070707]"
+                    : "text-neutral-600 hover:text-[#070707]"
                 }`}
               >
                 Draft

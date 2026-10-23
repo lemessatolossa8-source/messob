@@ -20,9 +20,9 @@ export const initialCityInfo = {
     en: "Provide a scalable digital foundation that connects directly to full CMS, external e-services, and official administrative data systems.",
   },
   generalInfo: {
-    om: "Magaalaan Burraayyuu Finfinnee irraa kiiloomeetira 15 fagaattee kan argamtu yoo ta'u, giddu-gala industirii, daldalaa fi lojistiksii saffisaan guddachaa jirtudha.",
-    am: "ቡራዩ ከአዲስ አበባ በ15 ኪሎ ሜትር ርቀት ላይ የምትገኝ ሲሆን በፍጥነት በማደግ ላይ ያለች የኢንዱስትሪ፣ የንግድ እና የሎጂስቲክስ ማዕከል ናት።",
-    en: "Burayu is a strategically located municipality adjacent to Addis Ababa, serving as a primary manufacturing, commerce, and logistics corridor in Oromia, Ethiopia.",
+    om: "",
+    am: "",
+    en: "",
   },
   status: "published",
   lastUpdated: "2026-08-30",

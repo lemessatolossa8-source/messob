@@ -23,6 +23,12 @@ const getAll = async (req, res) => {
     offset,
   });
 
+  if (!isAuth) {
+    res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+  } else {
+    res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+  }
+
   res.json({
     success: true,
     data: {
@@ -42,6 +48,13 @@ const getById = async (req, res) => {
   if (!req.user && slide.status !== "published") {
     return res.status(404).json({ success: false, message: "Slide not found" });
   }
+
+  if (!req.user) {
+    res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+  } else {
+    res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+  }
+
   res.json({ success: true, data: slide.toJSON() });
 };
 

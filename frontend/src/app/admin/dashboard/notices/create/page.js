@@ -15,7 +15,7 @@ export default function CreateNoticePage() {
   const toast = useToast();
 
   const [activeLang, setActiveLang] = useState("am");
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     title: { om: "", am: "", en: "" },
     summary: { om: "", am: "", en: "" },
     content: { om: "", am: "", en: "" },
@@ -23,7 +23,7 @@ export default function CreateNoticePage() {
     date: new Date().toISOString().split("T")[0],
     referenceNo: `BM-NT-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
     status: "published",
-  });
+  }));
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);

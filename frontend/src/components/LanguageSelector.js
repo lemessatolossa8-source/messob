@@ -76,11 +76,12 @@ export default function LanguageSelector({ variant = "header", className = "" })
         onClick={() => setDropdownOpen((v) => !v)}
         className={`relative inline-flex items-center gap-1 py-1 text-sm font-bold transition-colors duration-300 ease-in-out whitespace-nowrap focus:outline-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:transition-transform after:duration-300 after:origin-left ${
           isDarkText 
-            ? (dropdownOpen ? "text-[#070707] after:bg-[#FE0002] after:scale-x-100" : "text-[#070707] hover:text-[#070707] after:bg-[#FE0002] after:scale-x-0 hover:after:scale-x-100")
+            ? (dropdownOpen ? "text-[#070707] after:bg-[#D71920] after:scale-x-100" : "text-[#070707] hover:text-[#070707] after:bg-[#D71920] after:scale-x-0 hover:after:scale-x-100")
             : isBottom
-              ? (dropdownOpen ? "text-white after:bg-[#FE0002] after:scale-x-100" : "text-white/90 hover:text-white after:bg-[#FE0002] after:scale-x-0 hover:after:scale-x-100")
+              ? (dropdownOpen ? "text-white after:bg-[#D71920] after:scale-x-100" : "text-white/90 hover:text-white after:bg-[#D71920] after:scale-x-0 hover:after:scale-x-100")
               : (dropdownOpen ? "text-white after:bg-white after:scale-x-100" : "text-white/90 hover:text-white after:bg-white after:scale-x-0 hover:after:scale-x-100")
         }`}
+        aria-label="Select language"
         aria-expanded={dropdownOpen}
         aria-haspopup="true"
       >
@@ -104,12 +105,12 @@ export default function LanguageSelector({ variant = "header", className = "" })
                 }}
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition ${
                   isActive
-                    ? "bg-red-50 text-[#FE0002] font-semibold"
+                    ? "bg-red-50 text-[#D71920] font-semibold"
                     : "text-[#070707] hover:bg-slate-100"
                 }`}
               >
                 <span>{lang.label || lang.code}</span>
-                {isActive && <span className="h-1.5 w-1.5 rounded-full bg-[#FE0002]" />}
+                {isActive && <span className="h-1.5 w-1.5 rounded-full bg-[#D71920]" />}
               </button>
             );
           })}

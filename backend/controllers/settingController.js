@@ -9,6 +9,12 @@ const {
 
 const SINGLETON_ID = 1;
 
+let cachedPublicSettings = null;
+
+function invalidateSettingsCache() {
+  cachedPublicSettings = null;
+}
+
 async function getOrCreateRecord() {
   let record = await Setting.findByPk(SINGLETON_ID);
   if (!record) {
@@ -50,8 +56,18 @@ exports.getAllSettings = async (req, res) => {
  */
 exports.getPublicSettings = async (req, res) => {
   try {
+    if (cachedPublicSettings) {
+      res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+      return res.json({
+        success: true,
+        data: cachedPublicSettings,
+      });
+    }
+
     const record = await getOrCreateRecord();
     const data = toPublicSettings(resolvedPayload(record));
+    cachedPublicSettings = data;
+
     res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
     res.json({
       success: true,
@@ -87,6 +103,7 @@ exports.updateSettings = async (req, res) => {
     record.payload = merged;
     record.changed("payload", true);
     await record.save();
+    invalidateSettingsCache();
 
     const saved = resolvedPayload(record);
     res.json({
@@ -112,6 +129,7 @@ exports.resetSettings = async (req, res) => {
     record.payload = DEFAULT_SETTINGS;
     record.changed("payload", true);
     await record.save();
+    invalidateSettingsCache();
 
     res.json({
       success: true,

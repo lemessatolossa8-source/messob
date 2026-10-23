@@ -21,6 +21,12 @@ const getAll = async (req, res) => {
     order: [["order", "ASC"], ["createdAt", "DESC"]],
   });
 
+  if (!isAuth) {
+    res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+  } else {
+    res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+  }
+
   res.json({
     success: true,
     data: {

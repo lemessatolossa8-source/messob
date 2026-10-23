@@ -1,24 +1,63 @@
 const Contact = require("../models/Contact");
+const { sendContactInquiryEmail } = require("../config/email");
 
 // @desc   Submit a contact message (public)
 // @route  POST /api/contact
 const submitContact = async (req, res) => {
-  const { name, email, phone, subject, message } = req.body;
+  try {
+    const { name, email, phone, subject, message } = req.body;
 
-  if (!name || !email || !subject || !message) {
-    return res.status(400).json({
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email, subject, and message are required",
+      });
+    }
+
+    // 1. Save inquiry to database
+    const contact = await Contact.create({
+      name: String(name).trim(),
+      email: String(email).trim(),
+      phone: phone ? String(phone).trim() : null,
+      subject: String(subject).trim(),
+      message: String(message).trim(),
+    });
+
+    // 2. Dispatch email notification to configured recipient (lemessatolossa8@gmail.com)
+    try {
+      const emailResult = await sendContactInquiryEmail({
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        subject: contact.subject,
+        message: contact.message,
+        contactId: contact.id,
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: "Your inquiry has been submitted and delivered successfully.",
+        data: contact.toJSON(),
+        emailDelivered: true,
+        recipient: emailResult.recipient,
+      });
+    } catch (emailError) {
+      console.error("[CONTACT CONTROLLER] Email dispatch failed:", emailError.message);
+      return res.status(502).json({
+        success: false,
+        message: "Your message was recorded in our database, but email delivery to the municipal desk failed. Please try again or contact us directly.",
+        error: emailError.message,
+        data: contact.toJSON(),
+      });
+    }
+  } catch (err) {
+    console.error("[CONTACT CONTROLLER] Database or server error:", err);
+    return res.status(500).json({
       success: false,
-      message: "Name, email, subject, and message are required",
+      message: "An internal server error occurred while processing your message.",
+      error: err.message,
     });
   }
-
-  const contact = await Contact.create({ name, email, phone, subject, message });
-
-  res.status(201).json({
-    success: true,
-    message: "Your message has been received. We will get back to you shortly.",
-    data: contact.toJSON(),
-  });
 };
 
 // @desc   Get all contact messages (admin only)

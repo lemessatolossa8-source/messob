@@ -3,8 +3,8 @@
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 import { InvestmentCard } from "@/components/Cards";
-import AccessEServiceButton, { ESERVICE_URL } from "@/components/AccessEserviceButton";
-import { useTranslation } from "@/src/context/LanguageContext";
+import { ESERVICE_URL } from "@/components/AccessEserviceButton";
+import { useTranslation } from "@/context/LanguageContext";
 import {
   Factory,
   Building,
@@ -13,8 +13,6 @@ import {
   Cpu,
   Sprout,
   CheckCircle2,
-  TrendingUp,
-  Landmark,
   ArrowRight,
 } from "lucide-react";
 

@@ -1,5 +1,6 @@
 "use client";
-import { autoTranslateForm } from "@/src/lib/autoTranslate";
+
+import { autoTranslateForm } from "@/lib/autoTranslate";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -7,9 +8,8 @@ import Link from "next/link";
 import { ArrowLeft, Save, Send } from "lucide-react";
 import LanguageTabs from "@/components/admin/LanguageTabs";
 import { TextInput, TextAreaInput, SelectInput, ImagePickerInput } from "@/components/admin/FormControls";
-import { eventService } from "@/src/services";
-import { useToast } from "@/src/context/ToastContext";
-import { validateRequired, validateDate, validateTime, validateTimeRange, validateImage } from "@/src/lib/validation";
+import { eventService } from "@/services";
+import { useToast } from "@/context/ToastContext";
 
 export default function CreateEventPage() {
   const router = useRouter();

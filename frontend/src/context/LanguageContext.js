@@ -1,14 +1,14 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
-import { DEFAULT_LANGUAGE, LANGUAGES, LANGUAGE_CODES, getTranslation, getLocalizedText } from "@/src/i18n";
-import { useSiteSettings } from "@/src/context/SiteSettingsContext";
+import { DEFAULT_LANGUAGE, LANGUAGES, LANGUAGE_CODES, getTranslation, getLocalizedText } from "@/i18n";
+import { useSiteSettings } from "@/context/SiteSettingsContext";
 
 const LanguageContext = createContext({
   language: DEFAULT_LANGUAGE,
   setLanguage: () => {},
   t: (key, fallback) => fallback || key,
-  getText: (field) => "",
+  getText: (_field) => "",
   languages: LANGUAGES,
   isLoaded: false,
 });
@@ -21,28 +21,36 @@ export function LanguageProvider({ children }) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const configuredDefault = settings?.languageSettings?.defaultLanguage;
-    if (!configuredDefault || !LANGUAGE_CODES.includes(configuredDefault)) {
-      setIsLoaded(true);
-      return;
-    }
-
     try {
-      const sessionUserLang = sessionStorage.getItem("mesob_user_selected_lang");
-      if (sessionUserLang && LANGUAGE_CODES.includes(sessionUserLang)) {
-        setLanguageState(sessionUserLang);
+      const stored =
+        sessionStorage.getItem("mesob_user_selected_lang") ||
+        localStorage.getItem(STORAGE_KEY);
+      if (stored && LANGUAGE_CODES.includes(stored)) {
+        if (stored !== DEFAULT_LANGUAGE) {
+          setLanguageState(stored);
+        }
       } else {
-        setLanguageState(configuredDefault);
-        try {
-          localStorage.setItem(STORAGE_KEY, configuredDefault);
-        } catch {}
+        const configuredDefault = settings?.languageSettings?.defaultLanguage;
+        if (configuredDefault && LANGUAGE_CODES.includes(configuredDefault) && configuredDefault !== DEFAULT_LANGUAGE) {
+          setLanguageState(configuredDefault);
+        }
       }
     } catch {
-      setLanguageState(configuredDefault);
+      // Fallback to default
     } finally {
       setIsLoaded(true);
     }
   }, [settings?.languageSettings?.defaultLanguage]);
+
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === STORAGE_KEY && e.newValue && LANGUAGE_CODES.includes(e.newValue)) {
+        setLanguageState(e.newValue);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const setLanguage = useCallback((newLang) => {
     if (LANGUAGE_CODES.includes(newLang)) {

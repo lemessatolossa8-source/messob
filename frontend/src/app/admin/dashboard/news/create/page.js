@@ -1,285 +1,381 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Send, Sparkles } from "lucide-react";
-import LanguageTabs from "@/components/admin/LanguageTabs";
-import { TextInput, TextAreaInput, SelectInput, ImagePickerInput, VideoPickerInput } from "@/components/admin/FormControls";
+import { ArrowLeft, Upload, X, Film, ImageIcon, AlertCircle } from "lucide-react";
 import { newsService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
-import { validateRequired, validateLength, validateImage, validateMultilingual } from "@/src/lib/validation";
-import { NEWS_CATEGORIES, categoriesToOptions, getDefaultCategory } from "@/src/constants/categories";
-import { autoTranslateForm } from "@/src/lib/autoTranslate";
 
 export default function CreateNewsPage() {
   const router = useRouter();
   const toast = useToast();
 
-  const [activeLang, setActiveLang] = useState("om");
-  const [formData, setFormData] = useState({
-    title: { om: "", am: "", en: "" },
-    summary: { om: "", am: "", en: "" },
-    category: getDefaultCategory("news"),
-    date: new Date().toISOString().split("T")[0],
-    author: "Burayu Communications Desk",
-    image: "",
-    video: "",
-    tags: "Burayu, Municipal, News",
-    status: "published",
-  });
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [image, setImage] = useState("");
+  const [video, setVideo] = useState("");
 
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
+  const [imageUploading, setImageUploading] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isTranslating, setIsTranslating] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const handleFieldChange = (field, lang, value) => {
-    if (lang) {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: {
-          ...prev[field],
-          [lang]: value,
-        },
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-    }
+  const imageInputRef = useRef(null);
+  const videoInputRef = useRef(null);
 
-    // Clear specific error on change
-    const errorKey = lang ? `${field}_${lang}` : field;
-    if (errors[errorKey]) {
+  // File upload helper
+  const handleFileUpload = async (file, type) => {
+    if (!file) return;
+
+    if (type === "image") {
+      if (!file.type.startsWith("image/")) {
+        setErrors((prev) => ({ ...prev, image: "Please select an image file (PNG, JPG, WEBP)." }));
+        return;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        setErrors((prev) => ({ ...prev, image: "Image size must be less than 15MB." }));
+        return;
+      }
+      setImageUploading(true);
       setErrors((prev) => {
         const copy = { ...prev };
-        delete copy[errorKey];
+        delete copy.image;
+        return copy;
+      });
+    } else {
+      if (!file.type.startsWith("video/")) {
+        setErrors((prev) => ({ ...prev, video: "Please select a valid video file (MP4, WebM, MOV)." }));
+        return;
+      }
+      if (file.size > 50 * 1024 * 1024) {
+        setErrors((prev) => ({ ...prev, video: "Video size must be less than 50MB." }));
+        return;
+      }
+      setVideoUploading(true);
+      setErrors((prev) => {
+        const copy = { ...prev };
+        delete copy.video;
         return copy;
       });
     }
-  };
 
-  const handleBlur = (field, lang) => {
-    const key = lang ? `${field}_${lang}` : field;
-    setTouched((prev) => ({ ...prev, [key]: true }));
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    const val = lang ? formData[field][lang] : formData[field];
-    if (field === "title" && lang === "om") {
-      const err = validateRequired(val, "Afaan Oromoo Title");
-      if (err) setErrors((prev) => ({ ...prev, [key]: err }));
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("mesob_token") || localStorage.getItem("token")
+          : null;
+
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers,
+        credentials: "same-origin",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Upload failed.");
+      }
+
+      if (type === "image") {
+        setImage(data.url);
+      } else {
+        setVideo(data.url);
+      }
+    } catch (err) {
+      if (type === "image") {
+        setErrors((prev) => ({ ...prev, image: err.message || "Image upload failed." }));
+      } else {
+        setErrors((prev) => ({ ...prev, video: err.message || "Video upload failed." }));
+      }
+    } finally {
+      if (type === "image") {
+        setImageUploading(false);
+      } else {
+        setVideoUploading(false);
+      }
     }
   };
 
-  const validateForm = (targetStatus) => {
+  const validate = () => {
     const newErrors = {};
-
-    // Validate that at least ONE title is provided (om, am, or en)
-    const hasAnyTitle = !!(formData.title.om?.trim() || formData.title.am?.trim() || formData.title.en?.trim());
-    if (!hasAnyTitle) {
-      newErrors.title_om = "Please enter an article title in at least one language.";
+    if (!title.trim()) {
+      newErrors.title = "News title is required.";
     }
-
-    if (!formData.category) {
-      newErrors.category = "Category is required.";
+    if (!content.trim()) {
+      newErrors.content = "News content is required.";
     }
-
+    if (!image) {
+      newErrors.image = "Featured image is required.";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e, targetStatus) => {
-    if (e) e.preventDefault();
-    setIsSubmitting(true);
-
-    const isValid = validateForm(targetStatus);
-    if (!isValid) {
-      setIsSubmitting(false);
-      toast.error("Please enter an article headline.");
+  const handleSubmit = async (targetStatus) => {
+    if (!validate()) {
+      toast.error("Please fill in all required fields.");
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      const tagsArray = typeof formData.tags === "string"
-        ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean)
-        : formData.tags;
-
-      
-      
-
-      const finalTitle = {
-        om: formData.title.om?.trim(),
-        am: formData.title.am?.trim(),
-        en: formData.title.en?.trim(),
-      };
-
-      const finalSummary = {
-        om: formData.summary.om?.trim(),
-        am: formData.summary.am?.trim(),
-        en: formData.summary.en?.trim(),
-      };
-
       await newsService.create({
-        ...formData,
-        title: finalTitle,
-        summary: finalSummary,
-        image: formData.image || "",
-        video: formData.video || "",
-        tags: tagsArray,
+        title: title.trim(),
+        content: content.trim(),
+        image: image,
+        video: video || "",
         status: targetStatus,
       });
 
       toast.success(
         targetStatus === "published"
-          ? "News article created and published successfully!"
-          : "News article saved as draft."
+          ? "News published successfully!"
+          : "News saved as draft."
       );
       router.push("/admin/dashboard/news");
     } catch (err) {
       console.error("Create news error:", err);
-      toast.error("Failed to create news item. Please try again.");
+      toast.error("Failed to save news. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      {/* Header & Back Link */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/admin/dashboard/news"
-            className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50 transition"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h2 className="text-xl font-extrabold text-[#070707]">Create News Article</h2>
-            <p className="text-xs text-slate-500">Publish or draft an official municipal news release</p>
-          </div>
+    <div className="mx-auto max-w-3xl space-y-6 pb-12">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Link
+          href="/admin/dashboard/news"
+          className="rounded-xl border border-neutral-200 bg-white p-2.5 text-[#000000] hover:bg-neutral-50 transition"
+          title="Back to News Management"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        <div>
+          <h1 className="text-2xl font-black text-[#000000] tracking-tight">Create News</h1>
         </div>
       </div>
 
-      <form className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-        {/* Language Selection Header */}
-        <LanguageTabs
-          title="News Article Information"
-          activeTab={activeLang}
-          onTabChange={async (newLang) => {
-            if (activeLang !== newLang) {
-              await autoTranslateForm(formData, setFormData, activeLang, newLang, toast, setIsTranslating);
-              setActiveLang(newLang);
-            }
-          }}
-        />
-
-        {/* Multilingual Fields */}
-        <div className="space-y-5">
-          <TextInput
-            label={`Article Title`}
-            required={activeLang === "om"}
-            value={formData.title[activeLang]}
-            onChange={(v) => handleFieldChange("title", activeLang, v)}
-            onBlur={() => handleBlur("title", activeLang)}
-            error={errors[`title_${activeLang}`]}
-            placeholder="Enter news headline..."
+      {/* Main Form */}
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className="space-y-6 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-xs"
+      >
+        {/* Field 1: News Title */}
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-[#000000] uppercase tracking-wide">
+            News Title <span className="text-[#D71920]">*</span>
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (errors.title) {
+                setErrors((prev) => {
+                  const copy = { ...prev };
+                  delete copy.title;
+                  return copy;
+                });
+              }
+            }}
+            placeholder="Enter the news headline..."
+            className={`w-full rounded-xl border bg-white px-4 py-3 text-sm font-medium text-[#000000] placeholder-neutral-400 transition focus:outline-none focus:ring-2 ${
+              errors.title
+                ? "border-[#D71920] focus:ring-[#D71920]/20"
+                : "border-neutral-200 focus:border-[#D71920] focus:ring-[#D71920]/15"
+            }`}
           />
-
-          <TextAreaInput
-            label={`Summary / Lead Paragraph`}
-            rows={2}
-            value={formData.summary[activeLang]}
-            onChange={(v) => handleFieldChange("summary", activeLang, v)}
-            onBlur={() => handleBlur("summary", activeLang)}
-            error={errors[`summary_${activeLang}`]}
-            placeholder="Brief introductory summary..."
-          />
+          {errors.title && (
+            <p className="flex items-center gap-1.5 text-xs font-semibold text-[#D71920]">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <span>{errors.title}</span>
+            </p>
+          )}
         </div>
 
-        {/* Common Settings Divider */}
-        <div className="border-t border-slate-100 pt-6 space-y-5">
-          <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-            Publishing Settings & Metadata
-          </h3>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SelectInput
-              label="Category"
-              required
-              value={formData.category}
-              onChange={(v) => handleFieldChange("category", null, v)}
-              error={errors.category}
-              options={categoriesToOptions(NEWS_CATEGORIES)}
-            />
-
-            <TextInput
-              label="Author / Bureau Desk"
-              value={formData.author}
-              onChange={(v) => handleFieldChange("author", null, v)}
-              placeholder="e.g. Burayu Communications Desk"
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput
-              label="Published Date"
-              type="date"
-              value={formData.date}
-              onChange={(v) => handleFieldChange("date", null, v)}
-            />
-
-            <TextInput
-              label="Tags (Comma-separated)"
-              value={formData.tags}
-              onChange={(v) => handleFieldChange("tags", null, v)}
-              placeholder="Sanitation, Roads, Community"
-            />
-          </div>
-
-          <ImagePickerInput
-            label="Cover Photography"
-            value={formData.image}
-            onChange={(v) => handleFieldChange("image", null, v)}
-            error={errors.image}
+        {/* Field 2: News Content */}
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-[#000000] uppercase tracking-wide">
+            News Content <span className="text-[#D71920]">*</span>
+          </label>
+          <textarea
+            rows={10}
+            value={content}
+            onChange={(e) => {
+              setContent(e.target.value);
+              if (errors.content) {
+                setErrors((prev) => {
+                  const copy = { ...prev };
+                  delete copy.content;
+                  return copy;
+                });
+              }
+            }}
+            placeholder="Write the full news article here..."
+            className={`w-full rounded-xl border bg-white p-4 text-sm font-medium text-[#000000] placeholder-neutral-400 transition focus:outline-none focus:ring-2 leading-relaxed ${
+              errors.content
+                ? "border-[#D71920] focus:ring-[#D71920]/20"
+                : "border-neutral-200 focus:border-[#D71920] focus:ring-[#D71920]/15"
+            }`}
           />
-
-          <VideoPickerInput
-            label="Featured Video (Optional)"
-            value={formData.video}
-            onChange={(v) => handleFieldChange("video", null, v)}
-            error={errors.video}
-          />
+          {errors.content && (
+            <p className="flex items-center gap-1.5 text-xs font-semibold text-[#D71920]">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <span>{errors.content}</span>
+            </p>
+          )}
         </div>
 
-        {/* Form Action Buttons */}
-        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-slate-100 pt-6">
+        {/* Field 3: Featured Image */}
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-[#000000] uppercase tracking-wide">
+            Featured Image <span className="text-[#D71920]">*</span>
+          </label>
+          <input
+            type="file"
+            ref={imageInputRef}
+            onChange={(e) => handleFileUpload(e.target.files?.[0], "image")}
+            accept="image/*"
+            className="hidden"
+          />
+
+          {image ? (
+            <div className="relative overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 max-w-md">
+              <img
+                src={image}
+                alt="Featured preview"
+                className="aspect-video w-full object-cover max-h-56"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setImage("");
+                  if (imageInputRef.current) imageInputRef.current.value = "";
+                }}
+                className="absolute top-2.5 right-2.5 rounded-full bg-[#000000]/80 p-1.5 text-white hover:bg-[#D71920] transition cursor-pointer"
+                title="Remove image"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => imageInputRef.current?.click()}
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50/70 p-6 text-center hover:bg-neutral-100/60 transition cursor-pointer"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-xs border border-neutral-200">
+                <ImageIcon className="h-5 w-5 text-neutral-600" />
+              </div>
+              <p className="text-xs font-bold text-[#000000]">
+                {imageUploading ? "Uploading image..." : "Click to upload featured image"}
+              </p>
+              <p className="text-[11px] text-neutral-400">PNG, JPG, or WEBP</p>
+            </div>
+          )}
+
+          {errors.image && (
+            <p className="flex items-center gap-1.5 text-xs font-semibold text-[#D71920]">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <span>{errors.image}</span>
+            </p>
+          )}
+        </div>
+
+        {/* Field 4: Video Upload (Optional) */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-bold text-[#000000] uppercase tracking-wide">
+              Video Upload <span className="text-neutral-400 font-normal lowercase">(optional)</span>
+            </label>
+          </div>
+          <input
+            type="file"
+            ref={videoInputRef}
+            onChange={(e) => handleFileUpload(e.target.files?.[0], "video")}
+            accept="video/*"
+            className="hidden"
+          />
+
+          {video ? (
+            <div className="relative overflow-hidden rounded-xl border border-neutral-200 bg-black max-w-md">
+              <video
+                src={video}
+                controls
+                controlsList="nodownload"
+                className="aspect-video w-full object-contain max-h-56"
+              >
+                Your browser does not support the video tag.
+              </video>
+              <button
+                type="button"
+                onClick={() => {
+                  setVideo("");
+                  if (videoInputRef.current) videoInputRef.current.value = "";
+                }}
+                className="absolute top-2.5 right-2.5 rounded-full bg-[#000000]/80 p-1.5 text-white hover:bg-[#D71920] transition cursor-pointer"
+                title="Remove video"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => videoInputRef.current?.click()}
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50/70 p-6 text-center hover:bg-neutral-100/60 transition cursor-pointer"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-xs border border-neutral-200">
+                <Film className="h-5 w-5 text-neutral-600" />
+              </div>
+              <p className="text-xs font-bold text-[#000000]">
+                {videoUploading ? "Uploading video..." : "Click to upload an optional video"}
+              </p>
+              <p className="text-[11px] text-neutral-400">MP4, WebM, or MOV (optional)</p>
+            </div>
+          )}
+
+          {errors.video && (
+            <p className="flex items-center gap-1.5 text-xs font-semibold text-[#D71920]">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <span>{errors.video}</span>
+            </p>
+          )}
+        </div>
+
+        {/* Action Buttons: Cancel, Save as Draft, Publish News */}
+        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-neutral-200 pt-6">
           <Link
             href="/admin/dashboard/news"
-            className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-[#070707] hover:bg-slate-50 transition text-center"
+            className="w-full sm:w-auto rounded-xl border border-neutral-300 bg-white px-5 py-2.5 text-xs font-bold text-[#000000] hover:bg-neutral-50 transition text-center"
           >
             Cancel
           </Link>
 
           <button
             type="button"
-            disabled={isSubmitting}
-            onClick={(e) => handleSubmit(e, "draft")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-slate-200 transition disabled:opacity-50"
+            disabled={isSubmitting || imageUploading || videoUploading}
+            onClick={() => handleSubmit("draft")}
+            className="w-full sm:w-auto rounded-xl border border-[#000000] bg-[#FFFFFF] px-5 py-2.5 text-xs font-bold text-[#000000] hover:bg-neutral-100 transition disabled:opacity-50 cursor-pointer"
           >
-            <Save className="h-4 w-4" />
-            <span>Save as Draft</span>
+            Save as Draft
           </button>
 
           <button
             type="button"
-            disabled={isSubmitting}
-            onClick={(e) => handleSubmit(e, "published")}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#FE0002] px-6 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#CC0002] transition disabled:opacity-50"
+            disabled={isSubmitting || imageUploading || videoUploading}
+            onClick={() => handleSubmit("published")}
+            className="w-full sm:w-auto rounded-xl bg-[#D71920] px-6 py-2.5 text-xs font-bold text-white hover:bg-[#b5141a] transition disabled:opacity-50 shadow-sm cursor-pointer"
           >
-            <Send className="h-4 w-4 text-white" />
-            <span>{isSubmitting ? "Publishing..." : "Publish News"}</span>
+            {isSubmitting ? "Publishing..." : "Publish News"}
           </button>
         </div>
       </form>

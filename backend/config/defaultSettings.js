@@ -20,8 +20,8 @@ const DEFAULT_SETTINGS = {
     om: "Marsariitiin ofiishaala bulchiinsa Magaalaa Buraayyuu kan tajaajila munisipalaa, beeksisaafi odeeffannoo uummataa dhiyeessu",
   },
   contactInfo: {
-    email: "info@burayu.gov.et",
-    phone: "+251 11 284 0000",
+    email: "mesobburayubranch@gmail.com",
+    phone: "+251 94 466 4433",
     address: "Burayu City Administration, Main Office",
     workingHours: "Monday - Friday: 8:30 AM - 5:00 PM",
   },
@@ -120,9 +120,9 @@ const DEFAULT_SETTINGS = {
       en: "Provide a scalable digital foundation that connects directly to full CMS, external e-services, and official administrative data systems.",
     },
     generalInfo: {
-      om: "Magaalaan Burraayyuu Finfinnee irraa kiiloomeetira 15 fagaattee kan argamtu yoo ta'u, giddu-gala industirii, daldalaa fi lojistiksii saffisaan guddachaa jirtudha.",
-      am: "ቡራዩ ከአዲስ አበባ በ15 ኪሎ ሜትር ርቀት ላይ የምትገኝ ሲሆን በፍጥነት በማደግ ላይ ያለች የኢንዱስትሪ፣ የንግድ እና የሎጂስቲክስ ማዕከል ናት።",
-      en: "Burayu is a strategically located municipality adjacent to Addis Ababa, serving as a primary manufacturing, commerce, and logistics corridor in Oromia, Ethiopia.",
+      om: "",
+      am: "",
+      en: "",
     },
   },
 };

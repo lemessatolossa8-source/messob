@@ -6,6 +6,7 @@ const cors = require("cors");
 const path = require("path");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const compression = require("compression");
 const { connectDB } = require("./config/db");
 
 // Route files
@@ -40,31 +41,62 @@ const errorHandler = require("./middleware/errorMiddleware");
 // 1. Create Express app
 const app = express();
 
-// Simple request logger to debug CORS issues
-app.use((req, res, next) => {
-  console.log(`📥 ${req.method} ${req.path} - Origin: ${req.get('origin') || 'none'}`);
-  next();
-});
+// Trust reverse proxies (Render, Koyeb, Vercel, Cloudflare, Nginx) so req.ip and rate-limiting work accurately
+app.set("trust proxy", 1);
 
-// 2. CORS – allow localhost and 127.0.0.1 in development
+// High-performance gzip/brotli response compression for all JSON and text payloads
+app.use(compression({
+  threshold: 512, // Compress anything larger than 512 bytes
+}));
+
+// Request logger only active when explicitly enabled to prevent event loop lag
+if (process.env.DEBUG_REQUESTS === "true") {
+  app.use((req, res, next) => {
+    console.log(`📥 ${req.method} ${req.path} - Origin: ${req.get('origin') || 'none'}`);
+    next();
+  });
+}
+
+// 2. CORS configuration for production and development
+const configuredOrigins = (process.env.CLIENT_URL || "")
+  .split(",")
+  .map((u) => u.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
 const allowedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:3000",
+  ...configuredOrigins,
   "http://localhost:3000",
   "http://127.0.0.1:3000",
 ];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (server-to-server, curl, mobile apps)
+    // Allow requests with no origin (server-to-server, curl, mobile apps, health checks)
     if (!origin) return callback(null, true);
+
+    const normalizedOrigin = origin.replace(/\/+$/, "");
+
     // In development allow all localhost origins
-    if (process.env.NODE_ENV === "development" && (origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1"))) {
+    if (
+      process.env.NODE_ENV === "development" &&
+      (normalizedOrigin.startsWith("http://localhost") || normalizedOrigin.startsWith("http://127.0.0.1"))
+    ) {
       return callback(null, true);
     }
-    // In all environments only allow explicitly listed origins
-    if (allowedOrigins.includes(origin)) {
+
+    // Explicitly allowed origins
+    if (allowedOrigins.includes(normalizedOrigin)) {
       return callback(null, true);
     }
+
+    // Allow Vercel preview deployments if frontend is hosted on Vercel
+    if (
+      normalizedOrigin.endsWith(".vercel.app") &&
+      configuredOrigins.some((u) => u.includes("vercel.app"))
+    ) {
+      return callback(null, true);
+    }
+
     return callback(new Error(`CORS: origin '${origin}' is not allowed`));
   },
   credentials: true,
@@ -112,8 +144,14 @@ const authLimiter = rateLimit({
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// 4. Static uploads folder – absolute path so it works regardless of CWD
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// 4. Static uploads folder with long-term caching
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"), {
+    maxAge: "30d",
+    immutable: true,
+  })
+);
 
 // 5. Health check
 app.get("/", (req, res) => {

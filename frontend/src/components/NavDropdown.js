@@ -46,12 +46,6 @@ export default function NavDropdown({
   };
 
   const handleFocus = () => openNow();
-  const handleBlur = (e) => {
-    if (!e.currentTarget.contains(e.relatedTarget)) {
-      setOpen(false);
-      setActiveSub(null);
-    }
-  };
   const handleKeyDown = (e) => {
     if (e.key === "Escape") {
       setOpen(false);
@@ -60,8 +54,9 @@ export default function NavDropdown({
     }
   };
 
-  // Click outside closes
+  // Click outside closes — only listen when dropdown is actually open!
   useEffect(() => {
+    if (!open) return;
     const onDocDown = (e) => {
       if (ref.current && !ref.current.contains(e.target)) {
         setOpen(false);
@@ -69,18 +64,12 @@ export default function NavDropdown({
       }
     };
     document.addEventListener("mousedown", onDocDown);
-    document.addEventListener("touchstart", onDocDown);
     return () => {
       document.removeEventListener("mousedown", onDocDown);
-      document.removeEventListener("touchstart", onDocDown);
     };
-  }, []);
+  }, [open]);
 
   const handleItemClick = (e, item) => {
-    setOpen(false);
-    setActiveSub(null);
-    if (onNavigate) onNavigate();
-
     if (!item?.href) return;
 
     if (item.href.startsWith("/#") || item.href.startsWith("#")) {
@@ -113,6 +102,10 @@ export default function NavDropdown({
         }
       }
     }
+
+    setOpen(false);
+    setActiveSub(null);
+    if (onNavigate) onNavigate();
   };
 
   return (
@@ -122,7 +115,6 @@ export default function NavDropdown({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onFocus={handleFocus}
-      onBlur={handleBlur}
       onKeyDown={handleKeyDown}
     >
       <button
@@ -170,13 +162,13 @@ export default function NavDropdown({
                     }}
                   >
                     {/* Item trigger */}
-                    <div className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-[#070707] transition hover:bg-slate-100 hover:text-[#FE0002] cursor-pointer">
+                    <div className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-[#070707] transition hover:bg-slate-100 hover:text-[#D71920] cursor-pointer">
                       <Link
                         href={item.href || "#"}
                         onClick={(e) => handleItemClick(e, item)}
                         className="flex-1 flex items-center gap-2"
                       >
-                        <Layers className="h-4 w-4 text-[#FE0002]" />
+                        <Layers className="h-4 w-4 text-[#D71920]" />
                         <span className="font-semibold">{item.name}</span>
                       </Link>
                       <button
@@ -185,12 +177,12 @@ export default function NavDropdown({
                           e.stopPropagation();
                           setActiveSub((prev) => (prev === item.name ? null : item.name));
                         }}
-                        className="p-1 rounded-lg text-slate-400 hover:text-[#FE0002] transition"
+                        className="p-1 rounded-lg text-slate-400 hover:text-[#D71920] transition"
                         aria-label={`Toggle ${item.name} submenu`}
                       >
                         <ChevronRight
                           className={`h-4 w-4 transition-transform duration-200 ${
-                            isSubOpen ? "rotate-90 lg:rotate-0 text-[#FE0002]" : ""
+                            isSubOpen ? "rotate-90 lg:rotate-0 text-[#D71920]" : ""
                           }`}
                         />
                       </button>
@@ -210,7 +202,7 @@ export default function NavDropdown({
                                 key={child.name}
                                 href={child.href}
                                 onClick={(e) => handleItemClick(e, child)}
-                                className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold text-[#070707] transition hover:bg-rose-50 hover:text-[#FE0002]"
+                                className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold text-[#070707] transition hover:bg-rose-50 hover:text-[#D71920]"
                               >
                                 <span>{child.name}</span>
                                 {child.badge && (
@@ -230,7 +222,7 @@ export default function NavDropdown({
                               key={child.name}
                               href={child.href}
                               onClick={(e) => handleItemClick(e, child)}
-                              className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#070707] transition hover:text-[#FE0002]"
+                              className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#070707] transition hover:text-[#D71920]"
                             >
                               <span>{child.name}</span>
                               {child.badge && (
@@ -252,17 +244,17 @@ export default function NavDropdown({
                   key={item.name}
                   href={item.href}
                   onClick={(e) => handleItemClick(e, item)}
-                  className="group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-[#070707] transition hover:bg-rose-50/70 hover:text-[#FE0002]"
+                  className="group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-[#070707] transition hover:bg-rose-50/70 hover:text-[#D71920]"
                 >
                   <div className="flex items-center gap-2.5">
                     {item.badge && (
-                      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-slate-100 text-[11px] font-bold text-slate-700 group-hover:bg-[#FE0002] group-hover:text-white transition-colors">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-slate-100 text-[11px] font-bold text-slate-700 group-hover:bg-[#D71920] group-hover:text-white transition-colors">
                         {item.badge}
                       </span>
                     )}
                     <span>{item.name}</span>
                   </div>
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#FE0002] group-hover:translate-x-0.5 transition-all" />
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#D71920] group-hover:translate-x-0.5 transition-all" />
                 </Link>
               );
             })}

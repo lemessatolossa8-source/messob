@@ -2,15 +2,12 @@
  * galleryService — wraps the Express/MySQL backend API.
  * Replaces the previous localStorage-based storageStore implementation.
  */
-import api, { invalidateCacheAndNotify } from "./api";
+import api, { invalidateCacheAndNotify, getApiBase } from "./api";
 
 const getToken = () => {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("mesob_token");
 };
-
-const getApiBase = () =>
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 /** Create a gallery item with an uploaded image file via FormData */
 const createWithImage = async (formData) => {

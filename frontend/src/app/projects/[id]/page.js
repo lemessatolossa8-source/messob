@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Calendar, MapPin, Tag, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, Calendar, MapPin } from "lucide-react";
 import { projectService } from "@/src/services";
 import { useTranslation } from "@/src/context/LanguageContext";
 import { StatusBadge } from "@/components/Cards";
@@ -37,7 +38,7 @@ export default function ProjectDetailPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <span className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+        <span className="h-6 w-6 animate-spin rounded-full border-2 border-[#D71920] border-t-transparent" />
       </div>
     );
   }
@@ -45,9 +46,9 @@ export default function ProjectDetailPage() {
   if (!item) {
     return (
       <div className="container-shell py-20 text-center space-y-4">
-        <h2 className="text-2xl font-bold text-[#070707]">Project Not Found</h2>
-        <p className="text-xs text-slate-500">The requested infrastructure project is not currently available.</p>
-        <Link href="/projects" className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-xs font-bold text-white">
+        <h2 className="text-2xl font-bold text-[#000000]">Project Not Found</h2>
+        <p className="text-xs text-neutral-500">The requested infrastructure project is not currently available.</p>
+        <Link href="/projects" className="inline-flex items-center gap-2 rounded-full bg-[#000000] hover:bg-[#D71920] px-5 py-2 text-xs font-bold text-white transition">
           <ArrowLeft className="h-4 w-4" />
           <span>Return to Projects</span>
         </Link>
@@ -63,74 +64,81 @@ export default function ProjectDetailPage() {
   return (
     <div className="py-12 pb-20">
       <div className="container-shell max-w-4xl space-y-8">
+        {/* Back Link */}
         <Link
           href="/projects"
-          className="inline-flex items-center gap-2 text-xs font-bold text-emerald-800 transition hover:text-emerald-600"
+          className="inline-flex items-center gap-2 text-xs font-bold text-[#000000] hover:text-[#D71920] transition"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>{t("actions.backToProjects", "Back to Projects")}</span>
         </Link>
 
+        {/* Title & Metadata */}
         <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-full bg-emerald-100 px-3.5 py-1 text-xs font-bold text-emerald-900">
-              {item.department || item.category || "Infrastructure"}
-            </span>
-            <StatusBadge status={item.projectStatus || item.status} />
-          </div>
-
-          <h1 className="mt-4 text-3xl font-extrabold text-[#070707] sm:text-4xl lg:text-5xl leading-tight">
+          <h1 className="text-3xl font-black text-[#000000] sm:text-4xl lg:text-5xl leading-tight">
             {title}
           </h1>
 
-          <div className="mt-4 flex flex-wrap items-center gap-6 border-b border-slate-200 pb-4 text-xs sm:text-sm text-slate-600">
+          <div className="mt-4 flex flex-wrap items-center gap-6 border-b border-neutral-200 pb-4 text-xs sm:text-sm text-neutral-600">
             {item.location && (
               <span className="flex items-center gap-2 font-medium">
-                <MapPin className="h-4 w-4 text-amber-600" />
+                <MapPin className="h-4 w-4 text-[#D71920]" />
                 {item.location}
               </span>
             )}
             {(item.start_date || item.startDate) && (
               <span className="flex items-center gap-2 font-medium">
-                <Calendar className="h-4 w-4 text-emerald-700" />
+                <Calendar className="h-4 w-4 text-neutral-600" />
                 {item.start_date || item.startDate} {item.end_date || item.targetCompletion ? `→ ${item.end_date || item.targetCompletion}` : ""}
               </span>
             )}
-            {item.budget && (
-              <span className="font-semibold text-[#070707]">
-                Fund: {item.budget}
-              </span>
-            )}
-          </div>
-
-          {/* Overall Project Progress */}
-          <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
-            <div className="flex items-center justify-between text-xs font-bold">
-              <span className="text-[#070707]">Execution Progress</span>
-              <span className="text-emerald-700 text-sm">{progress}% Complete</span>
-            </div>
-            <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-emerald-600 rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
           </div>
         </div>
 
+        {/* Project Image */}
         {item.image && (
-          <div className="aspect-[16/9] w-full overflow-hidden rounded-3xl bg-slate-100 shadow-md">
-            <img src={getImageUrl(item.image)} alt={title} className="h-full w-full object-cover" />
+          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-3xl bg-neutral-100 shadow-sm border border-neutral-200">
+            <Image
+              src={getImageUrl(item.image)}
+              alt={title || "Project"}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 896px"
+              className="object-cover"
+            />
           </div>
         )}
 
+        {/* Status and Progress */}
+        <div className="p-5 bg-neutral-50 border border-neutral-200 rounded-2xl space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-[#000000] uppercase tracking-wider">Status:</span>
+              <StatusBadge status={item.projectStatus || item.status} />
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-[#000000]">
+              <span className="text-neutral-500 font-medium">Progress:</span>
+              <span className="text-base font-extrabold text-[#D71920]">{progress}%</span>
+              <span className="text-neutral-400 font-normal">Complete</span>
+            </div>
+          </div>
+          <div className="h-2.5 w-full bg-neutral-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#D71920] rounded-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Description */}
         {description && (
-          <p className="text-base sm:text-lg font-medium text-[#070707] leading-relaxed border-l-4 border-emerald-600 pl-4">
+          <p className="text-base sm:text-lg font-medium text-[#000000] leading-relaxed border-l-4 border-[#D71920] pl-4">
             {description}
           </p>
         )}
 
-        <article className="prose prose-slate max-w-none text-base text-[#070707] leading-relaxed space-y-4">
+        {/* Full Details Content */}
+        <article className="prose prose-neutral max-w-none text-base text-[#000000] leading-relaxed space-y-4">
           {content ? (
             content.split("\n\n").map((paragraph, index) => (
               <p key={index}>{paragraph}</p>

@@ -36,11 +36,11 @@ export const autoTranslateForm = async (
   if (fieldsToTranslate.length === 0) return;
 
   setTranslating(true);
-  const toastId = toast.info("Auto-translating content...");
+  toast.info("Auto-translating content...");
 
   try {
-    const token = localStorage.getItem("token") || "";
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+    const token = localStorage.getItem("token") || localStorage.getItem("mesob_token") || "";
+    const apiUrl = typeof window !== "undefined" ? "/api" : (process.env.INTERNAL_API_URL || "http://127.0.0.1:5000/api");
 
     const promises = fieldsToTranslate.map(async (field, index) => {
       const text = textToTranslate[index];

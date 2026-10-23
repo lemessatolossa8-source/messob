@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, ExternalLink, ShieldCheck, ChevronRight, User } from "lucide-react";
+import { Menu, ExternalLink, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LanguageSelector from "@/components/LanguageSelector";
@@ -19,7 +19,7 @@ const ROUTE_NAMES = {
   "/admin/dashboard/settings": "System Settings",
 };
 
-export default function AdminHeader({ onMenuClick, onToggleCollapse, isCollapsed, title, subtitle }) {
+export default function AdminHeader({ onMenuClick, title }) {
   const pathname = usePathname();
 
   // Determine current section title
@@ -32,7 +32,7 @@ export default function AdminHeader({ onMenuClick, onToggleCollapse, isCollapsed
         <button
           type="button"
           onClick={onMenuClick}
-          className="rounded-xl border border-slate-200 p-2 text-[#070707] hover:bg-slate-100 lg:hidden cursor-pointer"
+          className="rounded-full border border-slate-200 p-2 text-[#070707] hover:bg-slate-100 lg:hidden cursor-pointer"
           aria-label="Open sidebar"
         >
           <Menu className="h-4 w-4" />
@@ -41,30 +41,25 @@ export default function AdminHeader({ onMenuClick, onToggleCollapse, isCollapsed
         <div className="flex items-center gap-2 min-w-0">
           <Link
             href="/admin/dashboard"
-            className="text-xs font-semibold text-slate-500 hover:text-[#070707] hidden sm:inline"
+            className="text-xs font-semibold text-slate-500 hover:text-[#D71920] hidden sm:inline transition-colors"
           >
             MESOB Admin
           </Link>
           <ChevronRight className="h-3.5 w-3.5 text-slate-400 hidden sm:inline" />
-          <h1 className="truncate text-sm sm:text-base font-extrabold text-[#070707]">
+          <h1 className="truncate font-serif text-base sm:text-lg font-bold text-[#070707]">
             {currentTitle}
           </h1>
         </div>
       </div>
 
-      {/* Right: Actions, Portal Badge, Website Link & Language */}
+      {/* Right: Actions, Website Link & Language */}
       <div className="flex items-center gap-3">
-        {/* Official Portal Indicator */}
-        <span className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-700">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#FE0002] animate-pulse" />
-          <span>Official Administration Portal</span>
-        </span>
 
         {/* View Public Website */}
         <Link
           href="/"
           target="_blank"
-          className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-[#070707] shadow-xs hover:border-[#FE0002] hover:text-[#FE0002] transition cursor-pointer"
+          className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-bold text-[#070707] shadow-xs hover:border-[#D71920] hover:text-[#D71920] hover-lift transition cursor-pointer"
         >
           <span>View Website</span>
           <ExternalLink className="h-3.5 w-3.5 text-slate-400" />

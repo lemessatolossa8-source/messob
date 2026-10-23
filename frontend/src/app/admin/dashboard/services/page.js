@@ -288,11 +288,7 @@ export default function AdminFloorManagementPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <div className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#FE0002]">
-            <Layers className="h-4 w-4" />
-            <span>Burayu MESOB Floors</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#070707] tracking-tight mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#070707] tracking-tight">
             Floor Management
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">

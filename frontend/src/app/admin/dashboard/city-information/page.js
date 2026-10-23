@@ -159,7 +159,7 @@ export default function CityInformationCMSPage() {
 
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("mesob_token") || localStorage.getItem("token") || "" : "";
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const apiUrl = typeof window !== "undefined" ? "/api" : (process.env.INTERNAL_API_URL || "http://127.0.0.1:5000/api");
 
       let translatedCount = 0;
       const updates = {};
@@ -217,22 +217,11 @@ export default function CityInformationCMSPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      {/* Top Header: Title & Auto-fill */}
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl font-extrabold text-[#070707] tracking-tight">
           City Information Details
         </h1>
-
-        <button
-          type="button"
-          disabled={isTranslating}
-          onClick={handleAutoTranslateMissing}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-[#070707] hover:border-[#FE0002] hover:text-[#FE0002] transition disabled:opacity-50 shadow-xs cursor-pointer self-start sm:self-auto"
-          title="Auto-fill empty fields using existing translations"
-        >
-          <Sparkles className="h-3.5 w-3.5 text-[#FE0002]" />
-          <span>{isTranslating ? "Translating..." : "Auto-fill Content"}</span>
-        </button>
       </div>
 
       {/* Clean Form Card with Compact Dropdown Language Selector */}

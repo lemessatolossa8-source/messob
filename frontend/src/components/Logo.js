@@ -37,6 +37,7 @@ export default function Logo({
           alt="Burayu MESOB Logo"
           width={currentDimension}
           height={currentDimension}
+          priority
           className="h-full w-full object-contain rounded-full"
         />
       </div>

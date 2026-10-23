@@ -9,33 +9,33 @@ const ThemeContext = createContext({
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState("light");
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem("mesob-theme");
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const resolved = stored ? stored : prefersDark ? "dark" : "light";
-      setTheme(resolved);
+      if (stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        setTheme("dark");
+        document.documentElement.classList.add("dark");
+      }
     } catch {
       // Fallback gracefully if localStorage or matchMedia are unavailable
-    } finally {
-      setMounted(true);
     }
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-    localStorage.setItem("mesob-theme", theme);
-  }, [theme, mounted]);
-
-  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      try {
+        if (next === "dark") {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+        localStorage.setItem("mesob-theme", next);
+      } catch {}
+      return next;
+    });
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

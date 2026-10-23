@@ -1,14 +1,44 @@
 import "./globals.css";
+import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
+import { cache } from "react";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import { LanguageProvider } from "@/src/context/LanguageContext";
 import { ToastProvider } from "@/src/context/ToastContext";
 import { ThemeProvider } from "@/src/context/ThemeContext";
 import { SiteSettingsProvider } from "@/src/context/SiteSettingsContext";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
+  preload: true,
+  fallback: ["Georgia", "Cambria", "Times New Roman", "serif"],
+  adjustFontFallback: true,
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+  adjustFontFallback: true,
+});
+
+const API_BASE_URL =
+  process.env.INTERNAL_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://127.0.0.1:5000/api";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-async function loadPublicSettings() {
+export const viewport = {
+  themeColor: "#070707",
+  width: "device-width",
+  initialScale: 1,
+};
+
+// Deduplicate settings fetch across generateMetadata and RootLayout per request
+const loadPublicSettings = cache(async () => {
   try {
     const res = await fetch(`${API_BASE_URL}/settings/public`, {
       next: { revalidate: 60 },
@@ -19,7 +49,7 @@ async function loadPublicSettings() {
   } catch {
     return null;
   }
-}
+});
 
 export async function generateMetadata() {
   const settings = await loadPublicSettings();
@@ -87,7 +117,7 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang={defaultLang} className="h-full" data-scroll-behavior="smooth">
-      <body className="h-full antialiased">
+      <body className={`h-full antialiased ${playfair.variable} ${plusJakarta.variable}`}>
         <ThemeProvider>
           <SiteSettingsProvider initialSettings={settings}>
             <LanguageProvider>

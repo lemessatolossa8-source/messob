@@ -1,19 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { MapPin, Navigation, Phone, Mail, Clock, ExternalLink } from "lucide-react";
-import { useTranslation } from "@/src/context/LanguageContext";
+import { useTranslation } from "@/context/LanguageContext";
 
 export default function LocationMap({
   title = "Burayu MESOB One-Stop Service Center",
-  subtitle = "Location",
+  _subtitle = "Location",
   address = "Burayu MESOB One Stop Service Building, Burayu, Oromia, Ethiopia",
   plusCode = "3MC5+R5M",
-  phone = "+251944664433",
+  phone = "+251 94 466 4433",
   email = "mesobburayubranch@gmail.com",
   workingHours = "Mon - Fri: 8:30 AM - 5:30 PM | Sat: 8:30 AM - 12:30 PM",
-  latitude = 9.071792,
-  longitude = 38.658089,
+  _latitude = 9.071792,
+  _longitude = 38.658089,
   className = "",
   compact = false,
+  mapOnly = false,
 }) {
   const { t, getText } = useTranslation();
   const [inView, setInView] = useState(false);
@@ -28,7 +29,7 @@ export default function LocationMap({
           observer.disconnect();
         }
       },
-      { rootMargin: "250px" }
+      { rootMargin: "0px", threshold: 0.1 }
     );
     observer.observe(containerRef.current);
     return () => observer.disconnect();
@@ -50,9 +51,8 @@ export default function LocationMap({
 
   return (
     <div ref={containerRef} className={`overflow-hidden rounded-2xl border border-neutral-200/80 bg-white shadow-sm ${className}`} id="LocationMap">
-      <div className="grid gap-0 lg:grid-cols-12">
-        {/* Left Side: Interactive Map */}
-        <div className={`relative ${compact ? "min-h-[300px]" : "min-h-[380px]"} lg:col-span-7 bg-neutral-100 overflow-hidden flex items-center justify-center`}>
+      {mapOnly ? (
+        <div className="relative min-h-[400px] sm:min-h-[460px] w-full bg-neutral-100 overflow-hidden flex items-center justify-center">
           {inView ? (
             <iframe
               title="Burayu MESOB Official Location Map"
@@ -71,28 +71,62 @@ export default function LocationMap({
             </div>
           )}
 
-          {/* Interactive Floating Location Badge */}
-          <div className="absolute top-4 left-4 z-10 flex items-center gap-2 rounded-xl border border-white/20 bg-[#070707] p-3 text-white shadow-md">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FE0002] text-white shrink-0">
-              <MapPin className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-xs font-bold tracking-wide text-white">{t("locationMap.findUs", "FIND US")}</p>
-              <p className="text-[11px] font-medium text-neutral-200">{t("locationMap.cityRegion", "Burayu, Oromia, Ethiopia")}</p>
-            </div>
+
+
+          {/* Quick Floating Action Links at bottom right */}
+          <div className="absolute bottom-4 right-4 z-10 flex flex-wrap gap-2">
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("locationMap.getDirections", "Get Directions")}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#D71920] hover:bg-[#B91C1C] px-4 py-2.5 text-xs font-bold uppercase text-white shadow-md transition-all hover:-translate-y-0.5"
+            >
+              <Navigation className="h-3.5 w-3.5" />
+              <span>{t("locationMap.getDirections", "Get Directions")}</span>
+            </a>
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("locationMap.viewOnGoogleMaps", "View on Google Maps")}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/30 bg-[#000000]/80 backdrop-blur-md hover:bg-[#000000] px-4 py-2.5 text-xs font-bold uppercase text-white shadow-md transition-all hover:-translate-y-0.5"
+            >
+              <span>{t("locationMap.viewOnGoogleMaps", "View on Google Maps")}</span>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
           </div>
+        </div>
+      ) : (
+        <div className="grid gap-0 lg:grid-cols-12">
+          {/* Left Side: Interactive Map */}
+          <div className={`relative ${compact ? "min-h-[300px]" : "min-h-[380px]"} lg:col-span-7 bg-neutral-100 overflow-hidden flex items-center justify-center`}>
+          {inView ? (
+            <iframe
+              title="Burayu MESOB Official Location Map"
+              width="100%"
+              height="100%"
+              className="absolute inset-0 h-full w-full border-0 filter contrast-[1.05]"
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+              style={{ border: 0 }}
+              src={mapIframeSrc}
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-neutral-400 text-sm font-medium">
+              <span>{displayTitle}</span>
+            </div>
+          )}
+
+
         </div>
 
         {/* Right Side: Official Contact & Navigation Info */}
         <div className="flex flex-col justify-between p-6 sm:p-8 lg:col-span-5 bg-white text-[#070707] border-l border-neutral-200/80">
           <div>
 
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-[#FE0002]/20 bg-slate-50 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-[#FE0002]">
-              <Navigation className="h-3.5 w-3.5 text-[#FE0002]" />
-              <span>{t("locationMap.officialDesk", "Official Administration Desk")}</span>
-            </div>
-
-            <h3 className="mt-4 text-2xl font-black tracking-tight text-[#070707]">
+            <h3 className="text-2xl font-black tracking-tight text-[#070707]">
               {displayTitle}
             </h3>
 
@@ -106,24 +140,27 @@ export default function LocationMap({
 
             <div className="mt-6 space-y-4 text-xs">
               <div className="flex items-start gap-3">
-                <MapPin className="h-4 w-4 text-[#FE0002] shrink-0 mt-0.5" />
+                <MapPin className="h-4 w-4 text-[#D71920] shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-neutral-500 uppercase tracking-wider text-[10px]">{t("locationMap.officialAddress", "Official Address")}</p>
                   <p className="text-[#070707] font-semibold mt-0.5">{getText(address)}</p>
-                  <p className="text-neutral-500 mt-1">Plus Code: <strong className="text-[#070707]">{plusCode}</strong></p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <Phone className="h-4 w-4 text-[#FE0002] shrink-0 mt-0.5" />
+                <Phone className="h-4 w-4 text-[#D71920] shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-neutral-500 uppercase tracking-wider text-[10px]">{t("locationMap.contactDesk", "Contact Desk")}</p>
-                  <p className="text-[#070707] font-semibold mt-0.5">{phone}</p>
+                  <p className="font-semibold text-neutral-500 uppercase tracking-wider text-[10px]">{t("locationMap.phoneTitle", "Phone")}</p>
+                  <p className="text-[#070707] font-semibold mt-0.5">
+                    {(phone && !phone.includes("284") ? phone : "+251 94 466 4433").replace(/\s+/g, "") === "+251944664433"
+                      ? "+251 94 466 4433"
+                      : phone || "+251 94 466 4433"}
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <Mail className="h-4 w-4 text-[#FE0002] shrink-0 mt-0.5" />
+                <Mail className="h-4 w-4 text-[#D71920] shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-neutral-500 uppercase tracking-wider text-[10px]">{t("locationMap.officialEmail", "Official Email")}</p>
                   <p className="text-[#070707] font-semibold mt-0.5">{email}</p>
@@ -131,7 +168,7 @@ export default function LocationMap({
               </div>
 
               <div className="flex items-start gap-3">
-                <Clock className="h-4 w-4 text-[#FE0002] shrink-0 mt-0.5" />
+                <Clock className="h-4 w-4 text-[#D71920] shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-neutral-500 uppercase tracking-wider text-[10px]">{t("locationMap.workingInfo", "Working Information")}</p>
                   <p className="text-[#070707] font-semibold mt-0.5">{getText(workingHours)}</p>
@@ -145,7 +182,8 @@ export default function LocationMap({
               href={directionsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#FE0002] hover:bg-[#CC0002] px-6 py-3.5 text-xs font-bold uppercase text-white shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-[2px] active:translate-y-0 active:scale-[0.98]"
+              aria-label={t("locationMap.getDirections", "Get Directions")}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#D71920] hover:bg-[#B91C1C] px-6 py-3.5 text-xs font-bold uppercase text-white shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-[2px] active:translate-y-0 active:scale-[0.98]"
             >
               <Navigation className="h-4 w-4" />
               <span>{t("locationMap.getDirections", "Get Directions")}</span>
@@ -154,7 +192,8 @@ export default function LocationMap({
               href={googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-6 py-3.5 text-xs font-bold uppercase text-[#070707] shadow-xs transition-all duration-200 hover:border-[#FE0002] hover:text-[#FE0002] hover:shadow-md hover:-translate-y-[2px] active:translate-y-0"
+              aria-label={t("locationMap.viewOnGoogleMaps", "View on Google Maps")}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-6 py-3.5 text-xs font-bold uppercase text-[#070707] shadow-xs transition-all duration-200 hover:border-[#D71920] hover:text-[#D71920] hover:shadow-md hover:-translate-y-[2px] active:translate-y-0"
             >
               <span>{t("locationMap.viewOnGoogleMaps", "View on Google Maps")}</span>
               <ExternalLink className="h-4 w-4" />
@@ -162,6 +201,7 @@ export default function LocationMap({
           </div>
         </div>
       </div>
+    )}
     </div>
   );
 }

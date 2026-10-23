@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Calendar, FileText, Share2 } from "lucide-react";
-import { noticeService } from "@/src/services";
-import { useTranslation } from "@/src/context/LanguageContext";
+import { ArrowLeft, Calendar } from "lucide-react";
+import { noticeService } from "@/services";
+import { useTranslation } from "@/context/LanguageContext";
 import { NoticeCard } from "@/components/Cards";
 
 export default function NoticeDetailPage() {

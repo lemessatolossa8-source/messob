@@ -1,7 +1,5 @@
-import api from "./api";
+import api, { getApiBase } from "./api";
 import { DEFAULT_SITE_SETTINGS, mergeSiteSettings } from "@/src/data/defaultSiteSettings";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 async function parseError(response, fallback) {
   try {
@@ -41,7 +39,7 @@ export const settingService = {
       return mergeSiteSettings(DEFAULT_SITE_SETTINGS, res.data || {});
     } catch {
       // Fallback direct fetch if called in SSR or before full hydration
-      const response = await fetch(`${API_BASE_URL}/settings/public`, {
+      const response = await fetch(`${getApiBase()}/settings/public`, {
         cache: "no-store",
       });
 

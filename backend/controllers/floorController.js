@@ -18,6 +18,12 @@ const deleteUploadedFile = (imageValue) => {
   }
 };
 
+let publicFloorsCache = null;
+
+function invalidateFloorCache() {
+  publicFloorsCache = null;
+}
+
 /**
  * Get all floors
  * Public: returns only published floors and their published services
@@ -26,6 +32,17 @@ const deleteUploadedFile = (imageValue) => {
 const getAll = async (req, res) => {
   const isAuth = !!req.user;
   const { status } = req.query;
+
+  // Serve unauthenticated requests from instant memory cache if available
+  if (!isAuth && (!status || status === "published")) {
+    if (publicFloorsCache) {
+      res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+      return res.json({
+        success: true,
+        data: publicFloorsCache,
+      });
+    }
+  }
 
   const floorWhere = {};
   if (!isAuth) {
@@ -57,9 +74,18 @@ const getAll = async (req, res) => {
     ],
   });
 
+  const data = floors.map((f) => f.toJSON());
+
+  if (!isAuth && (!status || status === "published")) {
+    publicFloorsCache = data;
+    res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+  } else {
+    res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+  }
+
   res.json({
     success: true,
-    data: floors.map((f) => f.toJSON()),
+    data,
   });
 };
 
@@ -103,6 +129,12 @@ const getByNumber = async (req, res) => {
     return res.status(404).json({ success: false, message: `Floor ${floorNum} not found` });
   }
 
+  if (!isAuth) {
+    res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+  } else {
+    res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+  }
+
   res.json({
     success: true,
     data: floor.toJSON(),
@@ -140,6 +172,12 @@ const getById = async (req, res) => {
 
   if (!isAuth && floor.status !== "published") {
     return res.status(404).json({ success: false, message: "Floor not found" });
+  }
+
+  if (!isAuth) {
+    res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+  } else {
+    res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
   }
 
   res.json({
@@ -251,6 +289,7 @@ const create = async (req, res) => {
   }
 
   const floor = await Floor.create(payload);
+  invalidateFloorCache();
   res.status(201).json({
     success: true,
     message: "Floor created successfully",
@@ -369,6 +408,7 @@ const update = async (req, res) => {
   }
 
   await floor.update(payload);
+  invalidateFloorCache();
   const updated = await Floor.findByPk(floor.id, {
     include: [{ model: FloorService, as: "services" }],
   });
@@ -394,6 +434,7 @@ const remove = async (req, res) => {
   }
 
   await floor.destroy();
+  invalidateFloorCache();
   res.json({
     success: true,
     message: "Floor deleted successfully",
@@ -477,6 +518,7 @@ const addService = async (req, res) => {
     include: [{ model: Floor, as: "floor", attributes: ["id", "floorNumber", "name"] }],
   });
 
+  invalidateFloorCache();
   res.status(201).json({
     success: true,
     message: "Floor service added successfully",
@@ -536,6 +578,7 @@ const updateService = async (req, res) => {
   }
 
   await service.update(payload);
+  invalidateFloorCache();
   const updated = await FloorService.findByPk(service.id, {
     include: [{ model: Floor, as: "floor", attributes: ["id", "floorNumber", "name"] }],
   });
@@ -572,6 +615,7 @@ const deleteService = async (req, res) => {
   }
 
   await service.destroy();
+  invalidateFloorCache();
   res.json({
     success: true,
     message: "Floor service and photo deleted successfully",
@@ -601,6 +645,7 @@ const reorderServices = async (req, res) => {
     order: [["order", "ASC"]],
   });
 
+  invalidateFloorCache();
   res.json({
     success: true,
     message: "Floor services reordered successfully",

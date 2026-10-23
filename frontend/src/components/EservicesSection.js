@@ -1,10 +1,8 @@
 "use client";
 
-import { Monitor, ExternalLink, ShieldCheck, Sparkles, Lock, Globe, Laptop, Building2, Zap, BookOpen, CreditCard } from "lucide-react";
-import { useTranslation } from "@/src/context/LanguageContext";
+import { Monitor, ExternalLink, Lock, Globe, Laptop, Building2, Zap, BookOpen, CreditCard } from "lucide-react";
 
 export default function EServicesSection({ className = "" }) {
-  const { t } = useTranslation();
 
   const digitalServices = [
     {
@@ -134,16 +132,16 @@ export default function EServicesSection({ className = "" }) {
                     href={service.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#FE0002] hover:bg-[#CC0002] hover:shadow-md hover:-translate-y-[2px] active:translate-y-0 text-white px-5 py-3 text-xs font-bold uppercase tracking-wider shadow-xs transition-all duration-200 active:scale-[0.98]"
+                    className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#D71920] hover:bg-[#b5141a] text-white px-6 py-3 text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-950/20 hover:shadow-xl hover-lift transition-all duration-300 active:scale-[0.98] cursor-pointer"
                   >
                     <span>Open E-Service</span>
-                    <ExternalLink className="h-4 w-4 text-white" />
+                    <ExternalLink className="h-4 w-4 text-white transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </a>
                 ) : (
                   <button
                     type="button"
                     disabled
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-200 text-neutral-500 px-5 py-3 text-xs font-medium uppercase tracking-wider cursor-not-allowed"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-neutral-100 border border-neutral-200 text-neutral-400 px-6 py-3 text-xs font-medium uppercase tracking-wider cursor-not-allowed"
                   >
                     <span>Not Available — Coming Soon</span>
                   </button>

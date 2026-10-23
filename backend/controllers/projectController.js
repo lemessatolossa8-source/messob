@@ -18,11 +18,13 @@ const normalizeProjectData = (body, userId) => {
   if (body.start_date !== undefined || body.startDate !== undefined) {
     data.start_date = body.start_date || body.startDate || null;
   }
-  if (body.end_date !== undefined || body.targetCompletion !== undefined) {
-    data.end_date = body.end_date || body.targetCompletion || null;
+  if (body.end_date !== undefined || body.targetCompletion !== undefined || body.expectedCompletionDate !== undefined || body.endDate !== undefined) {
+    data.end_date = body.end_date || body.targetCompletion || body.expectedCompletionDate || body.endDate || null;
   }
   if (body.department !== undefined || body.category !== undefined) {
     data.department = body.department || body.category || "Infrastructure";
+  } else {
+    data.department = "Infrastructure";
   }
   if (body.progress !== undefined) {
     data.progress = Math.min(100, Math.max(0, parseInt(body.progress, 10) || 0));
@@ -30,7 +32,7 @@ const normalizeProjectData = (body, userId) => {
   if (body.budget !== undefined) data.budget = body.budget || "";
 
   // Handle project status ('Planned', 'Ongoing', 'Completed', 'Suspended')
-  if (body.projectStatus) {
+  if (body.projectStatus && ["Planned", "Ongoing", "Completed", "Suspended"].includes(body.projectStatus)) {
     data.status = body.projectStatus;
   } else if (body.status && ["Planned", "Ongoing", "Completed", "Suspended"].includes(body.status)) {
     data.status = body.status;
@@ -39,6 +41,10 @@ const normalizeProjectData = (body, userId) => {
   // Handle is_published
   if (body.is_published !== undefined) {
     data.is_published = Boolean(body.is_published);
+  } else if (body.publishStatus === "published" || body.publicationStatus === "published") {
+    data.is_published = true;
+  } else if (body.publishStatus === "draft" || body.publicationStatus === "draft") {
+    data.is_published = false;
   } else if (body.status === "published") {
     data.is_published = true;
   } else if (body.status === "draft") {
@@ -109,6 +115,12 @@ const getAll = async (req, res) => {
 
   const items = rows.map((item) => item.toJSON());
 
+  if (!isAuth) {
+    res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+  } else {
+    res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+  }
+
   res.json({
     success: true,
     data: {
@@ -135,6 +147,12 @@ const getById = async (req, res) => {
     return res.status(404).json({ success: false, message: "Project not found or unpublished" });
   }
 
+  if (!req.user) {
+    res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+  } else {
+    res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+  }
+
   res.json({ success: true, data: project.toJSON() });
 };
 
@@ -144,6 +162,14 @@ const getById = async (req, res) => {
 const create = async (req, res) => {
   const userId = req.user ? (req.user.id || req.user._id) : null;
   let payload = normalizeProjectData(req.body, userId);
+
+  if (payload.start_date && payload.end_date && payload.end_date < payload.start_date) {
+    return res.status(400).json({
+      success: false,
+      message: "Expected completion date cannot be before start date",
+    });
+  }
+
   payload = await autoTranslateModelData(payload);
 
   const project = await Project.create(payload);
@@ -166,6 +192,14 @@ const update = async (req, res) => {
   }
 
   let payload = normalizeProjectData(req.body);
+
+  if (payload.start_date && payload.end_date && payload.end_date < payload.start_date) {
+    return res.status(400).json({
+      success: false,
+      message: "Expected completion date cannot be before start date",
+    });
+  }
+
   payload = await autoTranslateModelData(payload);
   await project.update(payload);
 

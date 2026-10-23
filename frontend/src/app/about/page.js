@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
-import AccessEServiceButton from "@/components/AccessEserviceButton";
-import { useSiteSettings } from "@/src/context/SiteSettingsContext";
-import { siteService } from "@/src/services";
-import { useTranslation } from "@/src/context/LanguageContext";
-import { ArrowRight, CheckCircle2, Landmark, ShieldCheck, Users, Sprout } from "lucide-react";
+import { useSiteSettings } from "@/context/SiteSettingsContext";
+import { siteService } from "@/services";
+import { useTranslation } from "@/context/LanguageContext";
+import { Landmark, ShieldCheck, Sprout } from "lucide-react";
 
 export default function AboutPage() {
   const { t, getText, language } = useTranslation();
@@ -63,14 +63,18 @@ export default function AboutPage() {
           <div className="overflow-hidden rounded-3xl border border-slate-800 bg-black p-6 sm:p-10 text-white shadow-2xl">
             <div className="grid gap-8 lg:grid-cols-[300px_1fr] lg:items-center">
               {/* Portrait Image */}
-              <div className="relative mx-auto aspect-square w-full max-w-[280px] overflow-hidden rounded-2xl border-2 border-[#FE0002]/40 shadow-xl">
-                <img
-                  src={mayorPhoto || "/images/mr-essayas.jpg"}
+              <div className="relative mx-auto aspect-square w-full max-w-[280px] overflow-hidden rounded-2xl border-2 border-[#D71920]/40 shadow-xl bg-slate-900">
+                <Image
+                  src={mayorPhoto || "/images/burayu-mesob-logo.jpg"}
                   alt={activeMsg?.name || "Mayor of Burayu MESOB"}
-                  className="h-full w-full object-cover object-top"
+                  fill
+                  sizes="(max-width: 640px) 280px, 300px"
+                  quality={75}
+                  loading="lazy"
+                  className="object-cover object-top"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                <div className="absolute bottom-3 left-3 right-3 rounded-xl bg-black/80 px-3 py-1.5 backdrop-blur text-center border border-white/10">
+                <div className="absolute bottom-3 left-3 right-3 rounded-xl bg-black/80 px-3 py-1.5 backdrop-blur text-center border border-white/10 z-10">
                   <p className="text-xs font-black text-white">{activeMsg?.name || "Mr. Abate Asirat"}</p>
                   <p className="text-[10px] text-slate-300 font-medium">{activeMsg?.jobTitle || "Burayu MESOB"}</p>
                 </div>
@@ -78,7 +82,7 @@ export default function AboutPage() {
 
               {/* Administrator Message & Details */}
               <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#FE0002]/30 bg-[#FE0002]/10 px-3.5 py-1 text-xs font-bold text-[#FE0002]">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#D71920]/30 bg-[#D71920]/10 px-3.5 py-1 text-xs font-bold text-[#D71920]">
                   <span>{activeMsg?.welcomeMessage || "Welcome Message from the Burayu MESOB"}</span>
                 </div>
 
@@ -101,7 +105,6 @@ export default function AboutPage() {
       {/* 2. Mission, Vision & Strategic Intent */}
       <section className="container-shell">
         <SectionHeading
-          eyebrow={t("about.values", "Core Values")}
           title="Mission, Vision & Strategic Intent"
           description="Guiding principles driving transparent governance and modern public information delivery in Burayu."
         />
@@ -132,128 +135,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-
-      {/* 3. General City Information */}
-      {generalInfo && cityInfo?.status !== "draft" && (
-        <section className="container-shell">
-          <SectionHeading
-            eyebrow={t("about.cityOverview", "City Overview")}
-            title={t("about.generalInfoTitle", "General City Information")}
-            description={t("about.generalInfoDesc", "Key geographic, economic, and logistical facts about Burayu.")}
-          />
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm transition hover:shadow-md hover:border-[#FE0002]/30">
-            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal whitespace-pre-line">
-              {generalInfo}
-            </p>
-          </div>
-        </section>
-      )}
-
-      {/* 4. Location & Contact Information */}
-      <section className="container-shell">
-        <SectionHeading
-          eyebrow={t("locationMap.findUs", "FIND US")}
-          title={t("locationMap.locationContact", "Location & Contact")}
-          description={t("locationMap.locationDesc", "Official Burayu MESOB administration location and contact information.")}
-        />
-
-        <div className="overflow-hidden rounded-2xl border border-neutral-200/80 bg-white shadow-sm">
-          <div className="grid gap-0 lg:grid-cols-12">
-            {/* Left Side: Interactive Map */}
-            <div className="relative min-h-[380px] lg:col-span-7 bg-neutral-100 overflow-hidden">
-              <iframe
-                title="Burayu MESOB Official Location Map"
-                width="100%"
-                height="100%"
-                className="absolute inset-0 h-full w-full border-0 filter contrast-[1.05]"
-                loading="lazy"
-                allowFullScreen
-                src="https://www.openstreetmap.org/export/embed.html?bbox=38.632%2C9.041%2C38.662%2C9.071&layer=mapnik&marker=9.056%2C38.647"
-              />
-
-              {/* Interactive Floating Location Badge */}
-              <div className="absolute top-4 left-4 z-10 flex items-center gap-2 rounded-xl border border-white/20 bg-[#070707] p-3 text-white shadow-md">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FE0002] text-white shrink-0">
-                  <Landmark className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold tracking-wide text-white">{t("locationMap.findUs", "FIND US")}</p>
-                  <p className="text-[11px] font-medium text-neutral-200">{t("locationMap.cityRegion", "Burayu, Oromia, Ethiopia")}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Side: Official Contact & Navigation Info */}
-            <div className="flex flex-col justify-between p-6 sm:p-8 lg:col-span-5 bg-white text-[#070707] border-l border-neutral-200/80">
-              <div>
-
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-[#FE0002]/20 bg-slate-50 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-[#FE0002]">
-                  <Users className="h-3.5 w-3.5 text-[#FE0002]" />
-                  <span>{t("locationMap.officialDesk", "Official Administration Desk")}</span>
-                </div>
-
-                <h3 className="mt-4 text-2xl font-black tracking-tight text-[#070707]">
-                  {t("locationMap.locationTitle", "Burayu MESOB Location")}
-                </h3>
-
-                <p className="mt-2 text-xs text-neutral-600 leading-relaxed font-normal">
-                  {t("locationMap.subTitleDesc", "Wiirtuu Tajaajila Tokkooffaa (MESOB) Bulchiinsa Magaalaa Shaggaritti Damee Buraayyuu.")}
-                </p>
-
-                <div className="mt-6 space-y-4 text-xs">
-                  <div className="flex items-start gap-3">
-                    <Landmark className="h-4 w-4 text-[#FE0002] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-neutral-500 uppercase tracking-wider text-[10px]">{t("locationMap.officialAddress", "Official Address")}</p>
-                      <p className="text-[#070707] font-semibold mt-0.5">
-                        {getText(settings?.contactInfo?.address) || "Burayu MESOB Administration, Shaggar City, Oromia, Ethiopia"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <Users className="h-4 w-4 text-[#FE0002] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-neutral-500 uppercase tracking-wider text-[10px]">{t("locationMap.contactDesk", "Contact Desk")}</p>
-                      <p className="text-[#070707] font-semibold mt-0.5">{settings?.contactInfo?.phone || "+251944664433"}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <Users className="h-4 w-4 text-[#FE0002] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-neutral-500 uppercase tracking-wider text-[10px]">{t("locationMap.officialEmail", "Official Email")}</p>
-                      <p className="text-[#070707] font-semibold mt-0.5">{settings?.contactInfo?.email || "mesobburayubranch@gmail.com"}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-4 w-4 text-[#FE0002] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-neutral-500 uppercase tracking-wider text-[10px]">{t("locationMap.workingInfo", "Working Information")}</p>
-                      <p className="text-[#070707] font-semibold mt-0.5">{getText(settings?.contactInfo?.workingHours) || "Mon - Fri: 8:30 AM - 5:30 PM | Sat: 8:30 AM - 12:30 PM"}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-neutral-100">
-                <a
-                  href="https://maps.google.com/?q=Burayu+Administration+Shaggar+Oromia+Ethiopia"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#FE0002] hover:bg-[#CC0002] px-6 py-3.5 text-xs font-bold uppercase text-white shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-[2px] active:translate-y-0 active:scale-[0.98]"
-                >
-                  <span>{t("locationMap.viewOnGoogleMaps", "View on Google Maps")}</span>
-                  <ArrowRight className="h-4 w-4" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
     </div>
   );
 }

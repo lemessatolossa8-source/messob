@@ -33,7 +33,7 @@ export default function AnnouncementsPage() {
     loadAnnouncements();
   }, []);
 
-  const categories = ["All", ...new Set(announcements.map((item) => item.category).filter(Boolean))];
+  const categories = ["All", ...new Set(announcements.map((item) => item.category).filter((c) => c && c.toLowerCase() !== "general"))];
 
   const filteredItems = announcements.filter((item) => {
     const title = getText(item.title).toLowerCase();
@@ -75,7 +75,7 @@ export default function AnnouncementsPage() {
               </div>
             )}
 
-            {enableFilters && (
+            {enableFilters && categories.length > 2 && (
               <CategoryFilter
                 categories={categories}
                 activeCategory={activeCategory}

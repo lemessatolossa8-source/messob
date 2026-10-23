@@ -71,7 +71,7 @@ function VerifyOTPForm() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/verify-otp", {
+      const response = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -109,7 +109,7 @@ function VerifyOTPForm() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/resend-otp", {
+      const response = await fetch("/api/auth/resend-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -166,7 +166,7 @@ function VerifyOTPForm() {
                 Enter OTP Code
               </h1>
               <p className="text-xs text-slate-500">
-                We've sent a 6-digit verification code to{" "}
+                We&apos;ve sent a 6-digit verification code to{" "}
                 <span className="font-semibold text-[#070707]">{email}</span>
               </p>
             </div>
@@ -231,7 +231,7 @@ function VerifyOTPForm() {
             {/* Resend OTP */}
             <div className="text-center space-y-2">
               <p className="text-xs text-slate-600">
-                Didn't receive the code?
+                Didn&apos;t receive the code?
               </p>
               <button
                 type="button"

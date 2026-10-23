@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/forgot-password", {
+      const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,14 +97,15 @@ export default function ForgotPasswordPage() {
                   <input
                     type="email"
                     required
+                    autoComplete="off"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="lemessatolossa8@gmail.com"
+                    placeholder="admin@burayu.gov.et"
                     className="w-full rounded-xl border border-slate-300 bg-[#f8fafc] pl-10 pr-3.5 py-2.5 text-sm text-[#070707] placeholder-slate-400 focus:border-[#FE0002] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FE0002]/10 transition"
                   />
                 </div>
                 <p className="mt-1.5 text-xs text-slate-500">
-                  We'll send a 6-digit OTP code to this email address
+                  We&apos;ll send a 6-digit OTP code to this email address
                 </p>
               </div>
 
@@ -191,7 +192,7 @@ export default function ForgotPasswordPage() {
                 Secure Password Recovery
               </h2>
               <p className="text-xs text-slate-500 leading-relaxed">
-                We'll send a one-time verification code to your registered email address. The OTP expires in 10 minutes and can only be used once.
+                We&apos;ll send a one-time verification code to your registered email address. The OTP expires in 10 minutes and can only be used once.
               </p>
             </div>
           </div>

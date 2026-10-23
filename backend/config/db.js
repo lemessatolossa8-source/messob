@@ -6,35 +6,64 @@ const dbPort = process.env.DB_PORT || 3306;
 const dbUser = process.env.DB_USER || "root";
 const dbPass = process.env.DB_PASS || "";
 const dbName = process.env.DB_NAME || "burayu_mesob";
+const databaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
 
-const sequelize = new Sequelize(dbName, dbUser, dbPass, {
-  host: dbHost,
-  port: dbPort,
-  dialect: "mysql",
-  logging: false,
-  pool: {
-    max: 10,
-    min: 0,
-    acquire: 30000,
-    idle: 10000,
-  },
-});
+const isLocalhost = dbHost === "127.0.0.1" || dbHost === "localhost";
+const useSsl =
+  process.env.DB_SSL === "true" ||
+  (!isLocalhost && process.env.NODE_ENV === "production" && process.env.DB_SSL !== "false");
+
+const dialectOptions = useSsl ? { ssl: { rejectUnauthorized: false } } : {};
+
+const sequelize = databaseUrl
+  ? new Sequelize(databaseUrl, {
+      dialect: "mysql",
+      logging: false,
+      dialectOptions,
+      pool: {
+        max: 20,
+        min: 2,
+        acquire: 30000,
+        idle: 10000,
+      },
+    })
+  : new Sequelize(dbName, dbUser, dbPass, {
+      host: dbHost,
+      port: dbPort,
+      dialect: "mysql",
+      logging: false,
+      dialectOptions,
+      pool: {
+        max: 20,
+        min: 2,
+        acquire: 30000,
+        idle: 10000,
+      },
+    });
 
 const connectDB = async () => {
   try {
-    // 1. Ensure MySQL database exists
-    const connection = await mysql.createConnection({
-      host: dbHost,
-      port: dbPort,
-      user: dbUser,
-      password: dbPass,
-    });
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
-    await connection.end();
+    // 1. Try to ensure MySQL database exists (local or self-hosted)
+    if (!databaseUrl) {
+      try {
+        const connection = await mysql.createConnection({
+          host: dbHost,
+          port: dbPort,
+          user: dbUser,
+          password: dbPass,
+          ssl: useSsl ? { rejectUnauthorized: false } : undefined,
+        });
+        await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
+        await connection.end();
+      } catch (dbInitErr) {
+        // Cloud-managed databases (TiDB, Aiven, PlanetScale) pre-create the DB and restrict CREATE DATABASE privileges.
+        console.log(`ℹ️ Database initialization notice: ${dbInitErr.message}`);
+      }
+    }
 
     // 2. Authenticate Sequelize connection
     await sequelize.authenticate();
-    console.log(`✅ MySQL Connected on ${dbHost}:${dbPort}`);
+    console.log(`✅ MySQL Connected successfully${databaseUrl ? " via URL" : ` on ${dbHost}:${dbPort}`}`);
     console.log(`📦 Database: ${dbName}`);
 
     // 3. Sync models — create missing tables only, never alter existing ones.

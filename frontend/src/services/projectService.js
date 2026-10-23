@@ -49,18 +49,18 @@ export const projectService = {
   },
 
   /**
-   * Publish a project (set status to published).
+   * Publish a project (set is_published to true).
    */
   async publish(id) {
-    const res = await api.put(`${BASE}/${id}`, { status: "published" });
+    const res = await api.put(`${BASE}/${id}/publish`);
     return res.data;
   },
 
   /**
-   * Unpublish a project (set status to draft).
+   * Unpublish a project (set is_published to false).
    */
   async unpublish(id) {
-    const res = await api.put(`${BASE}/${id}`, { status: "draft" });
+    const res = await api.put(`${BASE}/${id}/unpublish`);
     return res.data;
   },
 
@@ -68,7 +68,7 @@ export const projectService = {
    * No-op subscribe (real-time not needed with API; polling via useEffect works fine).
    * Returns an unsubscribe function for API compatibility with existing code.
    */
-  subscribe(cb) {
+  subscribe(_cb) {
     // Intentional no-op – API data is fetched via useEffect dependencies
     return () => {};
   },

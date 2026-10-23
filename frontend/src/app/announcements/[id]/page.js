@@ -3,16 +3,17 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Calendar, FileText } from "lucide-react";
-import { announcementService } from "@/src/services";
-import { useTranslation } from "@/src/context/LanguageContext";
+import { announcementService } from "@/services";
+import { useTranslation } from "@/context/LanguageContext";
 import { AnnouncementCard } from "@/components/Cards";
 import { getImageUrl } from "@/lib/imageUrl";
 
 export default function AnnouncementDetailPage() {
   const params = useParams();
   const id = params?.id;
-  const { t, getText } = useTranslation();
+  const { t } = useTranslation();
 
   const [item, setItem] = useState(null);
   const [related, setRelated] = useState([]);
@@ -75,11 +76,8 @@ export default function AnnouncementDetailPage() {
 
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-full bg-amber-100 px-3.5 py-1 text-xs font-bold text-amber-900">
-              {item.category || "Public Notice"}
-            </span>
             <span className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-              <Calendar className="h-3.5 w-3.5 text-emerald-700" />
+              <Calendar className="h-3.5 w-3.5 text-[#D71920]" />
               {item.date}
             </span>
             {item.referenceNo && (
@@ -92,24 +90,22 @@ export default function AnnouncementDetailPage() {
           <h1 className="text-2xl sm:text-4xl font-extrabold text-[#070707] leading-tight">
             {title}
           </h1>
-
-          <div className="flex items-center gap-2 text-xs text-slate-500 border-b border-slate-200 pb-4 font-medium">
-            <span>Department:</span>
-            <span className="font-bold text-[#070707]">{item.department || "Office of the Administrator"}</span>
-          </div>
         </div>
 
         {item.image && (
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-3xl bg-slate-100 shadow-md">
-            <img
+            <Image
               src={getImageUrl(item.image)}
-              alt={title}
-              className="h-full w-full object-cover"
+              alt={title || "Announcement"}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 896px"
+              className="object-cover"
             />
           </div>
         )}
 
-        {summary && (
+        {summary && content && !content.startsWith(summary) && summary !== content && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 text-sm sm:text-base font-medium text-[#070707] leading-relaxed">
             {summary}
           </div>

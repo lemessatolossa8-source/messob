@@ -132,7 +132,7 @@ export default function AdminSidebar({
           {navSections.map((section, idx) => (
             <div key={idx} className="space-y-1">
               {section.title && !isCollapsed && (
-                <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                <p className="px-3 py-1.5 font-serif text-[10px] font-bold uppercase tracking-[0.22em] text-[#D71920]">
                   {section.title}
                 </p>
               )}
@@ -161,10 +161,10 @@ export default function AdminSidebar({
                       }}
                       title={isCollapsed ? item.label : undefined}
                       className={`w-full flex items-center ${
-                        isCollapsed ? "justify-center px-2" : "gap-3 px-3"
-                      } py-2 rounded-xl text-xs font-semibold transition text-slate-300 hover:bg-neutral-800 hover:text-white cursor-pointer`}
+                        isCollapsed ? "justify-center px-2" : "gap-3 px-3.5"
+                      } py-2.5 rounded-full text-xs font-semibold transition text-neutral-300 hover:bg-neutral-800 hover:text-white cursor-pointer`}
                     >
-                      <Icon className="h-4 w-4 shrink-0 text-slate-400" />
+                      <Icon className="h-4 w-4 shrink-0 text-neutral-400" />
                       {!isCollapsed && <span className="truncate">{item.label}</span>}
                     </button>
                   );
@@ -177,14 +177,14 @@ export default function AdminSidebar({
                     onClick={() => onClose && onClose()}
                     title={isCollapsed ? item.label : undefined}
                     className={`flex items-center ${
-                      isCollapsed ? "justify-center px-2" : "gap-3 px-3"
-                    } py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                      isCollapsed ? "justify-center px-2" : "gap-3 px-3.5"
+                    } py-2.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
                       isActive
-                        ? "bg-[#FE0002] text-white shadow-xs font-bold"
-                        : "text-slate-300 hover:bg-neutral-800 hover:text-white"
+                        ? "bg-[#D71920] text-white shadow-lg shadow-red-950/40 font-bold"
+                        : "text-neutral-300 hover:bg-neutral-800 hover:text-white"
                     }`}
                   >
-                    <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`} />
+                    <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-neutral-400"}`} />
                     {!isCollapsed && <span className="truncate">{item.label}</span>}
                   </Link>
                 );
@@ -200,21 +200,21 @@ export default function AdminSidebar({
             target="_blank"
             title="Open live website"
             className={`flex items-center ${
-              isCollapsed ? "justify-center px-2" : "justify-between px-3"
-            } py-2 rounded-xl border border-neutral-800 bg-neutral-900/60 text-xs font-semibold text-slate-300 hover:bg-neutral-800 hover:text-white transition cursor-pointer`}
+              isCollapsed ? "justify-center px-2" : "justify-between px-3.5"
+            } py-2 rounded-full border border-neutral-800 bg-neutral-900/60 text-xs font-semibold text-neutral-300 hover:border-[#D71920] hover:text-[#D71920] transition cursor-pointer`}
           >
             {!isCollapsed && <span className="truncate">View Website</span>}
-            <ExternalLink className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <ExternalLink className="h-3.5 w-3.5 text-neutral-400 shrink-0" />
           </Link>
 
           {!isCollapsed && (
             <div className="flex items-center gap-2.5 px-2 pt-1">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FE0002] text-[10px] font-bold text-white shrink-0">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#D71920] text-[10px] font-bold text-white shrink-0">
                 BM
               </div>
               <div className="min-w-0">
-                <p className="truncate text-xs font-bold text-white">Burayu MESOB CMS</p>
-                <p className="truncate text-[10px] text-slate-400">Government Portal</p>
+                <p className="truncate text-xs font-bold text-white font-serif">Burayu MESOB CMS</p>
+                <p className="truncate text-[10px] text-neutral-400">Government Portal</p>
               </div>
             </div>
           )}

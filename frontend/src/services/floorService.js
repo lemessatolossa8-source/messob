@@ -1,12 +1,9 @@
-import api from "./api";
+import api, { getApiBase } from "./api";
 
 const getToken = () => {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("mesob_token") || localStorage.getItem("token");
 };
-
-const getApiBase = () =>
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 const listeners = new Set();
 const notify = () => listeners.forEach((cb) => cb());

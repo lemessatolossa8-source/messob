@@ -75,7 +75,7 @@ export default function ProjectsPage() {
               </div>
             )}
 
-            {enableFilters && (
+            {enableFilters && categories.length > 2 && (
               <CategoryFilter
                 categories={categories}
                 activeCategory={activeCategory}

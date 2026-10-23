@@ -19,6 +19,10 @@ const Announcement = sequelize.define(
       type: DataTypes.JSON,
       defaultValue: { en: "", am: "", om: "" },
     },
+    content: {
+      type: DataTypes.JSON,
+      defaultValue: { en: "", am: "", om: "" },
+    },
     image: {
       type: DataTypes.STRING,
       defaultValue: "",

@@ -13,13 +13,14 @@ export function SearchBar({ value, onChange, placeholder = "Search..." }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-full border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-[#070707] placeholder-slate-400 transition focus:border-[#FE0002] focus:outline-none focus:ring-2 focus:ring-[#FE0002]/20"
+        className="w-full rounded-full border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-[#070707] placeholder-slate-400 transition focus:border-[#D71920] focus:outline-none focus:ring-2 focus:ring-[#D71920]/20"
       />
       {value ? (
         <button
           type="button"
           onClick={() => onChange("")}
-          className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600"
+          aria-label="Clear search"
+          className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 cursor-pointer"
         >
           <X className="h-4 w-4" />
         </button>

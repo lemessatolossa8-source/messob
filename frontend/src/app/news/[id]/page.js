@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Calendar, User, Tag } from "lucide-react";
 import { newsService } from "@/src/services";
 import { useTranslation } from "@/src/context/LanguageContext";
@@ -76,13 +77,12 @@ export default function NewsDetailPage() {
 
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-full bg-emerald-100 px-3.5 py-1 text-xs font-bold text-emerald-900">
-              {item.category}
-            </span>
-            <span className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-              <Calendar className="h-3.5 w-3.5 text-emerald-700" />
-              {item.date}
-            </span>
+            {item.date && (
+              <span className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                <Calendar className="h-3.5 w-3.5 text-emerald-700" />
+                {item.date}
+              </span>
+            )}
           </div>
 
           <h1 className="mt-4 text-3xl font-extrabold text-[#070707] sm:text-4xl lg:text-5xl leading-tight">
@@ -98,8 +98,15 @@ export default function NewsDetailPage() {
         </div>
 
         {item.image && (
-          <div className="aspect-[16/9] w-full overflow-hidden rounded-3xl bg-slate-100 shadow-md">
-            <img src={getImageUrl(item.image)} alt={title} className="h-full w-full object-cover" />
+          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-3xl bg-slate-100 shadow-md">
+            <Image
+              src={getImageUrl(item.image)}
+              alt={title || "News"}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 896px"
+              className="object-cover"
+            />
           </div>
         )}
 
@@ -117,7 +124,7 @@ export default function NewsDetailPage() {
           </div>
         )}
 
-        {summary && (
+        {summary && content && !content.startsWith(summary) && summary !== content && (
           <p className="text-base sm:text-lg font-medium text-[#070707] leading-relaxed border-l-4 border-emerald-600 pl-4">
             {summary}
           </p>
