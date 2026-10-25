@@ -29,56 +29,72 @@ const normalizeTitle = (title) => {
 };
 
 const create = async (req, res) => {
-  let payload = { ...req.body };
-  if (payload.title !== undefined) {
-    payload.title = normalizeTitle(payload.title);
-  }
-  payload = await autoTranslateModelData(payload);
+  try {
+    let payload = { ...req.body };
+    if (payload.title !== undefined) {
+      payload.title = normalizeTitle(payload.title);
+    }
+    payload = await autoTranslateModelData(payload);
 
-  if (req.file) {
-    payload.image = `/uploads/${req.file.filename}`;
-  }
+    if (req.file) {
+      payload.image = `/uploads/${req.file.filename}`;
+    }
 
-  if (!payload.image || !String(payload.image).trim()) {
-    return res.status(400).json({ success: false, message: "An image is required." });
-  }
+    if (!payload.image || !String(payload.image).trim()) {
+      return res.status(400).json({ success: false, message: "An image is required." });
+    }
 
-  if (req.user) {
-    payload.authorId = req.user.id;
-  }
+    if (req.user) {
+      payload.authorId = req.user.id;
+    }
 
-  const item = await Gallery.create(payload);
-  res.status(201).json({
-    success: true,
-    message: "Gallery image created successfully",
-    data: item.toJSON(),
-  });
+    const item = await Gallery.create(payload);
+    res.status(201).json({
+      success: true,
+      message: "Gallery image created successfully",
+      data: item.toJSON(),
+    });
+  } catch (error) {
+    console.error("[galleryController] create error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to create gallery image",
+    });
+  }
 };
 
 const update = async (req, res) => {
-  const item = await Gallery.findByPk(req.params.id);
-  if (!item) {
-    return res.status(404).json({ success: false, message: "Gallery item not found" });
-  }
+  try {
+    const item = await Gallery.findByPk(req.params.id);
+    if (!item) {
+      return res.status(404).json({ success: false, message: "Gallery item not found" });
+    }
 
-  let payload = { ...req.body };
-  if (payload.title !== undefined) {
-    payload.title = normalizeTitle(payload.title);
-  }
-  payload = await autoTranslateModelData(payload);
+    let payload = { ...req.body };
+    if (payload.title !== undefined) {
+      payload.title = normalizeTitle(payload.title);
+    }
+    payload = await autoTranslateModelData(payload);
 
-  if (req.file) {
-    payload.image = `/uploads/${req.file.filename}`;
-  } else if (req.body.existingImage) {
-    payload.image = req.body.existingImage;
-  }
+    if (req.file) {
+      payload.image = `/uploads/${req.file.filename}`;
+    } else if (req.body.existingImage) {
+      payload.image = req.body.existingImage;
+    }
 
-  await item.update(payload);
-  res.json({
-    success: true,
-    message: "Gallery image updated successfully",
-    data: item.toJSON(),
-  });
+    await item.update(payload);
+    res.json({
+      success: true,
+      message: "Gallery image updated successfully",
+      data: item.toJSON(),
+    });
+  } catch (error) {
+    console.error("[galleryController] update error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to update gallery image",
+    });
+  }
 };
 
 module.exports = {

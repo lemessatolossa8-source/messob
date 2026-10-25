@@ -30,6 +30,7 @@ const slideRoutes = require("./routes/slideRoutes");
 const translateRoutes = require("./routes/translateRoutes");
 const statisticRoutes = require("./routes/statisticRoutes");
 const floorRoutes = require("./routes/floorRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 const { ensureDefaultFloors } = require("./controllers/floorController");
 const { ensureDefaultAdmin } = require("./controllers/authController");
 
@@ -191,6 +192,7 @@ app.use("/api/slides", slideRoutes);
 app.use("/api/translate", translateRoutes);
 app.use("/api/statistics", statisticRoutes);
 app.use("/api/floors", floorRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // 8. 404 handler for unknown routes
 app.use((req, res) => {

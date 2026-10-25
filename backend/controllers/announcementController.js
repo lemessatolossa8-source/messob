@@ -190,54 +190,70 @@ const getById = async (req, res) => {
 
 // Create announcement
 const create = async (req, res) => {
-  let payload = prepareAnnouncementPayload(req.body);
+  try {
+    let payload = prepareAnnouncementPayload(req.body);
 
-  if (payload.date && payload.expiryDate && payload.expiryDate < payload.date) {
-    return res.status(400).json({
+    if (payload.date && payload.expiryDate && payload.expiryDate < payload.date) {
+      return res.status(400).json({
+        success: false,
+        message: "Expiry date must be later than or equal to publication date",
+      });
+    }
+
+    payload = await autoTranslateModelData(payload);
+
+    if (req.user) {
+      payload.authorId = req.user.id || req.user._id;
+    }
+
+    const item = await Announcement.create(payload);
+    res.status(201).json({
+      success: true,
+      message: "Announcement created successfully",
+      data: item.toJSON(),
+    });
+  } catch (error) {
+    console.error("[announcementController] create error:", error);
+    res.status(400).json({
       success: false,
-      message: "Expiry date must be later than or equal to publication date",
+      message: error.message || "Failed to create announcement",
     });
   }
-
-  payload = await autoTranslateModelData(payload);
-
-  if (req.user) {
-    payload.authorId = req.user.id || req.user._id;
-  }
-
-  const item = await Announcement.create(payload);
-  res.status(201).json({
-    success: true,
-    message: "Announcement created successfully",
-    data: item.toJSON(),
-  });
 };
 
 // Update announcement
 const update = async (req, res) => {
-  const item = await Announcement.findByPk(req.params.id);
-  if (!item) {
-    return res.status(404).json({ success: false, message: "Announcement not found" });
-  }
+  try {
+    const item = await Announcement.findByPk(req.params.id);
+    if (!item) {
+      return res.status(404).json({ success: false, message: "Announcement not found" });
+    }
 
-  let payload = prepareAnnouncementPayload(req.body);
+    let payload = prepareAnnouncementPayload(req.body);
 
-  if (payload.date && payload.expiryDate && payload.expiryDate < payload.date) {
-    return res.status(400).json({
+    if (payload.date && payload.expiryDate && payload.expiryDate < payload.date) {
+      return res.status(400).json({
+        success: false,
+        message: "Expiry date must be later than or equal to publication date",
+      });
+    }
+
+    payload = await autoTranslateModelData(payload);
+
+    await item.update(payload);
+
+    res.json({
+      success: true,
+      message: "Announcement updated successfully",
+      data: item.toJSON(),
+    });
+  } catch (error) {
+    console.error("[announcementController] update error:", error);
+    res.status(400).json({
       success: false,
-      message: "Expiry date must be later than or equal to publication date",
+      message: error.message || "Failed to update announcement",
     });
   }
-
-  payload = await autoTranslateModelData(payload);
-
-  await item.update(payload);
-
-  res.json({
-    success: true,
-    message: "Announcement updated successfully",
-    data: item.toJSON(),
-  });
 };
 
 // Export CRUD operations

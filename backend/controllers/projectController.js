@@ -6,8 +6,9 @@ const { autoTranslateModelData } = require("../utils/autoTranslator");
 const normalizeProjectData = (body, userId) => {
   const data = {};
 
-  if (body.title !== undefined) {
-    data.title = typeof body.title === "string" ? { om: body.title, am: body.title, en: body.title } : body.title;
+  const titleVal = body.title !== undefined ? body.title : body.name;
+  if (titleVal !== undefined) {
+    data.title = typeof titleVal === "string" ? { om: titleVal, am: titleVal, en: titleVal } : titleVal;
   }
   if (body.description !== undefined) {
     data.description = typeof body.description === "string" ? { om: body.description, am: body.description, en: body.description } : body.description;
@@ -160,54 +161,70 @@ const getById = async (req, res) => {
 // @route  POST /api/projects
 // @access Protected (admin/editor)
 const create = async (req, res) => {
-  const userId = req.user ? (req.user.id || req.user._id) : null;
-  let payload = normalizeProjectData(req.body, userId);
+  try {
+    const userId = req.user ? (req.user.id || req.user._id) : null;
+    let payload = normalizeProjectData(req.body, userId);
 
-  if (payload.start_date && payload.end_date && payload.end_date < payload.start_date) {
-    return res.status(400).json({
+    if (payload.start_date && payload.end_date && payload.end_date < payload.start_date) {
+      return res.status(400).json({
+        success: false,
+        message: "Expected completion date cannot be before start date",
+      });
+    }
+
+    payload = await autoTranslateModelData(payload);
+
+    const project = await Project.create(payload);
+
+    res.status(201).json({
+      success: true,
+      message: "Project created successfully",
+      data: project.toJSON(),
+    });
+  } catch (error) {
+    console.error("[projectController] create error:", error);
+    res.status(400).json({
       success: false,
-      message: "Expected completion date cannot be before start date",
+      message: error.message || "Failed to create project",
     });
   }
-
-  payload = await autoTranslateModelData(payload);
-
-  const project = await Project.create(payload);
-
-  res.status(201).json({
-    success: true,
-    message: "Project created successfully",
-    data: project.toJSON(),
-  });
 };
 
 // @desc   Update project
 // @route  PUT /api/projects/:id
 // @access Protected (admin/editor)
 const update = async (req, res) => {
-  const project = await Project.findByPk(req.params.id);
+  try {
+    const project = await Project.findByPk(req.params.id);
 
-  if (!project) {
-    return res.status(404).json({ success: false, message: "Project not found" });
-  }
+    if (!project) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
 
-  let payload = normalizeProjectData(req.body);
+    let payload = normalizeProjectData(req.body);
 
-  if (payload.start_date && payload.end_date && payload.end_date < payload.start_date) {
-    return res.status(400).json({
+    if (payload.start_date && payload.end_date && payload.end_date < payload.start_date) {
+      return res.status(400).json({
+        success: false,
+        message: "Expected completion date cannot be before start date",
+      });
+    }
+
+    payload = await autoTranslateModelData(payload);
+    await project.update(payload);
+
+    res.json({
+      success: true,
+      message: "Project updated successfully",
+      data: project.toJSON(),
+    });
+  } catch (error) {
+    console.error("[projectController] update error:", error);
+    res.status(400).json({
       success: false,
-      message: "Expected completion date cannot be before start date",
+      message: error.message || "Failed to update project",
     });
   }
-
-  payload = await autoTranslateModelData(payload);
-  await project.update(payload);
-
-  res.json({
-    success: true,
-    message: "Project updated successfully",
-    data: project.toJSON(),
-  });
 };
 
 // @desc   Delete project

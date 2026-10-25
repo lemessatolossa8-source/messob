@@ -19,6 +19,70 @@ const deleteUploadedFile = (imageValue) => {
   }
 };
 
+// Helper to normalize multilingual fields whether passed as object, string, or json string
+const parseMultilingualField = (val) => {
+  if (!val) return null;
+  if (typeof val === "object" && !Array.isArray(val)) return val;
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed === "object") return parsed;
+      } catch {
+        // Fall through
+      }
+    }
+    return { en: trimmed, am: "", om: "" };
+  }
+  return null;
+};
+
+// Normalize payload fields, multilingual objects, and model attributes
+const normalizePayload = (body, Model) => {
+  const payload = { ...body };
+
+  // Common multilingual fields
+  const multiFields = ["title", "name", "content", "summary", "description", "about", "guidance"];
+  for (const f of multiFields) {
+    if (payload[f] !== undefined) {
+      const parsed = parseMultilingualField(payload[f]);
+      if (parsed) payload[f] = parsed;
+    }
+  }
+
+  // Model column interop: if model expects title but payload only has name, or vice versa
+  if (Model.rawAttributes) {
+    if (Model.rawAttributes.title && !payload.title && payload.name) {
+      payload.title = payload.name;
+    }
+    if (Model.rawAttributes.name && !payload.name && payload.title) {
+      payload.name = payload.title;
+    }
+
+    // Status normalization for ENUM fields
+    if (
+      Model.rawAttributes.status &&
+      Model.rawAttributes.status.type &&
+      Array.isArray(Model.rawAttributes.status.type.values)
+    ) {
+      const allowed = Model.rawAttributes.status.type.values;
+      if (payload.status) {
+        const s = String(payload.status).toLowerCase();
+        if (s === "active" && allowed.includes("published")) {
+          payload.status = "published";
+        } else if (s === "inactive" && allowed.includes("draft")) {
+          payload.status = "draft";
+        } else if (!allowed.includes(payload.status)) {
+          payload.status = Model.rawAttributes.status.defaultValue || allowed[0];
+        }
+      }
+    }
+  }
+
+  return payload;
+};
+
 /**
  * Generic CRUD controller factory for Sequelize models.
  * Usage: const ctrl = createCRUDController(News, "news");
@@ -73,9 +137,16 @@ const createCRUDController = (Model, resourceName = "item") => {
 
     if (search && search.trim()) {
       const q = `%${search.trim()}%`;
-      where[Op.or] = [
-        Sequelize.where(Sequelize.cast(Sequelize.col("title"), "char"), { [Op.like]: q }),
-      ];
+      const orConditions = [];
+      if (Model.rawAttributes?.title) {
+        orConditions.push(Sequelize.where(Sequelize.cast(Sequelize.col("title"), "char"), { [Op.like]: q }));
+      }
+      if (Model.rawAttributes?.name) {
+        orConditions.push(Sequelize.where(Sequelize.cast(Sequelize.col("name"), "char"), { [Op.like]: q }));
+      }
+      if (orConditions.length > 0) {
+        where[Op.or] = orConditions;
+      }
     }
 
     const { rows, count: total } = await Model.findAndCountAll({
@@ -131,53 +202,77 @@ const createCRUDController = (Model, resourceName = "item") => {
   // @route  POST /api/<resource>
   // @access Protected (editor or admin)
   const create = async (req, res) => {
-    let payload = { ...req.body };
-    payload = await autoTranslateModelData(payload);
-    if (req.user) payload.authorId = req.user.id || req.user._id;
+    try {
+      let payload = normalizePayload(req.body, Model);
+      payload = await autoTranslateModelData(payload);
+      if (req.user) payload.authorId = req.user.id || req.user._id;
 
-    const item = await Model.create(payload);
-    invalidateCache();
-    res.status(201).json({
-      success: true,
-      message: `${resourceName} created successfully`,
-      data: item.toJSON(),
-    });
+      const item = await Model.create(payload);
+      invalidateCache();
+      res.status(201).json({
+        success: true,
+        message: `${resourceName} created successfully`,
+        data: item.toJSON(),
+      });
+    } catch (error) {
+      console.error(`[crudController:${resourceName}] create error:`, error);
+      res.status(400).json({
+        success: false,
+        message: error.message || `Failed to create ${resourceName}`,
+      });
+    }
   };
 
   // @desc   Update
   // @route  PUT /api/<resource>/:id
   // @access Protected (editor or admin)
   const update = async (req, res) => {
-    const item = await Model.findByPk(req.params.id);
+    try {
+      const item = await Model.findByPk(req.params.id);
 
-    if (!item) {
-      return res.status(404).json({ success: false, message: `${resourceName} not found` });
+      if (!item) {
+        return res.status(404).json({ success: false, message: `${resourceName} not found` });
+      }
+
+      let payload = normalizePayload(req.body, Model);
+      payload = await autoTranslateModelData(payload);
+      await item.update(payload);
+      invalidateCache();
+
+      res.json({
+        success: true,
+        message: `${resourceName} updated successfully`,
+        data: item.toJSON(),
+      });
+    } catch (error) {
+      console.error(`[crudController:${resourceName}] update error:`, error);
+      res.status(400).json({
+        success: false,
+        message: error.message || `Failed to update ${resourceName}`,
+      });
     }
-
-    let payload = { ...req.body };
-    payload = await autoTranslateModelData(payload);
-    await item.update(payload);
-    invalidateCache();
-
-    res.json({
-      success: true,
-      message: `${resourceName} updated successfully`,
-      data: item.toJSON(),
-    });
   };
 
   // @desc   Delete
   // @route  DELETE /api/<resource>/:id
   // @access Protected (admin only)
   const remove = async (req, res) => {
-    const item = await Model.findByPk(req.params.id);
-    if (!item) {
-      return res.status(404).json({ success: false, message: `${resourceName} not found` });
+    try {
+      const item = await Model.findByPk(req.params.id);
+      if (!item) {
+        return res.status(404).json({ success: false, message: `${resourceName} not found` });
+      }
+      await item.destroy();
+      invalidateCache();
+      if (item.image) deleteUploadedFile(item.image);
+      res.json({ success: true, message: `${resourceName} deleted successfully` });
+    } catch (error) {
+      console.error(`[crudController:${resourceName}] remove error:`, error);
+      res.status(500).json({
+        success: false,
+        message: error.message || `Failed to delete ${resourceName}`,
+      });
     }
-    await item.destroy();
-    invalidateCache();
-    if (item.image) deleteUploadedFile(item.image);
-    res.json({ success: true, message: `${resourceName} deleted successfully` });
   };
 
   return { getAll, getById, create, update, remove, invalidateCache };

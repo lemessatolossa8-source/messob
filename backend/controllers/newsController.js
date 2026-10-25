@@ -76,72 +76,88 @@ const prepareNewsPayload = (body) => {
 
 // Override create to handle simplified fields and file uploads
 const create = async (req, res) => {
-  let payload = prepareNewsPayload(req.body);
-  payload = await autoTranslateModelData(payload);
+  try {
+    let payload = prepareNewsPayload(req.body);
+    payload = await autoTranslateModelData(payload);
 
-  // Handle uploaded files
-  if (req.files) {
-    if (req.files.image && req.files.image[0]) {
-      payload.image = `/uploads/${req.files.image[0].filename}`;
+    // Handle uploaded files
+    if (req.files) {
+      if (req.files.image && req.files.image[0]) {
+        payload.image = `/uploads/${req.files.image[0].filename}`;
+      }
+      if (req.files.video && req.files.video[0]) {
+        payload.video = `/uploads/${req.files.video[0].filename}`;
+      }
     }
-    if (req.files.video && req.files.video[0]) {
-      payload.video = `/uploads/${req.files.video[0].filename}`;
+
+    if (req.user) {
+      payload.authorId = req.user.id || req.user._id;
     }
-  }
 
-  if (req.user) {
-    payload.authorId = req.user.id || req.user._id;
+    const item = await News.create(payload);
+    if (baseCRUD.invalidateCache) baseCRUD.invalidateCache();
+    res.status(201).json({
+      success: true,
+      message: "News created successfully",
+      data: item.toJSON(),
+    });
+  } catch (error) {
+    console.error("[newsController] create error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to create news",
+    });
   }
-
-  const item = await News.create(payload);
-  if (baseCRUD.invalidateCache) baseCRUD.invalidateCache();
-  res.status(201).json({
-    success: true,
-    message: "News created successfully",
-    data: item.toJSON(),
-  });
 };
 
 // Override update to handle simplified fields and file uploads
 const update = async (req, res) => {
-  const item = await News.findByPk(req.params.id);
+  try {
+    const item = await News.findByPk(req.params.id);
 
-  if (!item) {
-    return res.status(404).json({ success: false, message: "News not found" });
-  }
-
-  let payload = prepareNewsPayload(req.body);
-  payload = await autoTranslateModelData(payload);
-
-  // Handle uploaded files
-  if (req.files) {
-    if (req.files.image && req.files.image[0]) {
-      payload.image = `/uploads/${req.files.image[0].filename}`;
-    } else if (req.body.existingImage) {
-      payload.image = req.body.existingImage;
+    if (!item) {
+      return res.status(404).json({ success: false, message: "News not found" });
     }
 
-    if (req.files.video && req.files.video[0]) {
-      payload.video = `/uploads/${req.files.video[0].filename}`;
-    } else if (req.body.existingVideo) {
-      payload.video = req.body.existingVideo;
-    } else if (req.body.video === "" || req.body.video === null) {
-      payload.video = "";
+    let payload = prepareNewsPayload(req.body);
+    payload = await autoTranslateModelData(payload);
+
+    // Handle uploaded files
+    if (req.files) {
+      if (req.files.image && req.files.image[0]) {
+        payload.image = `/uploads/${req.files.image[0].filename}`;
+      } else if (req.body.existingImage) {
+        payload.image = req.body.existingImage;
+      }
+
+      if (req.files.video && req.files.video[0]) {
+        payload.video = `/uploads/${req.files.video[0].filename}`;
+      } else if (req.body.existingVideo) {
+        payload.video = req.body.existingVideo;
+      } else if (req.body.video === "" || req.body.video === null) {
+        payload.video = "";
+      }
+    } else {
+      if (req.body.existingImage) payload.image = req.body.existingImage;
+      if (req.body.existingVideo) payload.video = req.body.existingVideo;
+      if (req.body.video === "" || req.body.video === null) payload.video = "";
     }
-  } else {
-    if (req.body.existingImage) payload.image = req.body.existingImage;
-    if (req.body.existingVideo) payload.video = req.body.existingVideo;
-    if (req.body.video === "" || req.body.video === null) payload.video = "";
+
+    await item.update(payload);
+    if (baseCRUD.invalidateCache) baseCRUD.invalidateCache();
+
+    res.json({
+      success: true,
+      message: "News updated successfully",
+      data: item.toJSON(),
+    });
+  } catch (error) {
+    console.error("[newsController] update error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to update news",
+    });
   }
-
-  await item.update(payload);
-  if (baseCRUD.invalidateCache) baseCRUD.invalidateCache();
-
-  res.json({
-    success: true,
-    message: "News updated successfully",
-    data: item.toJSON(),
-  });
 };
 
 module.exports = {

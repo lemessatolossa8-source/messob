@@ -59,53 +59,69 @@ const getById = async (req, res) => {
 };
 
 const create = async (req, res) => {
-  const { image, order, status } = req.body;
+  try {
+    const { image, order, status } = req.body;
 
-  let imageUrl = image;
-  if (req.file) {
-    imageUrl = `/uploads/${req.file.filename}`;
+    let imageUrl = image;
+    if (req.file) {
+      imageUrl = `/uploads/${req.file.filename}`;
+    }
+
+    if (!imageUrl || !String(imageUrl).trim()) {
+      return res.status(400).json({ success: false, message: "An image is required." });
+    }
+
+    const slide = await Slide.create({
+      image: imageUrl,
+      order: parseInt(order, 10) || 0,
+      status: status || "published",
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Slide created successfully",
+      data: slide.toJSON(),
+    });
+  } catch (error) {
+    console.error("[slideController] create error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to create slide",
+    });
   }
-
-  if (!imageUrl || !String(imageUrl).trim()) {
-    return res.status(400).json({ success: false, message: "An image is required." });
-  }
-
-  const slide = await Slide.create({
-    image: imageUrl,
-    order: parseInt(order, 10) || 0,
-    status: status || "published",
-  });
-
-  res.status(201).json({
-    success: true,
-    message: "Slide created successfully",
-    data: slide.toJSON(),
-  });
 };
 
 const update = async (req, res) => {
-  const slide = await Slide.findByPk(req.params.id);
-  if (!slide) {
-    return res.status(404).json({ success: false, message: "Slide not found" });
+  try {
+    const slide = await Slide.findByPk(req.params.id);
+    if (!slide) {
+      return res.status(404).json({ success: false, message: "Slide not found" });
+    }
+
+    const payload = {};
+
+    if (req.file) {
+      payload.image = `/uploads/${req.file.filename}`;
+    } else if (req.body.image) {
+      payload.image = req.body.image;
+    }
+
+    if (req.body.order !== undefined) payload.order = parseInt(req.body.order, 10) || 0;
+    if (req.body.status) payload.status = req.body.status;
+
+    await slide.update(payload);
+    res.json({
+      success: true,
+      message: "Slide updated successfully",
+      data: slide.toJSON(),
+    });
+  } catch (error) {
+    console.error("[slideController] update error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to update slide",
+    });
   }
-
-  const payload = {};
-
-  if (req.file) {
-    payload.image = `/uploads/${req.file.filename}`;
-  } else if (req.body.image) {
-    payload.image = req.body.image;
-  }
-
-  if (req.body.order !== undefined) payload.order = parseInt(req.body.order, 10) || 0;
-  if (req.body.status) payload.status = req.body.status;
-
-  await slide.update(payload);
-  res.json({
-    success: true,
-    message: "Slide updated successfully",
-    data: slide.toJSON(),
-  });
 };
 
 const remove = async (req, res) => {
