@@ -56,8 +56,9 @@ exports.getAllSettings = async (req, res) => {
  */
 exports.getPublicSettings = async (req, res) => {
   try {
-    if (cachedPublicSettings) {
-      res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+    const isFresh = !!(req.query.t || req.headers.authorization);
+    if (!isFresh && cachedPublicSettings) {
+      res.set("Cache-Control", "public, max-age=5, s-maxage=10, stale-while-revalidate=30");
       return res.json({
         success: true,
         data: cachedPublicSettings,
@@ -66,9 +67,12 @@ exports.getPublicSettings = async (req, res) => {
 
     const record = await getOrCreateRecord();
     const data = toPublicSettings(resolvedPayload(record));
-    cachedPublicSettings = data;
-
-    res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+    if (!isFresh) {
+      cachedPublicSettings = data;
+      res.set("Cache-Control", "public, max-age=5, s-maxage=10, stale-while-revalidate=30");
+    } else {
+      res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+    }
     res.json({
       success: true,
       data,

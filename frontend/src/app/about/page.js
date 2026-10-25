@@ -12,7 +12,7 @@ import { Landmark, ShieldCheck, Sprout } from "lucide-react";
 
 export default function AboutPage() {
   const { t, getText, language } = useTranslation();
-  const { settings } = useSiteSettings();
+  const { settings, refresh } = useSiteSettings();
   const [localCityInfo, setLocalCityInfo] = useState(null);
 
   const mayorMessage = settings?.mayorMessage;
@@ -24,8 +24,19 @@ export default function AboutPage() {
     const unsub = siteService.subscribe(() => {
       setLocalCityInfo(siteService.getCityInfo());
     });
-    return () => unsub();
-  }, []);
+    const handleSync = () => {
+      if (typeof refresh === "function") refresh();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("mesob_content_updated", handleSync);
+    }
+    return () => {
+      unsub();
+      if (typeof window !== "undefined") {
+        window.removeEventListener("mesob_content_updated", handleSync);
+      }
+    };
+  }, [refresh]);
 
   // Prefer MySQL backend settings, fall back to local store
   const cityInfo = settings?.cityInfo || localCityInfo;

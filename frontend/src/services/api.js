@@ -41,12 +41,12 @@ export const getApiBase = () => {
 // Retrieve the JWT from localStorage (client-side only)
 const getToken = () => {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("mesob_token");
+  return localStorage.getItem("mesob_token") || localStorage.getItem("token") || null;
 };
 
 // Short-lived in-memory cache for unauthenticated public GET requests only (prevents duplicate waterfalls)
 const publicGetCache = new Map();
-const CACHE_TTL_MS = 60 * 1000;
+const CACHE_TTL_MS = 10 * 1000;
 
 const buildHeaders = (extra = {}) => {
   const headers = {
@@ -127,6 +127,17 @@ export const api = {
     const cleanPath = path.startsWith("/") ? path : `/${path}`;
     return fetch(`${base}${cleanPath}`, {
       method: "PUT",
+      headers: buildHeaders(),
+      body: JSON.stringify(body),
+    }).then(handleResponse);
+  },
+
+  patch: (path, body) => {
+    invalidateCacheAndNotify();
+    const base = getApiBase();
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return fetch(`${base}${cleanPath}`, {
+      method: "PATCH",
       headers: buildHeaders(),
       body: JSON.stringify(body),
     }).then(handleResponse);

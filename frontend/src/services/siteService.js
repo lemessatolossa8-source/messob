@@ -19,11 +19,22 @@ export const siteService = {
     }
     return data;
   },
-  getMayorMessage: () => storageStore.getSingle("mayorMessage") || storageStore.getSingle("cityInfo")?.mayorMessage,
-  updateMayorMessage: (data) => {
+  getMayorMessage: () => {
+    return (
+      storageStore.getSingle("mayorMessage") ||
+      storageStore.getSingle("cityInfo")?.mayorMessage ||
+      DEFAULT_SITE_SETTINGS.mayorMessage
+    );
+  },
+  updateMayorMessage: async (data) => {
     storageStore.updateSingle("mayorMessage", data);
     const cityInfo = storageStore.getSingle("cityInfo") || {};
     storageStore.updateSingle("cityInfo", { ...cityInfo, mayorMessage: data });
+    try {
+      await settingService.update({ mayorMessage: data });
+    } catch (err) {
+      console.warn("Could not sync mayorMessage to backend settings:", err);
+    }
     return data;
   },
   getContactInfo: () => storageStore.getSingle("contactInfo"),

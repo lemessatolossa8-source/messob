@@ -22,7 +22,7 @@ const getAll = async (req, res) => {
   });
 
   if (!isAuth) {
-    res.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=300");
+    res.set("Cache-Control", "public, max-age=5, s-maxage=10, stale-while-revalidate=30");
   } else {
     res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
   }

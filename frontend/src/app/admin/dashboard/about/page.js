@@ -8,6 +8,8 @@ import { settingService } from "@/src/services/settingService";
 import { useToast } from "@/src/context/ToastContext";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { DEFAULT_SITE_SETTINGS } from "@/src/data/defaultSiteSettings";
+import { invalidateCacheAndNotify } from "@/src/services/api";
+import { storageStore } from "@/src/services/storageStore";
 
 export default function AboutMayorMessageCMSPage() {
   const toast = useToast();
@@ -138,7 +140,10 @@ export default function AboutMayorMessageCMSPage() {
       let finalPhotoUrl = formData?.photo || formData?.om?.photo || formData?.am?.photo || formData?.en?.photo || "";
 
       if (selectedFile) {
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("mesob_token") || localStorage.getItem("token")
+            : null;
         const uploadData = new FormData();
         uploadData.append("file", selectedFile);
 
@@ -171,15 +176,18 @@ export default function AboutMayorMessageCMSPage() {
       };
 
       const updated = await settingService.update(payload);
+      invalidateCacheAndNotify();
+      if (updated?.data?.mayorMessage) {
+        storageStore.updateSingle("mayorMessage", updated.data.mayorMessage);
+        setFormData(updated.data.mayorMessage);
+      }
 
       toast.success(
         targetStatus === "published"
           ? "Mayor Message published successfully to live site!"
           : "Mayor Message draft saved successfully."
       );
-      if (updated?.data?.mayorMessage) {
-        setFormData(updated.data.mayorMessage);
-      }
+
       setSelectedFile(null);
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
@@ -190,7 +198,7 @@ export default function AboutMayorMessageCMSPage() {
       }
     } catch (err) {
       console.error("Save Mayor Message error:", err);
-      toast.error("Failed to save Mayor Message.");
+      toast.error(err?.message || "Failed to save Mayor Message.");
     } finally {
       setIsSubmitting(false);
     }
@@ -205,8 +213,10 @@ export default function AboutMayorMessageCMSPage() {
         am: { name: "", jobTitle: "", photo: "", welcomeMessage: "", title: "", message: "" },
         en: { name: "", jobTitle: "", photo: "", welcomeMessage: "", title: "", message: "" },
       };
-      await settingService.update({ mayorMessage: clearedData });
-      toast.info("Mayor Message cleared.");
+      const updated = await settingService.update({ mayorMessage: clearedData });
+      invalidateCacheAndNotify();
+      storageStore.updateSingle("mayorMessage", clearedData);
+      toast.info("Mayor Message cleared and set to draft.");
       setFormData(clearedData);
       setSelectedFile(null);
       if (previewUrl) {
@@ -217,8 +227,9 @@ export default function AboutMayorMessageCMSPage() {
         fileInputRef.current.value = "";
       }
       setDeleteModalOpen(false);
-    } catch {
-      toast.error("Failed to clear message.");
+    } catch (err) {
+      console.error("Clear Mayor Message error:", err);
+      toast.error(err?.message || "Failed to clear message.");
     }
   };
 

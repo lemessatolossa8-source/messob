@@ -30,8 +30,14 @@ export const statisticService = {
     return res.data;
   },
 
+  async patch(id, data) {
+    const res = await api.patch(`/statistics/${id}`, data);
+    return res.data;
+  },
+
   async delete(id) {
-    return api.delete(`/statistics/${id}`);
+    const res = await api.delete(`/statistics/${id}`);
+    return res;
   },
 
   async publish(id) {

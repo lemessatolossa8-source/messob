@@ -38,7 +38,18 @@ export function SiteSettingsProvider({ children, initialSettings = null }) {
         refresh();
       }
     });
-    return () => unsub();
+
+    const handleSync = () => refresh();
+    if (typeof window !== "undefined") {
+      window.addEventListener("mesob_content_updated", handleSync);
+    }
+
+    return () => {
+      unsub();
+      if (typeof window !== "undefined") {
+        window.removeEventListener("mesob_content_updated", handleSync);
+      }
+    };
   }, [initialSettings, refresh]);
 
   const value = useMemo(

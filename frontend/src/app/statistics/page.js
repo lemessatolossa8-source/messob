@@ -22,6 +22,15 @@ export default function StatisticsPage() {
 
   useEffect(() => {
     loadStatistics();
+    const handleSync = () => loadStatistics();
+    if (typeof window !== "undefined") {
+      window.addEventListener("mesob_content_updated", handleSync);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("mesob_content_updated", handleSync);
+      }
+    };
   }, []);
 
   return (
