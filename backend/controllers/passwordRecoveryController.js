@@ -8,7 +8,7 @@ const otpRequestRateLimits = new Map();
 const checkRateLimit = (key) => {
   const now = Date.now();
   const oneHourMs = 60 * 60 * 1000;
-  const maxLimit = process.env.NODE_ENV === "development" ? 30 : 5;
+  const maxLimit = process.env.NODE_ENV === "development" ? 30 : 15;
   
   if (!otpRequestRateLimits.has(key)) {
     otpRequestRateLimits.set(key, []);

@@ -1,3 +1,8 @@
+const dns = require("dns");
+if (typeof dns.setDefaultResultOrder === "function") {
+  dns.setDefaultResultOrder("ipv4first");
+}
+
 require("dotenv").config();
 require("express-async-errors"); // Auto-catch async errors
 
