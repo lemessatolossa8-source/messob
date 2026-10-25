@@ -156,12 +156,15 @@ app.use(
   })
 );
 
+let dbStatus = "connecting";
+
 // 5. Health check
 app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Burayu MESOB API is running",
     version: "1.0.0",
+    database: dbStatus,
     timestamp: new Date().toISOString(),
   });
 });
@@ -194,15 +197,24 @@ app.use((req, res) => {
 // 9. Centralized error handler (must be last)
 app.use(errorHandler);
 
-// 10. Connect to DB first, then start server so no requests arrive before models are ready
+// 10. Start HTTP server first so Render detects port binding immediately without crash loops
 const PORT = process.env.PORT || 5000;
 
+app.listen(PORT, () => {
+  console.log(`🚀 Burayu MESOB API running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`🔗 Allowed client origin: ${process.env.CLIENT_URL || "http://localhost:3000"}`);
+});
+
+// Connect to Database asynchronously so temporary DB hiccups don't crash the server container
 (async () => {
-  await connectDB();
-  await ensureDefaultFloors();
-  app.listen(PORT, () => {
-    console.log(`🚀 Burayu MESOB API running on http://localhost:${PORT}`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-    console.log(`🔗 Allowed client origin: ${process.env.CLIENT_URL || "http://localhost:3000"}`);
-  });
+  try {
+    await connectDB();
+    dbStatus = "connected";
+    await ensureDefaultFloors();
+  } catch (err) {
+    dbStatus = `error: ${err.message}`;
+    console.error(`⚠️ Initial DB connection attempt failed: ${err.message}`);
+    console.log("ℹ️ Server stays running to keep Render alive. Please enter DATABASE_URL in Render Environment settings.");
+  }
 })();

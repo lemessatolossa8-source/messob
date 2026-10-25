@@ -93,10 +93,22 @@ const sequelize = databaseUrl
 
 const activeDbName = databaseUrlDbName || dbName;
 
+const isCloudEnvironment = !!process.env.RENDER || process.env.NODE_ENV === "production";
+
 const connectDB = async () => {
+  if (isCloudEnvironment && !databaseUrl && isLocalhost) {
+    console.error("═════════════════════════════════════════════════════════════════════");
+    console.error("🚨 Render Deployment Notice: DATABASE_URL is missing!");
+    console.error("Render is trying to connect to 127.0.0.1:3306, but your database is on Aiven.");
+    console.error("👉 Fix: Go to Render Dashboard -> burayu-mesob-backend -> Environment");
+    console.error("👉 Add DATABASE_URL = (paste your Aiven MySQL Service URI)");
+    console.error("═════════════════════════════════════════════════════════════════════");
+    throw new Error("Missing DATABASE_URL in Render Environment settings. Please paste your Aiven MySQL Service URI.");
+  }
+
   try {
     // 1. Try to ensure MySQL database exists ONLY for local development
-    if (!databaseUrl && isLocalhost) {
+    if (!databaseUrl && isLocalhost && !isCloudEnvironment) {
       try {
         const connection = await mysql.createConnection({
           host: dbHost,
@@ -144,7 +156,7 @@ const connectDB = async () => {
     console.log(`🔄 MySQL Models synchronized`);
   } catch (error) {
     console.error(`❌ MySQL Connection Error: ${error.message}`);
-    process.exit(1);
+    throw error;
   }
 };
 
