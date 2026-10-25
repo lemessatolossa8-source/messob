@@ -37,6 +37,7 @@ export default function AdminLoginPage() {
       const params =
         typeof window !== "undefined"
           ? new URLSearchParams(window.location.search)
+          : null;
       const rawDest = params?.get("from");
       const destination = rawDest && !rawDest.startsWith("/admin/login") ? rawDest : "/admin/dashboard";
       window.location.href = destination;
