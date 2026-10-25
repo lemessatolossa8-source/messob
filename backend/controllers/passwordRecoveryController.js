@@ -121,7 +121,8 @@ const requestOTP = async (req, res) => {
       console.error(`[AUTH] Failed to dispatch OTP email to ${masked}: ${emailError.message}`);
       return res.status(500).json({
         success: false,
-        message: "Failed to send OTP email. Please ensure your Gmail SMTP credentials are configured properly.",
+        message: `Failed to send OTP email: ${emailError.message}`,
+        details: emailError.message,
       });
     }
   } catch (error) {

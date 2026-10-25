@@ -52,33 +52,33 @@ const isConfigured = () => {
 
 /**
  * Creates and returns reusable Nodemailer transporter instance
+ * Supports explicit port and forces IPv4 (family: 4) to prevent cloud network IPv6 timeout hangs.
  */
-const createTransporter = () => {
+const createTransporter = (forcePort = null) => {
   if (!isConfigured()) {
     return null;
   }
 
-  const { user, pass, service, host, port, secure } = getEmailCredentials();
+  const { user, pass, host, port: defaultPort } = getEmailCredentials();
+  const targetPort = forcePort || defaultPort || 465;
+  const isSecure = targetPort === 465;
 
   try {
-    if (service === "gmail" || host.includes("gmail.com")) {
-      return nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user,
-          pass,
-        },
-      });
-    }
-
     return nodemailer.createTransport({
-      host,
-      port,
-      secure,
+      host: host && !host.includes("gmail") ? host : "smtp.gmail.com",
+      port: targetPort,
+      secure: isSecure,
+      family: 4, // Explicitly force IPv4 to prevent cloud/Render IPv6 timeout issues
       auth: {
         user,
         pass,
       },
+      tls: {
+        rejectUnauthorized: false,
+      },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
     });
   } catch (error) {
     console.error("[EMAIL CONFIG ERROR] Failed to initialize nodemailer transport:", error.message);
@@ -197,13 +197,21 @@ const sendOTPEmail = async (email, otp) => {
   };
 
   try {
-    console.log(`[EMAIL] Dispatching OTP email via Gmail SMTP to ${maskedRecipient}...`);
+    console.log(`[EMAIL] Dispatching OTP email via Gmail SMTP (port 465 SSL, IPv4) to ${maskedRecipient}...`);
     const info = await transporter.sendMail(mailOptions);
     console.log(`[EMAIL] ✅ OTP email dispatched successfully (MessageID: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error(`[EMAIL ERROR] ❌ Failed to send OTP email: ${error.message}`);
-    throw new Error(`Failed to send OTP email: ${error.message}`);
+    console.warn(`[EMAIL WARNING] Port 465 dispatch attempt failed: ${error.message}. Retrying via port 587 STARTTLS...`);
+    try {
+      const fallbackTransporter = createTransporter(587);
+      const info = await fallbackTransporter.sendMail(mailOptions);
+      console.log(`[EMAIL] ✅ OTP email dispatched successfully via port 587 fallback (MessageID: ${info.messageId})`);
+      return { success: true, messageId: info.messageId };
+    } catch (fallbackError) {
+      console.error(`[EMAIL ERROR] ❌ Both SMTP ports failed: ${fallbackError.message}`);
+      throw new Error(`Failed to send OTP email: ${fallbackError.message}`);
+    }
   }
 };
 
