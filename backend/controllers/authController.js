@@ -114,4 +114,68 @@ const getMe = async (req, res) => {
   });
 };
 
-module.exports = { register, login, getMe };
+/**
+ * Automatically ensures at least one active administrator account exists in MySQL.
+ * Runs on backend startup (Render, production, and local development).
+ */
+const ensureDefaultAdmin = async () => {
+  try {
+    const adminEmail = (
+      process.env.ADMIN_EMAIL ||
+      process.env.EMAIL_USER ||
+      "lemessatolossa8@gmail.com"
+    ).trim().toLowerCase();
+
+    // Check if an account already exists with this email
+    let admin = await User.findOne({ where: { email: adminEmail } });
+
+    if (!admin) {
+      // Check if ANY admin account exists at all in the database
+      const anyAdmin = await User.findOne({ where: { role: "admin" } });
+
+      if (!anyAdmin) {
+        console.log(`ℹ️ Initializing primary administrator account for ${adminEmail}...`);
+        admin = await User.create({
+          name: "Burayu Administrator",
+          email: adminEmail,
+          password: process.env.INITIAL_ADMIN_PASSWORD || "Admin@12345678",
+          role: "admin",
+          isActive: true,
+        });
+        console.log(`✅ Default admin account created in MySQL: ${adminEmail}`);
+      } else {
+        // An admin user exists with a different email; also ensure ADMIN_EMAIL has admin access
+        console.log(`ℹ️ Existing admin detected (${anyAdmin.email}). Creating admin record for ADMIN_EMAIL: ${adminEmail}...`);
+        admin = await User.create({
+          name: "Burayu Administrator",
+          email: adminEmail,
+          password: process.env.INITIAL_ADMIN_PASSWORD || "Admin@12345678",
+          role: "admin",
+          isActive: true,
+        });
+        console.log(`✅ Admin account created for ADMIN_EMAIL: ${adminEmail}`);
+      }
+    } else {
+      let needsSave = false;
+      if (admin.role !== "admin") {
+        admin.role = "admin";
+        needsSave = true;
+      }
+      if (!admin.isActive) {
+        admin.isActive = true;
+        needsSave = true;
+      }
+      if (needsSave) {
+        await admin.save();
+        console.log(`✅ Upgraded ${adminEmail} to active administrator status`);
+      } else {
+        console.log(`👤 Active administrator account verified in MySQL: ${adminEmail}`);
+      }
+    }
+  } catch (err) {
+    console.error(`⚠️ Failed to ensure default admin user: ${err.message}`);
+  }
+};
+
+module.exports = { register, login, getMe, ensureDefaultAdmin };
+

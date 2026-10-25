@@ -98,6 +98,7 @@ OTP.createOTP = async (email) => {
     attempts: 0,
     expiresAt,
     used: false,
+    createdAt: new Date(),
   });
 
   return { realOtp: rawOtp, expiresAt: otpRecord.expiresAt };
@@ -114,7 +115,7 @@ OTP.verifyOTP = async (email, submittedOtp) => {
       email: normalizedEmail,
       used: false,
     },
-    order: [["createdAt", "DESC"]],
+    order: [["id", "DESC"]],
   });
 
   if (!otpRecord) {
@@ -187,7 +188,7 @@ OTP.verifyResetToken = async (email, resetToken) => {
 
   const otpRecord = await OTP.findOne({
     where: whereClause,
-    order: [["createdAt", "DESC"]],
+    order: [["id", "DESC"]],
   });
 
   if (!otpRecord) {

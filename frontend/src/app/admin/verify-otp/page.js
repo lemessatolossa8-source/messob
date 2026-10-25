@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ShieldCheck, RefreshCw } from "lucide-react";
 import Logo from "@/components/Logo";
+import { getApiBase } from "@/services/api";
 
 function VerifyOTPForm() {
   const router = useRouter();
@@ -71,7 +72,8 @@ function VerifyOTPForm() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/verify-otp", {
+      const apiBase = getApiBase();
+      const response = await fetch(`${apiBase}/auth/verify-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -82,9 +84,10 @@ function VerifyOTPForm() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        const errorMsg = data && typeof data.message === "string" && data.message !== "null"
-          ? data.message
-          : "Invalid OTP code. Please try again.";
+        const errorMsg =
+          data && typeof data.message === "string" && data.message.trim() && data.message !== "null"
+            ? data.message
+            : `Invalid OTP code (status ${response.status}). Please try again.`;
         throw new Error(errorMsg);
       }
 
@@ -109,7 +112,8 @@ function VerifyOTPForm() {
     setError("");
 
     try {
-      const response = await fetch("/api/auth/resend-otp", {
+      const apiBase = getApiBase();
+      const response = await fetch(`${apiBase}/auth/resend-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -120,9 +124,10 @@ function VerifyOTPForm() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        const errorMsg = data && typeof data.message === "string" && data.message !== "null"
-          ? data.message
-          : "Failed to resend OTP. Please try again.";
+        const errorMsg =
+          data && typeof data.message === "string" && data.message.trim() && data.message !== "null"
+            ? data.message
+            : `Failed to resend OTP (status ${response.status}). Please try again.`;
         throw new Error(errorMsg);
       }
 

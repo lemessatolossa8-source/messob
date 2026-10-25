@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle, Check, Circle } from "lucide-react";
 import Logo from "@/components/Logo";
+import { getApiBase } from "@/services/api";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -53,7 +54,8 @@ function ResetPasswordForm() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/reset-password", {
+      const apiBase = getApiBase();
+      const response = await fetch(`${apiBase}/auth/reset-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -68,9 +70,10 @@ function ResetPasswordForm() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        const errorMsg = data && typeof data.message === "string" && data.message !== "null"
-          ? data.message
-          : "Failed to reset password. Please try again.";
+        const errorMsg =
+          data && typeof data.message === "string" && data.message.trim() && data.message !== "null"
+            ? data.message
+            : `Failed to reset password (status ${response.status}). Please try again.`;
         throw new Error(errorMsg);
       }
 

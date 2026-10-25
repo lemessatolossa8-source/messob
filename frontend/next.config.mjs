@@ -39,11 +39,22 @@ const nextConfig = {
 
   // Proxy API requests and static uploads to backend
   async rewrites() {
+    const isProd = process.env.NODE_ENV === "production" || !!process.env.VERCEL;
+    const defaultBackend = isProd
+      ? "https://burayu-mesob-backend.onrender.com"
+      : "http://127.0.0.1:5000";
+
     const rawBackendUrl =
       process.env.BACKEND_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
-      "http://127.0.0.1:5000";
-    const backendUrl = rawBackendUrl.replace(/\/api\/?$/, "").replace(/\/+$/, "");
+      defaultBackend;
+
+    let backendUrl = rawBackendUrl.replace(/\/api\/?$/, "").replace(/\/+$/, "");
+
+    // Safety guard: If deployed on Vercel/production, NEVER proxy to private loopback IPs (causes DNS_HOSTNAME_RESOLVED_PRIVATE)
+    if (isProd && (backendUrl.includes("localhost") || backendUrl.includes("127.0.0.1"))) {
+      backendUrl = "https://burayu-mesob-backend.onrender.com";
+    }
 
     return [
       {

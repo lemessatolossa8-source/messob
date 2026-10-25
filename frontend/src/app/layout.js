@@ -25,12 +25,15 @@ const plusJakarta = Plus_Jakarta_Sans({
   adjustFontFallback: true,
 });
 
-const API_BASE_URL =
+const isProd = process.env.NODE_ENV === "production" || !!process.env.VERCEL;
+const prodDefault = "https://burayu-mesob-backend.onrender.com/api";
+const resolvedApi =
   process.env.INTERNAL_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
   (process.env.BACKEND_URL ? `${process.env.BACKEND_URL.replace(/\/+$/, "").replace(/\/api$/, "")}/api` : null) ||
-  "http://127.0.0.1:5000/api";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  (isProd ? prodDefault : "http://127.0.0.1:5000/api");
+const API_BASE_URL = isProd && (resolvedApi.includes("localhost") || resolvedApi.includes("127.0.0.1")) ? prodDefault : resolvedApi;
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://burayu-mesob.vercel.app";
 
 export const viewport = {
   themeColor: "#070707",

@@ -26,6 +26,7 @@ const translateRoutes = require("./routes/translateRoutes");
 const statisticRoutes = require("./routes/statisticRoutes");
 const floorRoutes = require("./routes/floorRoutes");
 const { ensureDefaultFloors } = require("./controllers/floorController");
+const { ensureDefaultAdmin } = require("./controllers/authController");
 
 // Ensure models are loaded so Sequelize syncs all tables on startup
 require("./models/Gallery");
@@ -211,6 +212,7 @@ app.listen(PORT, () => {
   try {
     await connectDB();
     dbStatus = "connected";
+    await ensureDefaultAdmin();
     await ensureDefaultFloors();
   } catch (err) {
     dbStatus = `error: ${err.message}`;

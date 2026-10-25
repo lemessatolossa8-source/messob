@@ -16,12 +16,18 @@ export const getApiBase = () => {
   const backend = process.env.BACKEND_URL
     ? `${process.env.BACKEND_URL.replace(/\/+$/, "").replace(/\/api$/, "")}/api`
     : null;
-  return (
+  const isProd = process.env.NODE_ENV === "production" || !!process.env.VERCEL;
+  const prodDefault = "https://burayu-mesob-backend.onrender.com/api";
+  const resolved =
     process.env.INTERNAL_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
     backend ||
-    "http://127.0.0.1:5000/api"
-  );
+    (isProd ? prodDefault : "http://127.0.0.1:5000/api");
+
+  if (isProd && (resolved.includes("localhost") || resolved.includes("127.0.0.1"))) {
+    return prodDefault;
+  }
+  return resolved;
 };
 
 // Retrieve the JWT from localStorage (client-side only)

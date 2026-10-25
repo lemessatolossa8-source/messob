@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Mail, Send } from "lucide-react";
 import Logo from "@/components/Logo";
+import { getApiBase } from "@/services/api";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -19,7 +20,8 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
+      const apiBase = getApiBase();
+      const response = await fetch(`${apiBase}/auth/forgot-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -30,9 +32,10 @@ export default function ForgotPasswordPage() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        const errorMsg = data && typeof data.message === "string" && data.message !== "null"
-          ? data.message
-          : "Failed to send OTP code. Please verify the admin email.";
+        const errorMsg =
+          data && typeof data.message === "string" && data.message.trim() && data.message !== "null"
+            ? data.message
+            : `Failed to send OTP code (status ${response.status}). Please verify the admin email.`;
         throw new Error(errorMsg);
       }
 
