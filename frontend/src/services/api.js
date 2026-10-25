@@ -5,9 +5,17 @@
 
 export const getApiBase = () => {
   if (typeof window !== "undefined") {
+    const isClientProd =
+      window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1";
+
     // If NEXT_PUBLIC_API_URL is configured with an absolute URL, use it directly (e.g. Render backend)
     const publicUrl = process.env.NEXT_PUBLIC_API_URL;
     if (publicUrl && publicUrl.startsWith("http")) {
+      // In production deployment, never use localhost/127.0.0.1
+      if (isClientProd && (publicUrl.includes("localhost") || publicUrl.includes("127.0.0.1"))) {
+        return "https://burayu-mesob-backend.onrender.com/api";
+      }
       return publicUrl.replace(/\/+$/, "");
     }
     // Otherwise fallback to same-origin /api rewrite via Next.js proxy

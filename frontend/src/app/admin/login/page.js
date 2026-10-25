@@ -37,8 +37,8 @@ export default function AdminLoginPage() {
       const params =
         typeof window !== "undefined"
           ? new URLSearchParams(window.location.search)
-          : null;
-      const destination = params?.get("from") || "/admin/dashboard";
+      const rawDest = params?.get("from");
+      const destination = rawDest && !rawDest.startsWith("/admin/login") ? rawDest : "/admin/dashboard";
       window.location.href = destination;
     } catch (err) {
       setError(err.message || "Login failed. Check your credentials.");

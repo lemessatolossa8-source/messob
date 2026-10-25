@@ -8,15 +8,19 @@ const COOKIE_NAME = "mesob_session";
 function setSessionCookie(token) {
   if (typeof document === "undefined") return;
   const maxAge = 7 * 24 * 60 * 60; // 7 days in seconds
-  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(token)}; path=/; max-age=${maxAge}; SameSite=Lax`;
-  document.cookie = `mesob_token=${encodeURIComponent(token)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
+  const secure = isHttps ? "; Secure" : "";
+  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(token)}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
+  document.cookie = `mesob_token=${encodeURIComponent(token)}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
 }
 
 /** Clear the session cookie */
 function clearSessionCookie() {
   if (typeof document === "undefined") return;
-  document.cookie = `${COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
-  document.cookie = `mesob_token=; path=/; max-age=0; SameSite=Lax`;
+  const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
+  const secure = isHttps ? "; Secure" : "";
+  document.cookie = `${COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax${secure}`;
+  document.cookie = `mesob_token=; path=/; max-age=0; SameSite=Lax${secure}`;
 }
 
 export const authService = {

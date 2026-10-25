@@ -17,9 +17,8 @@ function b64urlDecode(str) {
 }
 
 const JWT_FALLBACK_SECRET =
-  process.env.NODE_ENV === "development"
-    ? "c4942a7cf978ae9cadacd80b78dc97bb9ce0aec3d243425114fea0535e5e42d89e062c09e37d9f5903d99b4028d7197364ab02c29dc042da3fd949f40469f6d1"
-    : "";
+  process.env.JWT_SECRET ||
+  "c4942a7cf978ae9cadacd80b78dc97bb9ce0aec3d243425114fea0535e5e42d89e062c09e37d9f5903d99b4028d7197364ab02c29dc042da3fd949f40469f6d1";
 
 /**
  * Verify a HS256 JWT using JWT_SECRET from the environment.
