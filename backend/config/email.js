@@ -40,6 +40,12 @@ const getEmailCredentials = () => {
  * Determines whether real SMTP credentials are provided
  */
 const isConfigured = () => {
+  if (
+    (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith("re_")) ||
+    (process.env.BREVO_API_KEY && process.env.BREVO_API_KEY.length > 10)
+  ) {
+    return true;
+  }
   const { user, pass } = getEmailCredentials();
   if (!user || !pass) return false;
   // Ignore dummy/placeholder passwords
@@ -136,13 +142,12 @@ const sendOTPEmail = async (email, otp) => {
     return { success: true, mode: "console" };
   }
 
-  const transporter = createTransporter();
-  if (!transporter) {
-    throw new Error("Email transporter could not be initialized.");
-  }
+  const fromAddress = senderEmail
+    ? `"Burayu MESOB Admin" <${senderEmail}>`
+    : `"Burayu MESOB Admin" <lemessatolossa8@gmail.com>`;
 
   const mailOptions = {
-    from: `"Burayu MESOB Admin" <${senderEmail}>`,
+    from: fromAddress,
     to: email,
     subject: "🔐 Burayu MESOB Admin — Password Reset OTP",
     html: `
@@ -201,6 +206,73 @@ const sendOTPEmail = async (email, otp) => {
     text: `Burayu MESOB Admin - Password Reset Request\n\nYour one-time verification code is: ${otp}\n\nThis OTP code will expire in 10 minutes and can only be used once.\n\nIf you did not request this reset, you can safely ignore this email.\n\n- Burayu MESOB Administration`,
   };
 
+  // 1. Try Resend HTTP API (Port 443 HTTPS - Works on Render Free Tier where outbound SMTP is blocked)
+  if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith("re_")) {
+    try {
+      console.log(`[EMAIL] Dispatching OTP email via Resend HTTPS API to ${maskedRecipient}...`);
+      const fromEmail = process.env.RESEND_FROM || "Burayu MESOB Admin <onboarding@resend.dev>";
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.RESEND_API_KEY.trim()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: [email],
+          subject: mailOptions.subject,
+          html: mailOptions.html,
+          text: mailOptions.text,
+        }),
+      });
+
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(resData.message || `Resend HTTP error ${res.status}`);
+      }
+      console.log(`[EMAIL] ✅ OTP email dispatched successfully via Resend HTTPS (ID: ${resData.id})`);
+      return { success: true, messageId: resData.id };
+    } catch (resendErr) {
+      console.warn(`[EMAIL WARNING] Resend HTTPS dispatch failed: ${resendErr.message}. Attempting fallback...`);
+    }
+  }
+
+  // 2. Try Brevo HTTP API (Port 443 HTTPS - Works on Render Free Tier)
+  if (process.env.BREVO_API_KEY) {
+    try {
+      console.log(`[EMAIL] Dispatching OTP email via Brevo HTTPS API to ${maskedRecipient}...`);
+      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "api-key": process.env.BREVO_API_KEY.trim(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sender: { name: "Burayu MESOB Admin", email: senderEmail || "lemessatolossa8@gmail.com" },
+          to: [{ email }],
+          subject: mailOptions.subject,
+          htmlContent: mailOptions.html,
+          textContent: mailOptions.text,
+        }),
+      });
+
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(resData.message || `Brevo HTTP error ${res.status}`);
+      }
+      console.log(`[EMAIL] ✅ OTP email dispatched successfully via Brevo HTTPS (ID: ${resData.messageId})`);
+      return { success: true, messageId: resData.messageId };
+    } catch (brevoErr) {
+      console.warn(`[EMAIL WARNING] Brevo HTTPS dispatch failed: ${brevoErr.message}. Attempting fallback...`);
+    }
+  }
+
+  // 3. Fallback to direct SMTP (port 465 SSL, fallback port 587 STARTTLS)
+  const transporter = createTransporter(465);
+  if (!transporter) {
+    throw new Error("SMTP credentials are not configured and no HTTP email API key (RESEND_API_KEY) was found.");
+  }
+
   try {
     console.log(`[EMAIL] Dispatching OTP email via Gmail SMTP (port 465 SSL, IPv4) to ${maskedRecipient}...`);
     const info = await transporter.sendMail(mailOptions);
@@ -215,7 +287,7 @@ const sendOTPEmail = async (email, otp) => {
       return { success: true, messageId: info.messageId };
     } catch (fallbackError) {
       console.error(`[EMAIL ERROR] ❌ Both SMTP ports failed: ${fallbackError.message}`);
-      throw new Error(`Failed to send OTP email: ${fallbackError.message}`);
+      throw fallbackError;
     }
   }
 };
@@ -266,19 +338,18 @@ const sendContactInquiryEmail = async ({ name, email, phone, subject, message, c
     return { success: true, mode: "console", recipient: recipientEmail };
   }
 
-  const transporter = createTransporter();
-  if (!transporter) {
-    throw new Error("Email transporter could not be initialized.");
-  }
-
   const dateStr = new Date().toLocaleString("en-US", {
     timeZone: "Africa/Addis_Ababa",
     dateStyle: "full",
     timeStyle: "medium",
   });
 
+  const fromAddress = senderEmail
+    ? `"Burayu MESOB Contact Desk" <${senderEmail}>`
+    : `"Burayu MESOB Contact Desk" <lemessatolossa8@gmail.com>`;
+
   const mailOptions = {
-    from: `"Burayu MESOB Contact Desk" <${senderEmail}>`,
+    from: fromAddress,
     to: recipientEmail,
     replyTo: `"${name.replace(/[^\w\s.-]/g, "")}" <${email}>`,
     subject: `🏛️ [Burayu MESOB Inquiry] ${subject}`,
@@ -481,14 +552,91 @@ const sendContactInquiryEmail = async ({ name, email, phone, subject, message, c
       `To reply, reply directly to this email or send to ${email}.\n`,
   };
 
+  // 1. Try Resend HTTP API (Port 443 HTTPS - Works on Render Free Tier)
+  if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith("re_")) {
+    try {
+      console.log(`[EMAIL] Dispatching contact inquiry email via Resend HTTPS API to ${maskedRecipient}...`);
+      const fromEmail = process.env.RESEND_FROM || "Burayu MESOB Contact Desk <onboarding@resend.dev>";
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.RESEND_API_KEY.trim()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: [recipientEmail],
+          reply_to: email,
+          subject: mailOptions.subject,
+          html: mailOptions.html,
+          text: mailOptions.text,
+        }),
+      });
+
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(resData.message || `Resend HTTP error ${res.status}`);
+      }
+      console.log(`[EMAIL] ✅ Contact inquiry email dispatched successfully via Resend HTTPS (ID: ${resData.id})`);
+      return { success: true, messageId: resData.id, recipient: recipientEmail };
+    } catch (resendErr) {
+      console.warn(`[EMAIL WARNING] Resend HTTPS dispatch failed: ${resendErr.message}. Attempting SMTP...`);
+    }
+  }
+
+  // 2. Try Brevo HTTP API (Port 443 HTTPS - Works on Render Free Tier)
+  if (process.env.BREVO_API_KEY) {
+    try {
+      console.log(`[EMAIL] Dispatching contact inquiry email via Brevo HTTPS API to ${maskedRecipient}...`);
+      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "api-key": process.env.BREVO_API_KEY.trim(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sender: { name: "Burayu MESOB Contact Desk", email: senderEmail || "lemessatolossa8@gmail.com" },
+          to: [{ email: recipientEmail }],
+          replyTo: { email, name },
+          subject: mailOptions.subject,
+          htmlContent: mailOptions.html,
+          textContent: mailOptions.text,
+        }),
+      });
+
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(resData.message || `Brevo HTTP error ${res.status}`);
+      }
+      console.log(`[EMAIL] ✅ Contact inquiry email dispatched successfully via Brevo HTTPS (ID: ${resData.messageId})`);
+      return { success: true, messageId: resData.messageId, recipient: recipientEmail };
+    } catch (brevoErr) {
+      console.warn(`[EMAIL WARNING] Brevo HTTPS dispatch failed: ${brevoErr.message}. Attempting SMTP...`);
+    }
+  }
+
+  // 3. Fallback to direct SMTP
+  const transporter = createTransporter(465);
+  if (!transporter) {
+    throw new Error("SMTP credentials are not configured and no HTTP email API key (RESEND_API_KEY) was found.");
+  }
+
   try {
     console.log(`[EMAIL] Dispatching contact inquiry email to ${maskedRecipient}...`);
     const info = await transporter.sendMail(mailOptions);
     console.log(`[EMAIL] ✅ Contact inquiry email dispatched successfully (MessageID: ${info.messageId})`);
     return { success: true, messageId: info.messageId, recipient: recipientEmail };
   } catch (error) {
-    console.error(`[EMAIL ERROR] ❌ Failed to dispatch contact inquiry email: ${error.message}`);
-    throw error;
+    console.warn(`[EMAIL WARNING] Primary SMTP attempt failed: ${error.message}. Retrying via port 587...`);
+    try {
+      const fallbackTransporter = createTransporter(587);
+      const info = await fallbackTransporter.sendMail(mailOptions);
+      console.log(`[EMAIL] ✅ Contact inquiry email dispatched successfully via port 587 (MessageID: ${info.messageId})`);
+      return { success: true, messageId: info.messageId, recipient: recipientEmail };
+    } catch (fallbackError) {
+      console.error(`[EMAIL ERROR] ❌ Both SMTP ports failed: ${fallbackError.message}`);
+      throw fallbackError;
+    }
   }
 };
 

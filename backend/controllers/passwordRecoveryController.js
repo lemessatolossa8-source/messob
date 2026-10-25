@@ -119,10 +119,20 @@ const requestOTP = async (req, res) => {
       });
     } catch (emailError) {
       console.error(`[AUTH] Failed to dispatch OTP email to ${masked}: ${emailError.message}`);
+      const rawMsg = emailError.message || "";
+      const isConnectionTimeout =
+        rawMsg.includes("timeout") ||
+        rawMsg.includes("ENETUNREACH") ||
+        rawMsg.includes("ECONNREFUSED");
+
+      const helpfulMessage = isConnectionTimeout
+        ? "Email delivery timed out. Cloud hosting platforms (like Render Free Tier) block direct SMTP ports (465/587). Please configure RESEND_API_KEY in Render environment variables or log in directly with your admin credentials."
+        : `Failed to send OTP email: ${rawMsg}`;
+
       return res.status(500).json({
         success: false,
-        message: `Failed to send OTP email: ${emailError.message}`,
-        details: emailError.message,
+        message: helpfulMessage,
+        details: rawMsg,
       });
     }
   } catch (error) {

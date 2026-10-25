@@ -79,8 +79,20 @@ export default function ForgotPasswordPage() {
             </div>
 
             {error && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-xs text-[#FE0002] flex items-start gap-2">
-                <span className="font-bold">Error:</span> {error}
+              <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-[#FE0002] space-y-2">
+                <div className="flex items-start gap-2">
+                  <span className="font-bold shrink-0">Error:</span>
+                  <span className="leading-relaxed">{error}</span>
+                </div>
+                <div className="pt-2 border-t border-rose-200/60 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-600 font-medium">Have your admin password?</span>
+                  <Link
+                    href="/admin/login"
+                    className="font-bold text-[#FE0002] hover:underline inline-flex items-center gap-1"
+                  >
+                    Go to Admin Login &rarr;
+                  </Link>
+                </div>
               </div>
             )}
 
