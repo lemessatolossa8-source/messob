@@ -1,9 +1,22 @@
+# Dependencies & Build artifacts
 node_modules/
 .next/
+out/
+dist/
+build/
+
+# Environment files and credentials (NEVER commit secrets to git)
 .env
-.env.local
-.env.*.local
+.env.*
+*.env
+*.pem
+!.env.example
+!.env.*.example
+!.env.local.example
+
+# Temporary and log files
 logs/
 temporary/
 *.log
 .DS_Store
+Thumbs.db

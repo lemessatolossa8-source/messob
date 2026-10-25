@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
 import MesobStats from "@/components/MesobStats";
 import {
@@ -85,27 +86,24 @@ export default function HomeClient({ initialData = {} }) {
   );
   const [statistics, setStatistics] = useState(initialData.statistics || []);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [prevSlide, setPrevSlide] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
 
   const goToSlide = useCallback((index) => {
     if (slides.length <= 1) return;
-    const target = ((index % slides.length) + slides.length) % slides.length;
     setCurrentSlide((curr) => {
-      setPrevSlide(curr);
-      return target;
+      const nextIndex = typeof index === "function" ? index(curr) : index;
+      return ((nextIndex % slides.length) + slides.length) % slides.length;
     });
   }, [slides.length]);
 
   const nextSlide = useCallback(() => {
-    goToSlide(currentSlide + 1);
-  }, [goToSlide, currentSlide]);
+    goToSlide((curr) => curr + 1);
+  }, [goToSlide]);
 
   const prevSlideAction = useCallback(() => {
-    goToSlide(currentSlide - 1);
-  }, [goToSlide, currentSlide]);
+    goToSlide((curr) => curr - 1);
+  }, [goToSlide]);
 
   const loadData = useCallback(async () => {
     try {
@@ -164,14 +162,14 @@ export default function HomeClient({ initialData = {} }) {
     };
   }, [loadData]);
 
-  // Carousel auto-advance: rotates every 6s (6000ms) when not paused and more than 1 slide exists
+  // Carousel auto-advance: rotates smoothly every 5s when more than 1 slide exists
   useEffect(() => {
-    if (slides.length <= 1 || isPaused) return;
+    if (slides.length <= 1) return;
     const interval = setInterval(() => {
-      goToSlide(currentSlide + 1);
-    }, 6000);
+      setCurrentSlide((curr) => (curr + 1) % slides.length);
+    }, 5000);
     return () => clearInterval(interval);
-  }, [slides.length, isPaused, currentSlide, goToSlide]);
+  }, [slides.length]);
 
   // Touch swipe support for mobile devices
   const handleTouchStart = (e) => {
@@ -261,55 +259,47 @@ export default function HomeClient({ initialData = {} }) {
           aria-roledescription="carousel"
           aria-label="Homepage Hero Carousel"
           aria-live="polite"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           onKeyDown={handleSliderKeyDown}
         >
-          {/* Slide images — Smooth Fade with subtle Zoom effect */}
+          {/* Slide images — Smooth Crossfade with Ken Burns subtle Zoom effect */}
           <div className="absolute inset-0 overflow-hidden">
             {slides.length > 0 ? (
               slides.map((slide, index) => {
                 const isActive = index === activeSlideIndex;
-                const isPrev = index === (((activeSlideIndex - 1) % slides.length) + slides.length) % slides.length;
-                const isNext = index === (activeSlideIndex + 1) % slides.length;
-                const isOutgoing = index === prevSlide && !isActive;
-                const isFirst = index === 0;
-
-                // Render active, previous/outgoing (for smooth 800ms crossfade), next (for instant prefetch), or first
-                if (!isActive && !isPrev && !isNext && !isOutgoing && !isFirst) return null;
-
                 const slideSrc = getImageUrl(slide.image);
                 if (!slideSrc) return null;
 
                 return (
                   <div
                     key={slide.id || index}
-                    className={`absolute inset-0 transition-opacity ease-in-out ${isActive
-                        ? "opacity-100 z-10"
-                        : isPrev || isOutgoing
-                          ? "opacity-0 z-[5] pointer-events-none"
-                          : "opacity-0 z-0 pointer-events-none"
-                      }`}
-                    style={{
-                      transitionDuration: "800ms",
-                    }}
+                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                      isActive
+                        ? "opacity-100 z-10 pointer-events-auto"
+                        : "opacity-0 z-0 pointer-events-none"
+                    }`}
                     aria-hidden={!isActive}
                   >
-                    {/* Inner subtle zoom container */}
+                    {/* Inner subtle zoom container with continuous scale animation */}
                     <div
-                      className="relative w-full h-full will-change-transform motion-reduce:transform-none motion-reduce:transition-none"
-                      style={getSubtleZoomStyle(isActive)}
+                      className="relative w-full h-full will-change-transform"
+                      style={{
+                        transform: isActive ? "scale(1.05)" : "scale(1)",
+                        transition: isActive
+                          ? "transform 5500ms cubic-bezier(0.25, 1, 0.5, 1)"
+                          : "transform 1000ms ease-out",
+                        transformOrigin: "center center",
+                      }}
                     >
                       <Image
                         src={slideSrc}
                         alt={`Burayu MESOB Slide ${index + 1}`}
                         fill
-                        priority={isFirst}
+                        priority={index === 0}
                         sizes="100vw"
-                        quality={75}
+                        quality={80}
                         className="object-cover object-center filter brightness-[0.88] contrast-[1.05] saturate-[1.04]"
                       />
                     </div>
@@ -371,6 +361,28 @@ export default function HomeClient({ initialData = {} }) {
             </div>
           </div>
 
+          {/* Left / Right Navigation Chevrons */}
+          {slides.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={prevSlideAction}
+                aria-label="Previous Slide"
+                className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-2.5 rounded-full bg-black/40 hover:bg-black/75 text-white/80 hover:text-white backdrop-blur-xs border border-white/15 transition-all duration-200 cursor-pointer shadow-lg hover:scale-105 active:scale-95 focus:outline-none"
+              >
+                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+              <button
+                type="button"
+                onClick={nextSlide}
+                aria-label="Next Slide"
+                className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-2.5 rounded-full bg-black/40 hover:bg-black/75 text-white/80 hover:text-white backdrop-blur-xs border border-white/15 transition-all duration-200 cursor-pointer shadow-lg hover:scale-105 active:scale-95 focus:outline-none"
+              >
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+            </>
+          )}
+
           {/* Small pagination dots */}
           {slides.length > 1 && (
             <div className="absolute bottom-6 sm:bottom-8 inset-x-0 z-30 flex items-center justify-center gap-2 pointer-events-auto">
@@ -386,10 +398,11 @@ export default function HomeClient({ initialData = {} }) {
                       className="p-1 inline-flex items-center justify-center cursor-pointer focus:outline-none"
                     >
                       <span
-                        className={`rounded-full transition-all duration-300 block ${isActive
+                        className={`rounded-full transition-all duration-300 block ${
+                          isActive
                             ? "w-2.5 h-2.5 bg-[#C62828] shadow-[0_0_8px_rgba(198,40,40,0.8)]"
                             : "w-2 h-2 bg-white/40 hover:bg-white/80"
-                          }`}
+                        }`}
                       />
                     </button>
                   );

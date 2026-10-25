@@ -1,12 +1,29 @@
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 async function optimizeDb() {
-  const conn = await mysql.createConnection({
-    host: '127.0.0.1',
-    user: 'root',
-    password: '',
-    database: 'burayu_mesob'
-  });
+  const databaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+  let connConfig;
+
+  if (databaseUrl) {
+    connConfig = {
+      uri: databaseUrl,
+      ssl: { rejectUnauthorized: false }
+    };
+  } else {
+    const isLocal = !process.env.DB_HOST || process.env.DB_HOST === '127.0.0.1' || process.env.DB_HOST === 'localhost';
+    const useSsl = process.env.DB_SSL === 'true' || (process.env.DB_SSL !== 'false' && !isLocal);
+    connConfig = {
+      host: process.env.DB_HOST || '127.0.0.1',
+      port: process.env.DB_PORT || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASS || '',
+      database: process.env.DB_NAME || 'burayu_mesob',
+      ssl: useSsl ? { rejectUnauthorized: false } : undefined
+    };
+  }
+
+  const conn = await mysql.createConnection(connConfig);
 
   console.log('Connected to MySQL. Auditing indexes...');
 

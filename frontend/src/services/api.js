@@ -5,10 +5,23 @@
 
 export const getApiBase = () => {
   if (typeof window !== "undefined") {
-    // In browser: same-origin /api eliminates CORS preflight delays and allows socket reuse
+    // If NEXT_PUBLIC_API_URL is configured with an absolute URL, use it directly (e.g. Render backend)
+    const publicUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (publicUrl && publicUrl.startsWith("http")) {
+      return publicUrl.replace(/\/+$/, "");
+    }
+    // Otherwise fallback to same-origin /api rewrite via Next.js proxy
     return `${window.location.origin}/api`;
   }
-  return process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000/api";
+  const backend = process.env.BACKEND_URL
+    ? `${process.env.BACKEND_URL.replace(/\/+$/, "").replace(/\/api$/, "")}/api`
+    : null;
+  return (
+    process.env.INTERNAL_API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    backend ||
+    "http://127.0.0.1:5000/api"
+  );
 };
 
 // Retrieve the JWT from localStorage (client-side only)

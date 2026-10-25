@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Frontend-only Burayu MESOB official portal built with Next.js App Router.",
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "eslint ."

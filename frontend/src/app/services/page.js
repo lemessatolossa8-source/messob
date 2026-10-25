@@ -5,6 +5,7 @@ export const revalidate = 60;
 const API_BASE =
   process.env.INTERNAL_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.BACKEND_URL ? `${process.env.BACKEND_URL.replace(/\/+$/, "").replace(/\/api$/, "")}/api` : null) ||
   "http://127.0.0.1:5000/api";
 
 async function getFloors() {

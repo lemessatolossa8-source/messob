@@ -84,26 +84,29 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    // Explicitly allowed origins
+    // Explicitly allowed origins (from CLIENT_URL)
     if (allowedOrigins.includes(normalizedOrigin)) {
       return callback(null, true);
     }
 
-    // Allow Vercel preview deployments if frontend is hosted on Vercel
+    // Allow Vercel production and preview deployments
     if (
-      normalizedOrigin.endsWith(".vercel.app") &&
-      configuredOrigins.some((u) => u.includes("vercel.app"))
+      normalizedOrigin.endsWith(".vercel.app") ||
+      (process.env.CLIENT_URL && process.env.CLIENT_URL.includes(normalizedOrigin))
     ) {
       return callback(null, true);
     }
 
-    return callback(new Error(`CORS: origin '${origin}' is not allowed`));
+    // Origin not allowed: omit CORS header cleanly without throwing 500 error
+    console.warn(`⚠️ CORS blocked request from origin: ${origin}`);
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // 3. Security headers (helmet) – configured to allow CORS
 app.use(
