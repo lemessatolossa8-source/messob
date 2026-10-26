@@ -9,6 +9,7 @@ require("express-async-errors"); // Auto-catch async errors
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const compression = require("compression");
@@ -35,6 +36,7 @@ const { ensureDefaultFloors } = require("./controllers/floorController");
 const { ensureDefaultAdmin } = require("./controllers/authController");
 
 // Ensure models are loaded so Sequelize syncs all tables on startup
+require("./models/Upload");
 require("./models/Gallery");
 require("./models/Slide");
 require("./models/Setting");
@@ -154,6 +156,36 @@ const authLimiter = rateLimit({
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+// Database-backed recovery for uploads: if an image was wiped from ephemeral disk on Render redeploy, restore from Aiven MySQL
+app.get("/uploads/:filename", async (req, res, next) => {
+  const filename = path.basename(req.params.filename);
+  const localPath = path.join(__dirname, "uploads", filename);
+
+  if (fs.existsSync(localPath)) {
+    return next();
+  }
+
+  try {
+    const Upload = require("./models/Upload");
+    const record = await Upload.findByPk(filename);
+    if (record && record.data) {
+      try {
+        const uploadsDir = path.join(__dirname, "uploads");
+        if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+        fs.writeFileSync(localPath, record.data);
+      } catch (writeErr) {
+        // Disk write failed (read-only environment) — serve directly from memory
+      }
+      res.set("Content-Type", record.mimetype || "image/jpeg");
+      res.set("Cache-Control", "public, max-age=2592000, immutable");
+      return res.send(record.data);
+    }
+  } catch (err) {
+    console.warn(`Could not restore upload ${filename} from database:`, err.message);
+  }
+  next();
+});
+
 // 4. Static uploads folder with long-term caching
 app.use(
   "/uploads",
@@ -221,6 +253,8 @@ app.listen(PORT, () => {
     dbStatus = "connected";
     await ensureDefaultAdmin();
     await ensureDefaultFloors();
+    const { syncUploadsToDatabase } = require("./utils/uploadSync");
+    await syncUploadsToDatabase();
   } catch (err) {
     dbStatus = `error: ${err.message}`;
     console.error(`⚠️ Initial DB connection attempt failed: ${err.message}`);

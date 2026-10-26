@@ -83,16 +83,9 @@ export default function EditNoticePage() {
 
   const validateForm = (targetStatus) => {
     const newErrors = {};
-    if (!formData.title.om || formData.title.om.trim() === "") {
-      newErrors.title_om = "Afaan Oromoo title is required.";
-    }
-    if (targetStatus === "published") {
-      if (!formData.title.am || formData.title.am.trim() === "") {
-        newErrors.title_am = "Amharic title is required before publishing.";
-      }
-      if (!formData.title.en || formData.title.en.trim() === "") {
-        newErrors.title_en = "English title is required before publishing.";
-      }
+    const hasAnyTitle = !!(formData.title.om?.trim() || formData.title.am?.trim() || formData.title.en?.trim());
+    if (!hasAnyTitle) {
+      newErrors.title_om = "Please enter a notice title in at least one language.";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -102,16 +95,39 @@ export default function EditNoticePage() {
     if (e) e.preventDefault();
     setIsSubmitting(true);
 
-    const isValid = validateForm(targetStatus);
-    if (!isValid) {
-      setIsSubmitting(false);
-      toast.error("Please fix form errors.");
-      return;
-    }
-
     try {
-      noticeService.update(id, {
+      await autoTranslateForm(formData, setFormData, activeLang, "all", toast, setIsTranslating);
+
+      const isValid = validateForm(targetStatus);
+      if (!isValid) {
+        setIsSubmitting(false);
+        toast.error("Please enter a notice title.");
+        return;
+      }
+
+      const finalTitle = {
+        om: formData.title.om?.trim() || formData.title.en?.trim() || formData.title.am?.trim() || "",
+        am: formData.title.am?.trim() || formData.title.om?.trim() || formData.title.en?.trim() || "",
+        en: formData.title.en?.trim() || formData.title.om?.trim() || formData.title.am?.trim() || "",
+      };
+
+      const finalSummary = {
+        om: formData.summary.om?.trim() || formData.summary.en?.trim() || formData.summary.am?.trim() || "",
+        am: formData.summary.am?.trim() || formData.summary.om?.trim() || formData.summary.en?.trim() || "",
+        en: formData.summary.en?.trim() || formData.summary.om?.trim() || formData.summary.am?.trim() || "",
+      };
+
+      const finalContent = {
+        om: formData.content.om?.trim() || formData.content.en?.trim() || formData.content.am?.trim() || "",
+        am: formData.content.am?.trim() || formData.content.om?.trim() || formData.content.en?.trim() || "",
+        en: formData.content.en?.trim() || formData.content.om?.trim() || formData.content.am?.trim() || "",
+      };
+
+      await noticeService.update(id, {
         ...formData,
+        title: finalTitle,
+        summary: finalSummary,
+        content: finalContent,
         status: targetStatus,
       });
 
@@ -124,9 +140,9 @@ export default function EditNoticePage() {
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     try {
-      noticeService.delete(id);
+      await noticeService.delete(id);
       toast.success("Notice deleted.");
       router.push("/admin/dashboard/notices");
     } catch {

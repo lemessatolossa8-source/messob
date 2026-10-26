@@ -9,6 +9,7 @@ import * as LucideIcons from "lucide-react";
 import { TextInput, TextAreaInput } from "@/components/admin/FormControls";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { invalidateCacheAndNotify } from "@/src/services/api";
+import { translateSingleText } from "@/src/lib/autoTranslate";
 
 const DEFAULT_SEED_STATS = [
   { type: "employees", titleEn: "Employees", titleAm: "ሰራተኞች", titleOm: "Hojjattoota", value: "150+", icon: "Users", order: 1 },
@@ -39,30 +40,13 @@ export default function AdminStatisticsListPage() {
     setLoading(true);
     try {
       const res = await statisticService.getAll({ limit: 100, status: "all" });
-      let currentItems = res.items || [];
-
-      // Seed only if the database table is completely empty (first time run)
-      if (currentItems.length === 0) {
-        for (const seed of DEFAULT_SEED_STATS) {
-          await statisticService.create({
-            title: { en: seed.titleEn, am: seed.titleAm, om: seed.titleOm },
-            description: { en: "", am: "", om: "" },
-            value: seed.value,
-            icon: seed.icon,
-            order: seed.order,
-            status: "published",
-            type: seed.type,
-          });
-        }
-        const freshRes = await statisticService.getAll({ limit: 100, status: "all" });
-        currentItems = freshRes.items || [];
-      }
+      const currentItems = res.items || [];
 
       // Sort by order ascending, then ID ascending
       const sorted = [...currentItems].sort((a, b) => {
         const orderDiff = (Number(a.order) || 0) - (Number(b.order) || 0);
         if (orderDiff !== 0) return orderDiff;
-        return (Number(a.id) || 0) - (Number(b.id) || 0);
+        return (Number(a.id || a._id) || 0) - (Number(b.id || b._id) || 0);
       });
 
       setStats(sorted);
@@ -81,9 +65,10 @@ export default function AdminStatisticsListPage() {
     try {
       const isPublished = item.status === "published" || item.is_published;
       const newStatus = isPublished ? "draft" : "published";
+      const itemId = item.id || item._id;
 
       // Use PUT to update status in place
-      await statisticService.update(item.id, { status: newStatus });
+      await statisticService.update(itemId, { status: newStatus });
       invalidateCacheAndNotify();
 
       toast.success(
@@ -157,18 +142,33 @@ export default function AdminStatisticsListPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      // Auto-translate missing fields between languages before saving
+      const updatedFormData = { ...formData };
+      for (const field of ["title", "description"]) {
+        const obj = updatedFormData[field];
+        if (obj) {
+          const filled = ["om", "am", "en"].find((l) => obj[l] && String(obj[l]).trim() !== "");
+          if (filled) {
+            const missing = ["om", "am", "en"].filter((l) => !obj[l] || String(obj[l]).trim() === "");
+            if (missing.length > 0) {
+              const trans = await translateSingleText(obj[filled], missing, filled);
+              missing.forEach((ml) => {
+                if (trans[ml]) obj[ml] = trans[ml];
+              });
+            }
+          }
+        }
+      }
+
       const payload = {
-        ...formData,
-        order: parseInt(formData.order, 10) || 0,
+        ...updatedFormData,
+        order: parseInt(updatedFormData.order, 10) || 0,
       };
 
-      if (modalMode === "edit" && activeItem) {
+      const itemId = activeItem?.id || activeItem?._id;
+      if (modalMode === "edit" && itemId) {
         // Update existing record using PUT /api/statistics/:id
-        await statisticService.update(activeItem.id, {
-          ...payload,
-          id: activeItem.id,
-          type: activeItem.type || undefined,
-        });
+        await statisticService.update(itemId, payload);
         toast.success("Statistic updated successfully!");
       } else {
         // Create new record using POST /api/statistics
@@ -190,7 +190,8 @@ export default function AdminStatisticsListPage() {
   const handleDeleteConfirm = async () => {
     if (!deletingItem) return;
     try {
-      await statisticService.delete(deletingItem.id);
+      const itemId = deletingItem.id || deletingItem._id;
+      await statisticService.delete(itemId);
       invalidateCacheAndNotify();
       toast.success("Statistic deleted successfully!");
       setDeletingItem(null);

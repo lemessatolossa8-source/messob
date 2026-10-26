@@ -76,20 +76,22 @@ export default function CreateEventPage() {
     if (e) e.preventDefault();
     setIsSubmitting(true);
 
-    const isValid = validateForm(targetStatus);
-    if (!isValid) {
-      setIsSubmitting(false);
-      toast.error("Please enter an event title.");
-      return;
-    }
-
     try {
-            const primaryDesc = formData.description.om?.trim() || formData.description.en?.trim() || formData.description.am?.trim() || "";
+      await autoTranslateForm(formData, setFormData, activeLang, "all", toast, setIsTranslating);
+
+      const isValid = validateForm(targetStatus);
+      if (!isValid) {
+        setIsSubmitting(false);
+        toast.error("Please enter an event title.");
+        return;
+      }
+
+      const primaryDesc = formData.description.om?.trim() || formData.description.en?.trim() || formData.description.am?.trim() || "";
 
       const finalTitle = {
-        om: formData.title.om?.trim(),
-        am: formData.title.am?.trim(),
-        en: formData.title.en?.trim(),
+        om: formData.title.om?.trim() || formData.title.en?.trim() || formData.title.am?.trim() || "",
+        am: formData.title.am?.trim() || formData.title.om?.trim() || formData.title.en?.trim() || "",
+        en: formData.title.en?.trim() || formData.title.om?.trim() || formData.title.am?.trim() || "",
       };
 
       const finalDesc = {
@@ -98,7 +100,7 @@ export default function CreateEventPage() {
         en: formData.description.en?.trim() || primaryDesc,
       };
 
-      eventService.create({
+      await eventService.create({
         ...formData,
         title: finalTitle,
         description: finalDesc,

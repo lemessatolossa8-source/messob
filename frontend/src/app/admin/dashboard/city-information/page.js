@@ -8,6 +8,7 @@ import { siteService } from "@/src/services";
 import settingService from "@/src/services/settingService";
 import { DEFAULT_SITE_SETTINGS } from "@/src/data/defaultSiteSettings";
 import { useToast } from "@/src/context/ToastContext";
+import { autoTranslateForm, translateSingleText } from "@/src/lib/autoTranslate";
 
 const LANGUAGES = [
   { code: "om", label: "Afaan Oromo" },
@@ -106,6 +107,9 @@ export default function CityInformationCMSPage() {
     if (e) e.preventDefault();
     setIsSubmitting(true);
     try {
+      // Auto-translate missing fields across languages before persisting
+      await autoTranslateForm(formData, setFormData, activeLang, "all", toast, setIsTranslating);
+
       const payload = {
         ...formData,
         status: "published",
@@ -231,7 +235,17 @@ export default function CityInformationCMSPage() {
       >
         <LanguageTabs
           activeTab={activeLang}
-          onTabChange={setActiveLang}
+          onTabChange={async (newLang) => {
+            if (activeLang !== newLang) {
+              await autoTranslateForm(formData, setFormData, activeLang, newLang, toast, setIsTranslating);
+              setActiveLang(newLang);
+            }
+          }}
+          status={{
+            om: !!(formData.about?.om || formData.mission?.om || formData.vision?.om),
+            am: !!(formData.about?.am || formData.mission?.am || formData.vision?.am),
+            en: !!(formData.about?.en || formData.mission?.en || formData.vision?.en),
+          }}
           title="City Information Details"
           label="Editing Language"
         />

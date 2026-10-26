@@ -8,6 +8,8 @@ import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { announcementService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
 import { getLocalizedText } from "@/src/i18n";
+import { getImageUrl } from "@/src/lib/imageUrl";
+import { getApiBase } from "@/src/services/api";
 
 export default function EditAnnouncementPage() {
   const router = useRouter();
@@ -21,6 +23,7 @@ export default function EditAnnouncementPage() {
   const [expiryDate, setExpiryDate] = useState("");
   const [image, setImage] = useState("");
   const [status, setStatus] = useState("published");
+  const [localImagePreview, setLocalImagePreview] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
   const [imageUploading, setImageUploading] = useState(false);
@@ -92,6 +95,8 @@ export default function EditAnnouncementPage() {
       return;
     }
 
+    if (localImagePreview) URL.revokeObjectURL(localImagePreview);
+    setLocalImagePreview(URL.createObjectURL(file));
     setImageUploading(true);
     setErrors((prev) => {
       const copy = { ...prev };
@@ -111,7 +116,8 @@ export default function EditAnnouncementPage() {
       const headers = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const res = await fetch("/api/upload", {
+      const base = getApiBase();
+      const res = await fetch(`${base}/upload`, {
         method: "POST",
         headers,
         credentials: "same-origin",
@@ -124,6 +130,7 @@ export default function EditAnnouncementPage() {
       }
 
       setImage(data.url);
+      setLocalImagePreview("");
     } catch (err) {
       setErrors((prev) => ({ ...prev, image: err.message || "Image upload failed." }));
     } finally {
@@ -396,16 +403,22 @@ export default function EditAnnouncementPage() {
             className="hidden"
           />
 
-          {image ? (
+          {localImagePreview || image ? (
             <div className="relative overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 max-w-md">
               <img
-                src={image}
+                src={localImagePreview || getImageUrl(image)}
                 alt="Cover preview"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/images/burayu-mesob-logo.png";
+                }}
                 className="aspect-video w-full object-cover max-h-52"
               />
               <button
                 type="button"
                 onClick={() => {
+                  if (localImagePreview) URL.revokeObjectURL(localImagePreview);
+                  setLocalImagePreview("");
                   setImage("");
                   if (imageInputRef.current) imageInputRef.current.value = "";
                 }}

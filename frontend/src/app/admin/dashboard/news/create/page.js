@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ArrowLeft, Upload, X, Film, ImageIcon, AlertCircle } from "lucide-react";
 import { newsService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
+import { getImageUrl } from "@/src/lib/imageUrl";
+import { getApiBase } from "@/src/services/api";
 
 export default function CreateNewsPage() {
   const router = useRouter();
@@ -15,6 +17,7 @@ export default function CreateNewsPage() {
   const [content, setContent] = useState("");
   const [image, setImage] = useState("");
   const [video, setVideo] = useState("");
+  const [localImagePreview, setLocalImagePreview] = useState("");
 
   const [imageUploading, setImageUploading] = useState(false);
   const [videoUploading, setVideoUploading] = useState(false);
@@ -37,27 +40,23 @@ export default function CreateNewsPage() {
         setErrors((prev) => ({ ...prev, image: "Image size must be less than 15MB." }));
         return;
       }
-      setImageUploading(true);
-      setErrors((prev) => {
-        const copy = { ...prev };
-        delete copy.image;
-        return copy;
-      });
-    } else {
-      if (!file.type.startsWith("video/")) {
-        setErrors((prev) => ({ ...prev, video: "Please select a valid video file (MP4, WebM, MOV)." }));
-        return;
+      if (type === "image") {
+        if (localImagePreview) URL.revokeObjectURL(localImagePreview);
+        setLocalImagePreview(URL.createObjectURL(file));
+        setImageUploading(true);
+        setErrors((prev) => {
+          const copy = { ...prev };
+          delete copy.image;
+          return copy;
+        });
+      } else {
+        setVideoUploading(true);
+        setErrors((prev) => {
+          const copy = { ...prev };
+          delete copy.video;
+          return copy;
+        });
       }
-      if (file.size > 50 * 1024 * 1024) {
-        setErrors((prev) => ({ ...prev, video: "Video size must be less than 50MB." }));
-        return;
-      }
-      setVideoUploading(true);
-      setErrors((prev) => {
-        const copy = { ...prev };
-        delete copy.video;
-        return copy;
-      });
     }
 
     try {
@@ -72,7 +71,8 @@ export default function CreateNewsPage() {
       const headers = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const res = await fetch("/api/upload", {
+      const base = getApiBase();
+      const res = await fetch(`${base}/upload`, {
         method: "POST",
         headers,
         credentials: "same-origin",
@@ -86,6 +86,7 @@ export default function CreateNewsPage() {
 
       if (type === "image") {
         setImage(data.url);
+        setLocalImagePreview("");
       } else {
         setVideo(data.url);
       }
@@ -249,16 +250,22 @@ export default function CreateNewsPage() {
             className="hidden"
           />
 
-          {image ? (
+          {localImagePreview || image ? (
             <div className="relative overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 max-w-md">
               <img
-                src={image}
+                src={localImagePreview || getImageUrl(image)}
                 alt="Featured preview"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/images/burayu-mesob-logo.png";
+                }}
                 className="aspect-video w-full object-cover max-h-56"
               />
               <button
                 type="button"
                 onClick={() => {
+                  if (localImagePreview) URL.revokeObjectURL(localImagePreview);
+                  setLocalImagePreview("");
                   setImage("");
                   if (imageInputRef.current) imageInputRef.current.value = "";
                 }}

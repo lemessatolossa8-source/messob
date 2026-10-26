@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const { translateText } = require("../controllers/translateController");
-const { protect } = require("../middleware/authMiddleware");
+const { optionalAuth } = require("../middleware/authMiddleware");
 
-// Only logged-in admin users should trigger automated translations to prevent abuse
-router.post("/", protect, translateText);
+// Translations for admin dashboard (optional auth so token refresh doesn't block UI)
+router.post("/", optionalAuth, translateText);
 
 module.exports = router;

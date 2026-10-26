@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ArrowLeft, Upload, X, ImageIcon, AlertCircle } from "lucide-react";
 import { announcementService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
+import { getImageUrl } from "@/src/lib/imageUrl";
+import { getApiBase } from "@/src/services/api";
 
 export default function CreateAnnouncementPage() {
   const router = useRouter();
@@ -16,6 +18,7 @@ export default function CreateAnnouncementPage() {
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [expiryDate, setExpiryDate] = useState("");
   const [image, setImage] = useState("");
+  const [localImagePreview, setLocalImagePreview] = useState("");
 
   const [imageUploading, setImageUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,6 +39,8 @@ export default function CreateAnnouncementPage() {
       return;
     }
 
+    if (localImagePreview) URL.revokeObjectURL(localImagePreview);
+    setLocalImagePreview(URL.createObjectURL(file));
     setImageUploading(true);
     setErrors((prev) => {
       const copy = { ...prev };
@@ -55,7 +60,8 @@ export default function CreateAnnouncementPage() {
       const headers = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const res = await fetch("/api/upload", {
+      const base = getApiBase();
+      const res = await fetch(`${base}/upload`, {
         method: "POST",
         headers,
         credentials: "same-origin",
@@ -68,6 +74,7 @@ export default function CreateAnnouncementPage() {
       }
 
       setImage(data.url);
+      setLocalImagePreview("");
     } catch (err) {
       setErrors((prev) => ({ ...prev, image: err.message || "Image upload failed." }));
     } finally {
@@ -304,16 +311,22 @@ export default function CreateAnnouncementPage() {
             className="hidden"
           />
 
-          {image ? (
+          {localImagePreview || image ? (
             <div className="relative overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 max-w-md">
               <img
-                src={image}
+                src={localImagePreview || getImageUrl(image)}
                 alt="Cover preview"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/images/burayu-mesob-logo.png";
+                }}
                 className="aspect-video w-full object-cover max-h-52"
               />
               <button
                 type="button"
                 onClick={() => {
+                  if (localImagePreview) URL.revokeObjectURL(localImagePreview);
+                  setLocalImagePreview("");
                   setImage("");
                   if (imageInputRef.current) imageInputRef.current.value = "";
                 }}

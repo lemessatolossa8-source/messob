@@ -20,6 +20,7 @@ import { slideService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { getLocalizedText } from "@/src/i18n";
+import { getImageUrl } from "@/src/lib/imageUrl";
 
 export default function SlideImageAdminPage() {
   const [slides, setSlides] = useState([]);
@@ -201,9 +202,13 @@ export default function SlideImageAdminPage() {
                 {/* Image Banner Container */}
                 <div className="relative h-64 w-full bg-[#070707] overflow-hidden">
                   <img
-                    src={slide.image}
+                    src={getImageUrl(slide.image)}
                     alt={`Slide ${index + 1}`}
                     className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/placeholder.svg";
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 

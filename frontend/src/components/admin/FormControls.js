@@ -2,6 +2,8 @@
 
 import { Upload, X, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { useRef, useState } from "react";
+import { getImageUrl } from "@/src/lib/imageUrl";
+import { getApiBase } from "@/src/services/api";
 
 export function FormField({
   label,
@@ -143,6 +145,7 @@ export function ImagePickerInput({
   const fileInputRef = useRef(null);
   const [uploadError, setUploadError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [localPreview, setLocalPreview] = useState("");
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
@@ -161,6 +164,11 @@ export function ImagePickerInput({
     setUploadError("");
     setIsUploading(true);
 
+    // Instant local preview
+    if (localPreview) URL.revokeObjectURL(localPreview);
+    const objectUrl = URL.createObjectURL(file);
+    setLocalPreview(objectUrl);
+
     try {
       const form = new FormData();
       form.append("file", file);
@@ -173,7 +181,8 @@ export function ImagePickerInput({
       const headers = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const res = await fetch("/api/upload", {
+      const base = getApiBase();
+      const res = await fetch(`${base}/upload`, {
         method: "POST",
         headers,
         credentials: "same-origin",
@@ -187,6 +196,7 @@ export function ImagePickerInput({
       }
 
       onChange(data.url);
+      setLocalPreview("");
     } catch {
       setUploadError("Upload failed. Please check connection and try again.");
     } finally {
@@ -195,9 +205,15 @@ export function ImagePickerInput({
   };
 
   const clearImage = () => {
+    if (localPreview) {
+      URL.revokeObjectURL(localPreview);
+      setLocalPreview("");
+    }
     onChange("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  const displaySrc = localPreview || (value ? getImageUrl(value) : "");
 
   return (
     <FormField label={label} required={required} error={error || uploadError} helpText={helpText}>
@@ -243,11 +259,15 @@ export function ImagePickerInput({
           />
         </div>
 
-        {value ? (
+        {displaySrc ? (
           <div className="relative inline-block overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-xs max-w-sm">
             <img
-              src={value}
+              src={displaySrc}
               alt="Preview"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "/images/burayu-mesob-logo.png";
+              }}
               className="aspect-video w-full object-cover max-h-52"
             />
             <button

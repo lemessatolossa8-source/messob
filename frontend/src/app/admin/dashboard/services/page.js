@@ -20,6 +20,8 @@ import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import LanguageTabs from "@/components/admin/LanguageTabs";
 import { floorService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
+import { getImageUrl } from "@/src/lib/imageUrl";
+import { translateSingleText } from "@/src/lib/autoTranslate";
 
 const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const SUPPORTED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
@@ -227,21 +229,43 @@ export default function AdminFloorManagementPage() {
     setErrors({});
 
     try {
-      // Build multilingual payload with smart defaults
-      const enName = (floorNames.en || primaryName).trim();
-      const omDefaultName = enName === "Floor 1" ? "Darbii 1" : enName === "Floor 2" ? "Darbii 2" : primaryName;
-      const amDefaultName = enName === "Floor 1" ? "ፎቅ 1" : enName === "Floor 2" ? "ፎቅ 2" : primaryName;
+      // Auto-translate missing fields across languages before persisting
+      const nameObj = { ...floorNames };
+      const descObj = { ...descriptions };
+      const langs = ["om", "am", "en"];
+
+      const nameSource = langs.find((l) => nameObj[l] && nameObj[l].trim());
+      if (nameSource) {
+        const missingNames = langs.filter((l) => !nameObj[l] || !nameObj[l].trim());
+        if (missingNames.length > 0) {
+          const trans = await translateSingleText(nameObj[nameSource], missingNames, nameSource);
+          missingNames.forEach((ml) => {
+            if (trans[ml]) nameObj[ml] = trans[ml];
+          });
+        }
+      }
+
+      const descSource = langs.find((l) => descObj[l] && descObj[l].trim());
+      if (descSource) {
+        const missingDescs = langs.filter((l) => !descObj[l] || !descObj[l].trim());
+        if (missingDescs.length > 0) {
+          const trans = await translateSingleText(descObj[descSource], missingDescs, descSource);
+          missingDescs.forEach((ml) => {
+            if (trans[ml]) descObj[ml] = trans[ml];
+          });
+        }
+      }
 
       const dataPayload = {
         name: {
-          en: enName,
-          om: (floorNames.om || omDefaultName).trim(),
-          am: (floorNames.am || amDefaultName).trim(),
+          en: nameObj.en || primaryName,
+          om: nameObj.om || primaryName,
+          am: nameObj.am || primaryName,
         },
         description: {
-          en: (descriptions.en || primaryDesc).trim(),
-          om: (descriptions.om || primaryDesc).trim(),
-          am: (descriptions.am || primaryDesc).trim(),
+          en: descObj.en || primaryDesc,
+          om: descObj.om || primaryDesc,
+          am: descObj.am || primaryDesc,
         },
       };
 
@@ -379,11 +403,12 @@ export default function AdminFloorManagementPage() {
                 <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 border-b border-slate-100">
                   {floor.image ? (
                     <img
-                      src={floor.image}
+                      src={getImageUrl(floor.image)}
                       alt={name || "Floor Image"}
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       onError={(e) => {
-                        e.currentTarget.style.display = "none";
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/images/burayu-mesob-logo.png";
                       }}
                     />
                   ) : (
@@ -473,7 +498,32 @@ export default function AdminFloorManagementPage() {
               {/* Language Selection Dropdown */}
               <LanguageTabs
                 activeTab={activeFormLang}
-                onTabChange={setActiveFormLang}
+                onTabChange={async (newLang) => {
+                  if (activeFormLang !== newLang) {
+                    const curName = floorNames[activeFormLang];
+                    const newName = floorNames[newLang];
+                    if (curName && (!newName || !newName.trim())) {
+                      const trans = await translateSingleText(curName, [newLang], activeFormLang);
+                      if (trans[newLang]) {
+                        setFloorNames((prev) => ({ ...prev, [newLang]: trans[newLang] }));
+                      }
+                    }
+                    const curDesc = descriptions[activeFormLang];
+                    const newDesc = descriptions[newLang];
+                    if (curDesc && (!newDesc || !newDesc.trim())) {
+                      const trans = await translateSingleText(curDesc, [newLang], activeFormLang);
+                      if (trans[newLang]) {
+                        setDescriptions((prev) => ({ ...prev, [newLang]: trans[newLang] }));
+                      }
+                    }
+                    setActiveFormLang(newLang);
+                  }
+                }}
+                status={{
+                  om: !!floorNames.om?.trim(),
+                  am: !!floorNames.am?.trim(),
+                  en: !!floorNames.en?.trim(),
+                }}
                 title="Floor Information"
                 label="Editing Language"
               />
@@ -571,8 +621,12 @@ export default function AdminFloorManagementPage() {
                 {imagePreview ? (
                   <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xs">
                     <img
-                      src={imagePreview}
+                      src={getImageUrl(imagePreview)}
                       alt="Floor Preview"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/images/burayu-mesob-logo.png";
+                      }}
                       className="h-full w-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition duration-200">

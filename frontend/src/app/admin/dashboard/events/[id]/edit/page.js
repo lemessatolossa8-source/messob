@@ -114,15 +114,17 @@ export default function EditEventPage() {
     if (e) e.preventDefault();
     setIsSubmitting(true);
 
-    const isValid = validateForm(targetStatus);
-    if (!isValid) {
-      setIsSubmitting(false);
-      toast.error("Please resolve event validation errors.");
-      return;
-    }
-
     try {
-      eventService.update(id, {
+      await autoTranslateForm(formData, setFormData, activeLang, "all", toast, setIsTranslating);
+
+      const isValid = validateForm(targetStatus);
+      if (!isValid) {
+        setIsSubmitting(false);
+        toast.error("Please resolve event validation errors.");
+        return;
+      }
+
+      await eventService.update(id, {
         ...formData,
         status: targetStatus,
       });
@@ -136,9 +138,9 @@ export default function EditEventPage() {
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     try {
-      eventService.delete(id);
+      await eventService.delete(id);
       toast.success("Event deleted.");
       router.push("/admin/dashboard/events");
     } catch {

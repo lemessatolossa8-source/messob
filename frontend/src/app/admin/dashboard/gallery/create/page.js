@@ -102,14 +102,16 @@ export default function CreateGalleryPage() {
     if (e) e.preventDefault();
     setIsSubmitting(true);
 
-    const isValid = validateForm();
-    if (!isValid) {
-      setIsSubmitting(false);
-      toast.error("Please provide both a title and an image.");
-      return;
-    }
-
     try {
+      await autoTranslateForm(formData, setFormData, activeLang, "all", toast, setIsTranslating);
+
+      const isValid = validateForm();
+      if (!isValid) {
+        setIsSubmitting(false);
+        toast.error("Please provide both a title and an image.");
+        return;
+      }
+
       await galleryService.create({
         title: formData.title,
         image: formData.image,

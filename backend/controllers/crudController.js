@@ -236,6 +236,8 @@ const createCRUDController = (Model, resourceName = "item") => {
 
       let payload = normalizePayload(req.body, Model);
       payload = await autoTranslateModelData(payload);
+      delete payload.id;
+      delete payload._id;
       await item.update(payload);
       invalidateCache();
 

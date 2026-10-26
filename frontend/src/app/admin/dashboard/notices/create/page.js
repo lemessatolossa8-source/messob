@@ -69,34 +69,35 @@ export default function CreateNoticePage() {
     if (e) e.preventDefault();
     setIsSubmitting(true);
 
-    const isValid = validateForm(targetStatus);
-    if (!isValid) {
-      setIsSubmitting(false);
-      toast.error("Please enter a notice title.");
-      return;
-    }
-
     try {
-                  
+      await autoTranslateForm(formData, setFormData, activeLang, "all", toast, setIsTranslating);
+
+      const isValid = validateForm(targetStatus);
+      if (!isValid) {
+        setIsSubmitting(false);
+        toast.error("Please enter a notice title.");
+        return;
+      }
+
       const finalTitle = {
-        om: formData.title.om?.trim(),
-        am: formData.title.am?.trim(),
-        en: formData.title.en?.trim(),
+        om: formData.title.om?.trim() || formData.title.en?.trim() || formData.title.am?.trim() || "",
+        am: formData.title.am?.trim() || formData.title.om?.trim() || formData.title.en?.trim() || "",
+        en: formData.title.en?.trim() || formData.title.om?.trim() || formData.title.am?.trim() || "",
       };
 
       const finalSummary = {
-        om: formData.summary.om?.trim(),
-        am: formData.summary.am?.trim(),
-        en: formData.summary.en?.trim(),
+        om: formData.summary.om?.trim() || formData.summary.en?.trim() || formData.summary.am?.trim() || "",
+        am: formData.summary.am?.trim() || formData.summary.om?.trim() || formData.summary.en?.trim() || "",
+        en: formData.summary.en?.trim() || formData.summary.om?.trim() || formData.summary.am?.trim() || "",
       };
 
       const finalContent = {
-        om: formData.content.om?.trim(),
-        am: formData.content.am?.trim(),
-        en: formData.content.en?.trim(),
+        om: formData.content.om?.trim() || formData.content.en?.trim() || formData.content.am?.trim() || "",
+        am: formData.content.am?.trim() || formData.content.om?.trim() || formData.content.en?.trim() || "",
+        en: formData.content.en?.trim() || formData.content.om?.trim() || formData.content.am?.trim() || "",
       };
 
-      noticeService.create({
+      await noticeService.create({
         ...formData,
         title: finalTitle,
         summary: finalSummary,

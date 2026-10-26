@@ -8,8 +8,10 @@ import { settingService } from "@/src/services/settingService";
 import { useToast } from "@/src/context/ToastContext";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { DEFAULT_SITE_SETTINGS } from "@/src/data/defaultSiteSettings";
-import { invalidateCacheAndNotify } from "@/src/services/api";
+import { invalidateCacheAndNotify, getApiBase } from "@/src/services/api";
 import { storageStore } from "@/src/services/storageStore";
+import { getImageUrl } from "@/src/lib/imageUrl";
+import { autoTranslateForm } from "@/src/lib/autoTranslate";
 
 export default function AboutMayorMessageCMSPage() {
   const toast = useToast();
@@ -18,6 +20,7 @@ export default function AboutMayorMessageCMSPage() {
   const [activeLang, setActiveLang] = useState("om");
   const [formData, setFormData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -137,6 +140,9 @@ export default function AboutMayorMessageCMSPage() {
     setIsSubmitting(true);
     setUploadError("");
     try {
+      // Auto-translate to all missing languages before persisting
+      await autoTranslateForm(formData, setFormData, activeLang, "all", toast, setIsTranslating);
+
       let finalPhotoUrl = formData?.photo || formData?.om?.photo || formData?.am?.photo || formData?.en?.photo || "";
 
       if (selectedFile) {
@@ -147,7 +153,8 @@ export default function AboutMayorMessageCMSPage() {
         const uploadData = new FormData();
         uploadData.append("file", selectedFile);
 
-        const uploadRes = await fetch("/api/upload", {
+        const base = getApiBase();
+        const uploadRes = await fetch(`${base}/upload`, {
           method: "POST",
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: uploadData,
@@ -233,7 +240,8 @@ export default function AboutMayorMessageCMSPage() {
     }
   };
 
-  const currentPhotoSrc = previewUrl || formData?.photo || formData?.om?.photo || formData?.am?.photo || formData?.en?.photo || "";
+  const rawPhoto = formData?.photo || formData?.om?.photo || formData?.am?.photo || formData?.en?.photo || "";
+  const currentPhotoSrc = previewUrl || (rawPhoto ? getImageUrl(rawPhoto) : "");
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -281,7 +289,20 @@ export default function AboutMayorMessageCMSPage() {
             <h2 className="text-sm font-bold text-[#070707]">Content Language</h2>
             <p className="text-xs text-slate-500">Edit spotlight information for each supported official language</p>
           </div>
-          <LanguageTabs activeTab={activeLang} onTabChange={setActiveLang} />
+          <LanguageTabs
+            activeTab={activeLang}
+            onTabChange={async (newLang) => {
+              if (activeLang !== newLang) {
+                await autoTranslateForm(formData, setFormData, activeLang, newLang, toast, setIsTranslating);
+                setActiveLang(newLang);
+              }
+            }}
+            status={{
+              om: !!(formData?.om?.name || formData?.om?.welcomeMessage || formData?.om?.title),
+              am: !!(formData?.am?.name || formData?.am?.welcomeMessage || formData?.am?.title),
+              en: !!(formData?.en?.name || formData?.en?.welcomeMessage || formData?.en?.title),
+            }}
+          />
         </div>
 
         {/* 2-Column Form Layout matching Screenshot */}

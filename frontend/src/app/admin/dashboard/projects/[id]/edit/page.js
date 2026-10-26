@@ -8,6 +8,8 @@ import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { projectService } from "@/src/services";
 import { useToast } from "@/src/context/ToastContext";
 import { getLocalizedText } from "@/src/i18n";
+import { getImageUrl } from "@/src/lib/imageUrl";
+import { getApiBase } from "@/src/services/api";
 
 export default function EditProjectPage() {
   const router = useRouter();
@@ -25,6 +27,7 @@ export default function EditProjectPage() {
   const [location, setLocation] = useState("");
   const [progress, setProgress] = useState(0);
   const [image, setImage] = useState("");
+  const [localImagePreview, setLocalImagePreview] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,17 +88,35 @@ export default function EditProjectPage() {
       toast.error("Please upload a valid image file.");
       return;
     }
+
+    if (localImagePreview) URL.revokeObjectURL(localImagePreview);
+    setLocalImagePreview(URL.createObjectURL(file));
     setImageUploading(true);
+
     try {
       const uploadData = new FormData();
       uploadData.append("file", file);
-      const res = await fetch("/api/upload", {
+
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("mesob_token") || localStorage.getItem("token")
+          : null;
+
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const base = getApiBase();
+      const res = await fetch(`${base}/upload`, {
         method: "POST",
+        headers,
+        credentials: "same-origin",
         body: uploadData,
       });
+
       const result = await res.json();
       if (result.success && result.url) {
         setImage(result.url);
+        setLocalImagePreview("");
         toast.success("Image uploaded successfully.");
         if (errors.image) {
           setErrors((prev) => {
@@ -490,16 +511,22 @@ export default function EditProjectPage() {
             className="hidden"
           />
 
-          {image ? (
+          {localImagePreview || image ? (
             <div className="relative overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 max-w-md">
               <img
-                src={image}
+                src={localImagePreview || getImageUrl(image)}
                 alt="Project preview"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/images/burayu-mesob-logo.png";
+                }}
                 className="aspect-video w-full object-cover max-h-56"
               />
               <button
                 type="button"
                 onClick={() => {
+                  if (localImagePreview) URL.revokeObjectURL(localImagePreview);
+                  setLocalImagePreview("");
                   setImage("");
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}

@@ -104,6 +104,13 @@ exports.updateSettings = async (req, res) => {
       });
     }
 
+    try {
+      const { autoTranslateModelData } = require("../utils/autoTranslator");
+      merged = await autoTranslateModelData(merged);
+    } catch (transErr) {
+      console.warn("Settings auto-translation warning:", transErr.message);
+    }
+
     record.payload = merged;
     record.changed("payload", true);
     await record.save();
